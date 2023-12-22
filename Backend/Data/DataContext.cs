@@ -27,14 +27,10 @@ namespace Backend.Data
                 .HasKey(os => new { os.OwnerShipmentId });
 
             modelBuilder.Entity<OwnerShipment>()
-                .Property(o => o.OwnerShipmentId)
-                .ValueGeneratedOnAdd();
-
-            modelBuilder.Entity<OwnerShipment>()
-                    .HasOne(o => o.Owner)
-                    .WithMany(u => u.OwnerShipments)
-                    .HasForeignKey(o => o.OwnerId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(o => o.Owner)
+                .WithMany(u => u.OwnerShipments)
+                .HasForeignKey(o => o.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OwnerShipment>()
                 .HasOne(o => o.Vehicle)
@@ -52,14 +48,10 @@ namespace Backend.Data
                 .HasKey(os => new { os.TransporterShipmentId });
 
             modelBuilder.Entity<TransporterShipment>()
-                .Property(o => o.TransporterShipmentId)
-                .ValueGeneratedOnAdd();
-
-            modelBuilder.Entity<TransporterShipment>()
-                    .HasOne(o => o.Transporter)
-                    .WithMany(u => u.TransporterShipments)
-                    .HasForeignKey(o => o.TransporterId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(o => o.Transporter)
+                .WithMany(u => u.TransporterShipments)
+                .HasForeignKey(o => o.TransporterId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TransporterShipment>()
                 .HasOne(o => o.Vehicle)
@@ -88,9 +80,10 @@ namespace Backend.Data
 
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.Address)
-                .WithOne(a => a.Shipment)
-                .HasForeignKey<Address>(a => a.ShipmentId)
+                .WithOne()
+                .HasForeignKey<Shipment>(s => s.AddressId)
                 .OnDelete(DeleteBehavior.Restrict);
+
 
 
             modelBuilder.Entity<Vehicle>()
