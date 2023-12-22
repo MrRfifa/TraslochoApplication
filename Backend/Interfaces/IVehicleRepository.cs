@@ -1,5 +1,4 @@
-using Backend.Dtos;
-using Backend.Dtos.Vehicle;
+using Backend.Dtos.VehicleDtos;
 using Backend.Models.classes;
 
 namespace Backend.Interfaces
@@ -10,7 +9,7 @@ namespace Backend.Interfaces
         Task<Vehicle> GetVehicleById(int vehicleId);
         Task<ICollection<Vehicle>> GetVehiclesByTransporterId(int transporterId);
         Task<bool> VehicleExists(int vehicleId);
-        Task<bool> CreateVehicle(VehicleDto vehicle, int transporterId);
+        Task<bool> CreateVehicle(CreateVehicleDto vehicle, int transporterId);
         Task<bool> DeleteVehicle(int vehicleId);
         Task<bool> Save();
     }

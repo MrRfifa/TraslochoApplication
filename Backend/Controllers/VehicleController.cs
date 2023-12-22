@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
-using Backend.Dtos;
-using Backend.Dtos.Vehicle;
+using Backend.Dtos.VehicleDtos;
 using Backend.Interfaces;
-using Backend.Models.classes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -98,7 +92,7 @@ namespace Backend.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> CreateVehicle([FromForm] VehicleDto vehicleCreate, int transporterId)
+        public async Task<IActionResult> CreateVehicle([FromForm] CreateVehicleDto vehicleCreate, int transporterId)
         {
             if (vehicleCreate == null)
                 return BadRequest(new { status = "fail", message = "Vehicle data is null." });

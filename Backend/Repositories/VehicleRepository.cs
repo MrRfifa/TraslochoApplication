@@ -2,7 +2,7 @@
 using AutoMapper;
 using Backend.Data;
 using Backend.Dtos;
-using Backend.Dtos.Vehicle;
+using Backend.Dtos.VehicleDtos;
 using Backend.Interfaces;
 using Backend.Models.classes;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +20,7 @@ namespace Backend.Repositories
             _context = context;
         }
 
-        public async Task<bool> CreateVehicle(VehicleDto vehicleDto, int transporterId)
+        public async Task<bool> CreateVehicle(CreateVehicleDto vehicleDto, int transporterId)
         {
             // Map the DTO to the entity
             var vehicleEntity = _mapper.Map<Vehicle>(vehicleDto);
