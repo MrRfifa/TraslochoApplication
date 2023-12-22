@@ -18,6 +18,7 @@ builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
 
 // Load environment variables from .env file
 DotNetEnv.Env.Load();

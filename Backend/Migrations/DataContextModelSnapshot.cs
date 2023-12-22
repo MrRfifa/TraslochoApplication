@@ -42,9 +42,6 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ShipmentId")
-                        .HasColumnType("int");
-
                     b.Property<string>("State")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -54,9 +51,6 @@ namespace Backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ShipmentId")
-                        .IsUnique();
 
                     b.ToTable("Addresses");
                 });
@@ -128,6 +122,9 @@ namespace Backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AddressId")
+                        .IsUnique();
 
                     b.HasIndex("OwnerId");
 
@@ -373,17 +370,6 @@ namespace Backend.Migrations
                     b.HasDiscriminator().HasValue("Transporter");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.Address", b =>
-                {
-                    b.HasOne("Backend.Models.classes.Shipment", "Shipment")
-                        .WithOne("Address")
-                        .HasForeignKey("Backend.Models.classes.Address", "ShipmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Shipment");
-                });
-
             modelBuilder.Entity("Backend.Models.classes.OwnerShipment", b =>
                 {
                     b.HasOne("Backend.Models.classes.Owner", "Owner")
@@ -413,6 +399,12 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
+                    b.HasOne("Backend.Models.classes.Address", "Address")
+                        .WithOne()
+                        .HasForeignKey("Backend.Models.classes.Shipment", "AddressId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.classes.Owner", "Owner")
                         .WithMany("Shipments")
                         .HasForeignKey("OwnerId")
@@ -430,6 +422,8 @@ namespace Backend.Migrations
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Address");
 
                     b.Navigation("Owner");
 
@@ -497,9 +491,6 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
-                    b.Navigation("Address")
-                        .IsRequired();
-
                     b.Navigation("OwnerShipments");
 
                     b.Navigation("TransporterShipments");
