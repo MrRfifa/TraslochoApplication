@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Backend.Models.classes;
 using Backend.Models.enums;
 
-
-
-namespace Backend.Dtos.Vehicle
+namespace Backend.Dtos.VehicleDtos
 {
-    public record VehicleDto
+    public record GetVehicleDto
     {
+        public int id { get; set; }
         [Required(ErrorMessage = "Manufacture is required.")]
         public string Manufacture { get; set; } = string.Empty;
 
@@ -29,6 +29,6 @@ namespace Backend.Dtos.Vehicle
         public float Height { get; set; }
 
         [Required(ErrorMessage = "At least one vehicle image is required.")]
-        public ICollection<IFormFile> VehicleImages { get; set; } = new List<IFormFile>();
+        public ICollection<VehicleImage>? VehicleImages { get; set; }
     }
 }
