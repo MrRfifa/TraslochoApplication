@@ -5,9 +5,9 @@ namespace Backend.Models.enums
     public enum TransporterType
     {
         [EnumMember(Value = "Private")]
-        Private = 0,
+        Private,
 
         [EnumMember(Value = "Society")]
-        Society = 1
+        Society
     }
 }

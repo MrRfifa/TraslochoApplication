@@ -9,17 +9,17 @@ namespace Backend.Models.classes
         public ShipmentStatus ShipmentStatus { get; set; }
         public DateTime ShipmentDate { get; set; }
         public int Price { get; set; }
-        public Address Address { get; set; } = new Address();
-        public int AddressId { get; set; } 
+        public Address? Address { get; set; }
+        public int AddressId { get; set; }
         public string Description { get; set; } = string.Empty;
-        public Owner Owner { get; set; } = new Owner();
+        public Owner? Owner { get; set; }
         public int OwnerId { get; set; }
-        public Transporter Transporter { get; set; } = new Transporter();
+        public Transporter? Transporter { get; set; }
         public int TransporterId { get; set; }
-        public Vehicle Vehicle { get; set; } = new Vehicle();
+        public Vehicle? Vehicle { get; set; }
         public int VehicleId { get; set; }
-        public ICollection<OwnerShipment> OwnerShipments { get; set; } = new List<OwnerShipment>();
-        public ICollection<TransporterShipment> TransporterShipments { get; set; } = new List<TransporterShipment>();
+        public ICollection<OwnerShipment>? OwnerShipments { get; set; }
+        public ICollection<TransporterShipment>? TransporterShipments { get; set; }
 
     }
 }

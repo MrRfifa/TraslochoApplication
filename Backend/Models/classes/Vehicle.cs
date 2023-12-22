@@ -12,12 +12,14 @@ namespace Backend.Models.classes
         public VehicleType VehicleType { get; set; }
         public float Length { get; set; }
         public float Height { get; set; }
-        public ICollection<VehicleImage> VehicleImages { get; set; } = new List<VehicleImage>();
-        public bool IsAvailable { get; set; }
+
+        // Foreign key for Transporter
         public int TransporterId { get; set; }
         public Transporter? Transporter { get; set; }
-        public ICollection<OwnerShipment> OwnerShipments { get; set; } = new List<OwnerShipment>();
-        public ICollection<TransporterShipment> TransporterShipments { get; set; } = new List<TransporterShipment>();
 
+        public ICollection<VehicleImage>? VehicleImages { get; set; }
+        public bool IsAvailable { get; set; }
+        public ICollection<OwnerShipment>? OwnerShipments { get; set; }
+        public ICollection<TransporterShipment>? TransporterShipments { get; set; }
     }
 }
