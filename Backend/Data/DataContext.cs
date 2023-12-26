@@ -16,7 +16,7 @@ namespace Backend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<UserTokens> UserTokens { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
-        public DbSet<VehicleImage> VehicleImages { get; set; }
+        public DbSet<ImageFile> Images { get; set; }
         public DbSet<TransporterShipment> TransporterShipments { get; set; }
         public DbSet<OwnerShipment> OwnerShipments { get; set; }
 
@@ -79,16 +79,36 @@ namespace Backend.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Shipment>()
-                .HasOne(s => s.Address)
+                .HasOne(s => s.DestinationAddress)
                 .WithOne()
-                .HasForeignKey<Shipment>(s => s.AddressId)
+                //.HasForeignKey<Shipment>(s => s.DestinationAddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<User>()
+                .HasOne(s => s.UserAddress)
+                .WithOne()
+                //.HasForeignKey<Shipment>(s => s.DestinationAddressId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Shipment>()
+                .HasMany(v => v.Images)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.UserAddress)
+                .WithOne()
+                .HasForeignKey<UserAddress>(ua => ua.UserId)  // Assuming UserAddress has a UserId property
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Shipment>()
+                .HasOne(u => u.DestinationAddress)
+                .WithOne()
+                .HasForeignKey<ShipmentAddress>(ua => ua.ShipmentId)  // Assuming UserAddress has a UserId property
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Vehicle>()
                 .HasOne(v => v.Transporter)       // A Vehicle has one Transporter
-                .WithMany(t => t.Vehicles)         // A Transporter can have many Vehicles
+                .WithMany(t => t.Vehicles)        // A Transporter can have many Vehicles
                 .HasForeignKey(v => v.TransporterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -97,7 +117,10 @@ namespace Backend.Data
                 .WithOne()
                 .OnDelete(DeleteBehavior.Restrict);
 
-
+            modelBuilder.Entity<Shipment>()
+                .HasMany(v => v.Images)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Configure profile image column type
             modelBuilder.Entity<User>()

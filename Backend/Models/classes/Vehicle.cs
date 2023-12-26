@@ -16,7 +16,6 @@ namespace Backend.Models.classes
         // Foreign key for Transporter
         public int TransporterId { get; set; }
         public Transporter? Transporter { get; set; }
-
         public ICollection<VehicleImage>? VehicleImages { get; set; }
         public bool IsAvailable { get; set; }
         public ICollection<OwnerShipment>? OwnerShipments { get; set; }

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Backend.Models.classes
 {
-    public class VehicleImage : ImageFile
+    public class ShipmentImage : ImageFile
     {
-        public int VehicleId { get; set; }
+        public int ShipmentId { get; set; }
     }
 }

@@ -1,5 +1,7 @@
+using AutoMapper;
 using Backend.Data;
 using Backend.Dtos;
+using Backend.Dtos.AddressDto;
 using Backend.Dtos.RegisterUsers;
 using Backend.Interfaces;
 using Backend.Models.classes;
@@ -14,9 +16,11 @@ namespace Backend.Repositories
         private readonly IUserRepository _userRepository;
         private readonly ITokenRepository _tokenRepository;
 
+        private readonly IMapper _mapper;
 
-        public AuthRepository(DataContext context, IUserRepository userRepository, ITokenRepository tokenRepository)
+        public AuthRepository(DataContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IMapper mapper)
         {
+            _mapper = mapper;
             _tokenRepository = tokenRepository;
             _userRepository = userRepository;
             _context = context;
@@ -67,7 +71,6 @@ namespace Backend.Repositories
                     // Convert the image to a base64-encoded string.
                     byte[] bytes = ms.ToArray();
                     string base64Image = Convert.ToBase64String(bytes);
-
                     // Use userEntity instead of user for setting properties
                     var userEntity = new Transporter
                     {
@@ -85,6 +88,7 @@ namespace Backend.Repositories
                         {
                             VerificationToken = await _tokenRepository.GenerateUniqueToken()
                         },
+                        UserAddress = _mapper.Map<UserAddress>(userCreated.UserAddress),
                         FileName = file.FileName,  // Assuming FileName is a property of User
                         FileContentBase64 = bytes  // Assuming FileContentBase64 is a property of User
                     };
@@ -135,6 +139,7 @@ namespace Backend.Repositories
                         {
                             VerificationToken = await _tokenRepository.GenerateUniqueToken()
                         },
+                        UserAddress = _mapper.Map<UserAddress>(userCreated.UserAddress),
                         FileName = file.FileName,  // Assuming FileName is a property of User
                         FileContentBase64 = bytes  // Assuming FileContentBase64 is a property of User
                     };

@@ -16,10 +16,13 @@ namespace Backend.Helpers
             CreateMap<CreateVehicleDto, Vehicle>()
             .ForMember(dest => dest.VehicleImages, opt => opt.Ignore());
             CreateMap<Transporter, GetTransporterDto>();
-            CreateMap<CreateShipmentDto, Shipment>();
+            CreateMap<CreateShipmentDto, Shipment>()
+            .ForMember(dest => dest.Images, opt => opt.Ignore());
+
             CreateMap<Shipment, GetShipmentDto>();
 
-            CreateMap<CreateAddressDto, Address>();
+            CreateMap<CreateAddressDto, ShipmentAddress>();
+            CreateMap<CreateAddressDto, UserAddress>();
         }
     }
 }

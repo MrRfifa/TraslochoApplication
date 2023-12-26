@@ -34,7 +34,10 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Country")
+                    b.Property<int>("Country")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Discriminator")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -53,6 +56,42 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Addresses");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("Address");
+
+                    b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.ImageFile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("FileContentBase64")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UploadDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Images");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("ImageFile");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Backend.Models.classes.OwnerShipment", b =>
@@ -67,6 +106,9 @@ namespace Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ShipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShipmentStatus")
                         .HasColumnType("int");
 
                     b.Property<int>("VehicleId")
@@ -91,12 +133,12 @@ namespace Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AddressId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<float>("DistanceBetweenAddresses")
+                        .HasColumnType("real");
 
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
@@ -123,9 +165,6 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AddressId")
-                        .IsUnique();
-
                     b.HasIndex("OwnerId");
 
                     b.HasIndex("TransporterId");
@@ -144,6 +183,9 @@ namespace Backend.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransporterShipmentId"));
 
                     b.Property<int>("ShipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShipmentStatus")
                         .HasColumnType("int");
 
                     b.Property<int>("TransporterId")
@@ -323,33 +365,56 @@ namespace Backend.Migrations
                     b.ToTable("Vehicles");
                 });
 
+            modelBuilder.Entity("Backend.Models.classes.ShipmentAddress", b =>
+                {
+                    b.HasBaseType("Backend.Models.classes.Address");
+
+                    b.Property<int>("ShipmentId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("ShipmentId")
+                        .IsUnique()
+                        .HasFilter("[ShipmentId] IS NOT NULL");
+
+                    b.HasDiscriminator().HasValue("ShipmentAddress");
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.UserAddress", b =>
+                {
+                    b.HasBaseType("Backend.Models.classes.Address");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
+
+                    b.HasDiscriminator().HasValue("UserAddress");
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.ShipmentImage", b =>
+                {
+                    b.HasBaseType("Backend.Models.classes.ImageFile");
+
+                    b.Property<int>("ShipmentId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.HasDiscriminator().HasValue("ShipmentImage");
+                });
+
             modelBuilder.Entity("Backend.Models.classes.VehicleImage", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.HasBaseType("Backend.Models.classes.ImageFile");
+
+                    b.Property<int>("VehicleId")
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<byte[]>("FileContentBase64")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UploadDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("VehicleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
 
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("VehicleImages");
+                    b.HasDiscriminator().HasValue("VehicleImage");
                 });
 
             modelBuilder.Entity("Backend.Models.classes.Owner", b =>
@@ -399,12 +464,6 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
-                    b.HasOne("Backend.Models.classes.Address", "Address")
-                        .WithOne()
-                        .HasForeignKey("Backend.Models.classes.Shipment", "AddressId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Backend.Models.classes.Owner", "Owner")
                         .WithMany("Shipments")
                         .HasForeignKey("OwnerId")
@@ -422,8 +481,6 @@ namespace Backend.Migrations
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Address");
 
                     b.Navigation("Owner");
 
@@ -481,19 +538,58 @@ namespace Backend.Migrations
                     b.Navigation("Transporter");
                 });
 
+            modelBuilder.Entity("Backend.Models.classes.ShipmentAddress", b =>
+                {
+                    b.HasOne("Backend.Models.classes.Shipment", null)
+                        .WithOne("DestinationAddress")
+                        .HasForeignKey("Backend.Models.classes.ShipmentAddress", "ShipmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.UserAddress", b =>
+                {
+                    b.HasOne("Backend.Models.classes.User", null)
+                        .WithOne("UserAddress")
+                        .HasForeignKey("Backend.Models.classes.UserAddress", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.ShipmentImage", b =>
+                {
+                    b.HasOne("Backend.Models.classes.Shipment", null)
+                        .WithMany("Images")
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Backend.Models.classes.VehicleImage", b =>
                 {
                     b.HasOne("Backend.Models.classes.Vehicle", null)
                         .WithMany("VehicleImages")
                         .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
+                    b.Navigation("DestinationAddress")
+                        .IsRequired();
+
+                    b.Navigation("Images");
+
                     b.Navigation("OwnerShipments");
 
                     b.Navigation("TransporterShipments");
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.User", b =>
+                {
+                    b.Navigation("UserAddress")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Backend.Models.classes.Vehicle", b =>

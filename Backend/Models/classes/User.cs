@@ -31,6 +31,9 @@ namespace Backend.Models.classes
         [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; }
 
+        [Required(ErrorMessage = "The address is required.")]
+        public UserAddress UserAddress { get; set; } = new UserAddress();
+
         [Required(ErrorMessage = "File Name is required.")]
         public string FileName { get; set; } = string.Empty;
 
