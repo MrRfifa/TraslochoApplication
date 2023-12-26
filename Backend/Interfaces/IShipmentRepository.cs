@@ -1,4 +1,5 @@
 
+using Backend.Dtos;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
 using Backend.Dtos.VehicleDtos;
@@ -14,6 +15,7 @@ namespace Backend.Interfaces
         Task<Shipment> GetShipmentById(int shipmentId);
         Task<GetShipmentDto> GetShipmentDtoById(int shipmentId);
         Task<bool> ShipmentExists(int shipmentId);
+        Task<List<Transporter>> MatchTransporters(SearchCriteria criteria);
 
         Task<bool> CreateShipment(CreateShipmentDto shipment, int transporterId, int ownerId, int transporterVehicleId);
         Task<bool> NegociatePrice(int shipmentId, int newPrice);

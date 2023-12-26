@@ -16,7 +16,5 @@ namespace Backend.Interfaces
         public Task<bool> ForgetPassword(string email);
         public Task<bool> VerifyAccount(string token);
         public Task<bool> Save();
-        Task<bool> DeleteAccount(int userId, string currentPassword);
-        Task<bool> DeleteAccountVerification(string token);
     }
 }

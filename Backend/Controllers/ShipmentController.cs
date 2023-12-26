@@ -4,12 +4,15 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Backend.Dtos;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
 using Backend.Dtos.VehicleDtos;
 using Backend.Interfaces;
+using Backend.Models.classes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Backend.Controllers
 {
@@ -195,7 +198,17 @@ namespace Backend.Controllers
             }
         }
 
+        [HttpGet("{shipmentId}")]
+        [ProducesResponseType(200, Type = typeof(GetShipmentDto))]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        [Authorize(Roles = "Owner")]
+        public async Task<IActionResult> SearchTransporters(SearchCriteria criteria)
+        {
+            List<Transporter> matchedTransporters = await _shipmentRepository.MatchTransporters(criteria);
 
+            return Ok(matchedTransporters);
+        }
 
     }
 }

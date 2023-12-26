@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using AutoMapper;
 using Backend.Data;
+using Backend.Dtos;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
 using Backend.Dtos.VehicleDtos;
@@ -323,6 +324,20 @@ namespace Backend.Repositories
             return transportersWithAvailableVehiclesDto;
         }
 
+        public async Task<List<Transporter>> MatchTransporters(SearchCriteria criteria)
+        {
+            var matchedTransporters = await _context.Transporters
+                .Include(t => t.Vehicles)
+                .Where(t =>
+                    t.UserAddress.Country == criteria.Country ||
+                    t.UserAddress.City == criteria.City ||
+                    t.Vehicles!.Any(v => v.VehicleType == criteria.VehicleType) ||
+                    t.TransporterType == criteria.TransporterType)
+                .ToListAsync();
+
+            return matchedTransporters;
+        }
+
         public async Task<bool> ModifyShipmentDate(int shipmentId, DateTime newDate)
         {
             Shipment shipment = await GetShipmentById(shipmentId);
@@ -365,6 +380,9 @@ namespace Backend.Repositories
             }
             return true;
         }
+
+
+
 
     }
 }
