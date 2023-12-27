@@ -13,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
+//
+builder.Services.AddSignalR();
+
 //Dependency Injection
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -75,6 +78,20 @@ if (jwtKey != null)
             ValidateIssuer = false,
             ValidateAudience = false
         };
+        // options.Events = new JwtBearerEvents
+        // {
+        //     OnMessageReceived = context =>
+        //     {
+        //         var accessToken = context.Request.Query["access_token"];
+        //         var path = context.HttpContext.Request.Path;
+        //         if (!string.IsNullOrEmpty(accessToken)
+        //             && path.StartsWithSegments("/chathub"))
+        //         {
+        //             context.Token = accessToken;
+        //         }
+        //         return Task.CompletedTask;
+        //     }
+        // };
     });
 }
 else
@@ -106,14 +123,25 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//signal R
+
+// app.MapHub<ChatHub>("chat");
+
 app.UseHttpsRedirection();
 
 app.UseCors("PhotographOrigin");
+app.UseRouting();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ShipmentStatusHub>("/shipment-status-update");
+// app.UseEndpoints(endpoints =>
+//     {
+//         endpoints.MapHub<ChatHub>("/chathub");
+//         endpoints.MapControllers();
+//     });
 
 app.Run();

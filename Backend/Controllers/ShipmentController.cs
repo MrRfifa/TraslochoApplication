@@ -198,7 +198,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("{shipmentId}")]
+        [HttpGet("search/{shipmentId}")]
         [ProducesResponseType(200, Type = typeof(GetShipmentDto))]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
