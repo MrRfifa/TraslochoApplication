@@ -36,7 +36,7 @@ namespace Backend.Repositories
         public async Task<bool> AcceptShipment(int shipmentId, int transporterId)
         {
 
-            Shipment shipment = await GetShipmentById(shipmentId);
+            Shipment? shipment = await GetShipmentById(shipmentId);
 
             OwnerShipment? ownerShipment = await _context.OwnerShipments
                     .Where(os => os.ShipmentId == shipmentId)
@@ -52,7 +52,7 @@ namespace Backend.Repositories
                 throw new Exception($"Transporter Shipment/Owner Shipment ID {shipmentId} not found");
             }
 
-            if (shipment.ShipmentStatus == ShipmentStatus.Canceled && transporterId == shipment.TransporterId)
+            if (shipment!.ShipmentStatus == ShipmentStatus.Canceled && transporterId == shipment.TransporterId)
             {
                 throw new Exception($"Transporter with ID {shipmentId} has canceled the shipment!");
             }
@@ -72,9 +72,9 @@ namespace Backend.Repositories
         public async Task<bool> CancelShipment(int shipmentId)
         {
             // Get the shipment
-            Shipment shipment = await GetShipmentById(shipmentId);
+            Shipment? shipment = await GetShipmentById(shipmentId);
 
-            int daysDifference = (shipment.ShipmentDate - DateTime.Now).Days;
+            int daysDifference = (shipment!.ShipmentDate - DateTime.Now).Days;
 
             if (daysDifference > 7)
             {
@@ -192,7 +192,7 @@ namespace Backend.Repositories
             }
         }
 
-        public async Task<ICollection<GetVehicleDto>> GetAvailableVehicles(DateTime shipmentDate)
+        public async Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate)
         {
             var availableVehicles = await _context.Vehicles
                 .Include(v => v.VehicleImages)
@@ -252,7 +252,7 @@ namespace Backend.Repositories
             }
         }
 
-        public async Task<Shipment> GetShipmentById(int shipmentId)
+        public async Task<Shipment?> GetShipmentById(int shipmentId)
         {
             if (!await ShipmentExists(shipmentId))
             {
@@ -271,7 +271,7 @@ namespace Backend.Repositories
             return shipment;
         }
 
-        public async Task<GetShipmentDto> GetShipmentDtoById(int shipmentId)
+        public async Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId)
         {
             if (!await ShipmentExists(shipmentId))
             {
@@ -292,7 +292,7 @@ namespace Backend.Repositories
             return shipmentDto;
         }
 
-        public async Task<ICollection<GetTransporterDto>> GetTransportersWithAvailableVehicles(DateTime shipmentDate)
+        public async Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate)
         {
             var transportersWithAvailableVehicles = await _context.Transporters
                 .Include(t => t.Vehicles)
@@ -300,31 +300,12 @@ namespace Backend.Repositories
                 .OrderBy(t => t.Id)
                 .ToListAsync();
 
-            var transportersWithAvailableVehiclesDto = transportersWithAvailableVehicles
-                .Select(t =>
-                {
-                    var transporterDto = _mapper.Map<GetTransporterDto>(t);
-
-                    // Load related entities for each vehicle before applying ToList
-                    transporterDto.AvailableVehicles = t.Vehicles!
-                        .Where(v => v.IsAvailable && !v.TransporterShipments!.Any(ts => ts.Shipment!.ShipmentDate == shipmentDate))
-                        .Select(v =>
-                        {
-                            var vehicleDto = _mapper.Map<GetVehicleDto>(v);
-                            vehicleDto.VehicleImages = _mapper.Map<List<VehicleImage>>(v.VehicleImages);
-                            // Map other properties as needed
-                            return vehicleDto;
-                        })
-                        .ToList();
-
-                    return transporterDto;
-                })
-                .ToList();
-
-            return transportersWithAvailableVehiclesDto;
+            return _mapper.Map<ICollection<GetTransporterDto>>(transportersWithAvailableVehicles);
         }
 
-        public async Task<List<Transporter>> MatchTransporters(SearchCriteria criteria)
+
+
+        public async Task<List<Transporter>?> MatchTransporters(SearchCriteria criteria)
         {
             var matchedTransporters = await _context.Transporters
                 .Include(t => t.Vehicles)
@@ -340,9 +321,9 @@ namespace Backend.Repositories
 
         public async Task<bool> ModifyShipmentDate(int shipmentId, DateTime newDate)
         {
-            Shipment shipment = await GetShipmentById(shipmentId);
+            Shipment? shipment = await GetShipmentById(shipmentId);
 
-            int daysDifference = (shipment.ShipmentDate - DateTime.Now).Days;
+            int daysDifference = (shipment!.ShipmentDate - DateTime.Now).Days;
 
             if (daysDifference > 3)
             {
@@ -359,8 +340,8 @@ namespace Backend.Repositories
 
         public async Task<bool> NegociatePrice(int shipmentId, int newPrice)
         {
-            Shipment shipment = await GetShipmentById(shipmentId);
-            shipment.Price = newPrice;
+            Shipment? shipment = await GetShipmentById(shipmentId);
+            shipment!.Price = newPrice;
 
             return await Save();
         }

@@ -34,7 +34,7 @@ namespace Backend.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<GetVehicleDto>))]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        [Authorize(Roles = "Owner")]
+        // [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetAvailableVehicles([FromQuery] DateTime? shipmentDate)
         {
             try
@@ -54,23 +54,24 @@ namespace Backend.Controllers
 
 
         [HttpGet("get-available-transporters")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<GetTransporterDto>))]
+        // [ProducesResponseType(200, Type = typeof(ICollection<Transporter>))]
+        [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        [Authorize(Roles = "Owner")]
+        // [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetTransportersWithAvailableVehicles([FromQuery] DateTime? shipmentDate)
         {
             try
             {
-                var transporters = await _shipmentRepository.GetTransportersWithAvailableVehicles(shipmentDate ?? DateTime.Now);
+                IEnumerable<GetTransporterDto>? transporters = await _shipmentRepository.GetTransportersWithAvailableVehicles(shipmentDate ?? DateTime.Now);
 
                 return Ok(new { status = "success", message = transporters });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Log the exception details
 
-                ModelState.AddModelError("Error", "An error occurred while retrieving data.");
+                ModelState.AddModelError("Error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
@@ -198,14 +199,14 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("{shipmentId}")]
+        [HttpGet("search-transporters")]
         [ProducesResponseType(200, Type = typeof(GetShipmentDto))]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> SearchTransporters(SearchCriteria criteria)
         {
-            List<Transporter> matchedTransporters = await _shipmentRepository.MatchTransporters(criteria);
+            List<Transporter>? matchedTransporters = await _shipmentRepository.MatchTransporters(criteria);
 
             return Ok(matchedTransporters);
         }

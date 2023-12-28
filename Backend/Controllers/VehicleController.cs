@@ -32,9 +32,9 @@ namespace Backend.Controllers
 
                 return Ok(new { status = "success", message = vehicles });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ModelState.AddModelError("Error", "An error occurred while retrieving data.");
+                ModelState.AddModelError("Error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }

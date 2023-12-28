@@ -79,7 +79,7 @@ namespace Backend.Repositories
             return await Save();
         }
 
-        public async Task<Vehicle> GetVehicleById(int vehicleId)
+        public async Task<Vehicle?> GetVehicleById(int vehicleId)
         {
             var vehicle = await _context.Vehicles
                             .Include(v => v.VehicleImages)
@@ -91,7 +91,7 @@ namespace Backend.Repositories
             return vehicle;
         }
 
-        public async Task<ICollection<GetVehicleDto>> GetVehicles()
+        public async Task<ICollection<GetVehicleDto>?> GetVehicles()
         {
             var vehicles = await _context.Vehicles
                 .Include(v => v.VehicleImages)
@@ -102,7 +102,7 @@ namespace Backend.Repositories
             return vehicleDtos;
         }
 
-        public async Task<ICollection<Vehicle>> GetVehiclesByTransporterId(int transporterId)
+        public async Task<ICollection<Vehicle>?> GetVehiclesByTransporterId(int transporterId)
         {
             var transporterExists = await _context.Transporters.AnyAsync(v => v.Id == transporterId);
 

@@ -1,4 +1,5 @@
 using System.Text;
+using Backend.CachedRepositories;
 using Backend.Data;
 using Backend.Interfaces;
 using Backend.Repositories;
@@ -6,22 +7,41 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Scrutor;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
+// Load environment variables from .env file
+DotNetEnv.Env.Load();
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+//Memory Cache Dependency Injection
+builder.Services.AddMemoryCache();
+builder.Services.AddStackExchangeRedisCache(redisOptions =>
+{
+
+    string? connectionRedis = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
+    redisOptions.Configuration = connectionRedis;
+
+});
 
 //Dependency Injection
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
-builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
 
-// Load environment variables from .env file
-DotNetEnv.Env.Load();
+// builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
+
+// Included redis memory cache for vehicle repo
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.Decorate<IVehicleRepository, CachedVehicleRepository>();
+// Included redis memory cache for shipment repo
+builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
+builder.Services.Decorate<IShipmentRepository, CachedShipmentRepository>();
+
+
 
 // Enable CORS
 var corsOrigin = Environment.GetEnvironmentVariable("CORS");
