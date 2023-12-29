@@ -18,7 +18,8 @@ DotNetEnv.Env.Load();
 builder.Services.AddControllers();
 
 //Memory Cache Dependency Injection
-builder.Services.AddMemoryCache();
+// builder.Services.AddMemoryCache();
+
 builder.Services.AddStackExchangeRedisCache(redisOptions =>
 {
 
@@ -40,6 +41,9 @@ builder.Services.Decorate<IVehicleRepository, CachedVehicleRepository>();
 // Included redis memory cache for shipment repo
 builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
 builder.Services.Decorate<IShipmentRepository, CachedShipmentRepository>();
+// Included redis memory cache for auth repo
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.Decorate<IAuthRepository, CachedAuthRepository>();
 
 
 
