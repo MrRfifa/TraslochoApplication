@@ -29,11 +29,27 @@ namespace Backend.CachedRepositories
 
         public Task<bool> AcceptShipment(int shipmentId, int transporterId)
         {
+
+            string shipment = $"shipment-{shipmentId}";
+            string shipmentDto = $"shipment-dto-{shipmentId}";
+            string shipmentExists = $"shipment-exists-{shipmentId}";
+
+            _distributedCache.Remove(shipment);
+            _distributedCache.Remove(shipmentDto);
+            _distributedCache.Remove(shipmentExists);
+
             return _decorated.AcceptShipment(shipmentId, transporterId);
         }
 
         public Task<bool> CancelShipment(int shipmentId)
         {
+            string shipment = $"shipment-{shipmentId}";
+            string shipmentDto = $"shipment-dto-{shipmentId}";
+            string shipmentExists = $"shipment-exists-{shipmentId}";
+
+            _distributedCache.Remove(shipment);
+            _distributedCache.Remove(shipmentDto);
+            _distributedCache.Remove(shipmentExists);
             return _decorated.CancelShipment(shipmentId);
         }
 
@@ -211,11 +227,27 @@ namespace Backend.CachedRepositories
 
         public Task<bool> ModifyShipmentDate(int shipmentId, DateTime newDate)
         {
+            string shipment = $"shipment-{shipmentId}";
+            string shipmentDto = $"shipment-dto-{shipmentId}";
+            string shipmentExists = $"shipment-exists-{shipmentId}";
+
+            _distributedCache.Remove(shipment);
+            _distributedCache.Remove(shipmentDto);
+            _distributedCache.Remove(shipmentExists);
+
             return _decorated.ModifyShipmentDate(shipmentId, newDate);
         }
 
         public Task<bool> NegociatePrice(int shipmentId, int newPrice)
         {
+            string shipment = $"shipment-{shipmentId}";
+            string shipmentDto = $"shipment-dto-{shipmentId}";
+            string shipmentExists = $"shipment-exists-{shipmentId}";
+
+            _distributedCache.Remove(shipment);
+            _distributedCache.Remove(shipmentDto);
+            _distributedCache.Remove(shipmentExists);
+            
             return _decorated.NegociatePrice(shipmentId, newPrice);
         }
 

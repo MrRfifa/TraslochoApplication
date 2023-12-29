@@ -72,13 +72,6 @@ namespace Backend.Repositories
             return await Save();
         }
 
-        public async Task<bool> DeleteVehicle(int vehicleId)
-        {
-            var vehicle = GetVehicleById(vehicleId);
-            _context.Remove(vehicle);
-            return await Save();
-        }
-
         public async Task<Vehicle?> GetVehicleById(int vehicleId)
         {
             var vehicle = await _context.Vehicles
@@ -128,5 +121,34 @@ namespace Backend.Repositories
         {
             return await _context.Vehicles.AnyAsync(e => e.Id == vehicleId);
         }
+
+        public async Task<bool> MarkVehicleAsAvailable(int vehicleId)
+        {
+            var vehicle = await GetVehicleById(vehicleId);
+            if (vehicle is not null)
+            {
+                vehicle.IsAvailable = true;
+                return await Save();
+            }
+            else
+            {
+                throw new Exception($"Vehicle with Id {vehicleId} is not found.");
+            }
+        }
+
+        public async Task<bool> MarkVehicleAsUnavailable(int vehicleId)
+        {
+            var vehicle = await GetVehicleById(vehicleId);
+            if (vehicle is not null)
+            {
+                vehicle.IsAvailable = false;
+                return await Save();
+            }
+            else
+            {
+                throw new Exception($"Vehicle with Id {vehicleId} is not found.");
+            }
+        }
+
     }
 }

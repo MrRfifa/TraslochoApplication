@@ -24,12 +24,47 @@ namespace Backend.CachedRepositories
 
         public Task<bool> CreateVehicle(CreateVehicleDto vehicle, int transporterId)
         {
-            return _decorated.CreateVehicle(vehicle, transporterId);
+            var result = _decorated.CreateVehicle(vehicle, transporterId);
+            // Invalidate the cache entry associated with the transporters list
+            string availableVehicles = "available-vehicles";
+            string trasnporterVehicles = $"transporter-{transporterId}-vehicles";
+
+            _distributedCache.Remove(availableVehicles);
+            _distributedCache.Remove(trasnporterVehicles);
+
+            return result;
         }
 
-        public Task<bool> DeleteVehicle(int vehicleId)
+        public Task<bool> MarkVehicleAsUnavailable(int vehicleId)
         {
-            return _decorated.DeleteVehicle(vehicleId);
+            var result = _decorated.MarkVehicleAsUnavailable(vehicleId);
+
+            string availableVehicles = "available-vehicles";
+            string vehicle = $"vehicle-{vehicleId}";
+            string vehicleExists = $"vehicle-exists-{vehicleId}";
+            string trasnporterVehicles = "transporter-*-vehicles";
+
+            _distributedCache.Remove(availableVehicles);
+            _distributedCache.Remove(trasnporterVehicles);
+            _distributedCache.Remove(vehicleExists);
+            _distributedCache.Remove(vehicle);
+            return result;
+        }
+
+        public Task<bool> MarkVehicleAsAvailable(int vehicleId)
+        {
+            var result = _decorated.MarkVehicleAsAvailable(vehicleId);
+
+            string availableVehicles = "available-vehicles";
+            string vehicle = $"vehicle-{vehicleId}";
+            string vehicleExists = $"vehicle-exists-{vehicleId}";
+            string trasnporterVehicles = "transporter-*-vehicles";
+
+            _distributedCache.Remove(availableVehicles);
+            _distributedCache.Remove(trasnporterVehicles);
+            _distributedCache.Remove(vehicleExists);
+            _distributedCache.Remove(vehicle);
+            return result;
         }
 
         public async Task<Vehicle?> GetVehicleById(int vehicleId)

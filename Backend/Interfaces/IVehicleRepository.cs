@@ -10,7 +10,8 @@ namespace Backend.Interfaces
         Task<ICollection<Vehicle>?> GetVehiclesByTransporterId(int transporterId);
         Task<bool> VehicleExists(int vehicleId);
         Task<bool> CreateVehicle(CreateVehicleDto vehicle, int transporterId);
-        Task<bool> DeleteVehicle(int vehicleId);
+        Task<bool> MarkVehicleAsUnavailable(int vehicleId);
+        Task<bool> MarkVehicleAsAvailable(int vehicleId);
         Task<bool> Save();
     }
 }

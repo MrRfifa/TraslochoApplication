@@ -62,24 +62,50 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpDelete("{vehicleId}")]
+        [HttpPost("available/{vehicleId}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> DeleteVehicle(int vehicleId)
+        public async Task<IActionResult> MarkVehicleAsUnavailable(int vehicleId)
         {
             try
             {
                 if (!await _vehicleRepository.VehicleExists(vehicleId))
                     return NotFound();
 
-                if (!await _vehicleRepository.DeleteVehicle(vehicleId))
+                if (!await _vehicleRepository.MarkVehicleAsUnavailable(vehicleId))
                 {
-                    ModelState.AddModelError("", "Something went wrong deleting the vehicle");
+                    ModelState.AddModelError("", "Something went wrong updating the vehicle");
                     return BadRequest(new { status = "fail", message = ModelState });
                 }
-                return Ok(new { status = "success", message = "Vehicle deleted successfully." });
+                return Ok(new { status = "success", message = "Vehicle is marked as unavailable successfully." });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                return BadRequest(ModelState);
+            }
+        }
+
+        [HttpPost("unavailable/{vehicleId}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> MarkVehicleAsAvailable(int vehicleId)
+        {
+            try
+            {
+                if (!await _vehicleRepository.VehicleExists(vehicleId))
+                    return NotFound();
+
+                if (!await _vehicleRepository.MarkVehicleAsAvailable(vehicleId))
+                {
+                    ModelState.AddModelError("", "Something went wrong updating the vehicle");
+                    return BadRequest(new { status = "fail", message = ModelState });
+                }
+                return Ok(new { status = "success", message = "Vehicle is marked as available successfully." });
             }
             catch (Exception ex)
             {
