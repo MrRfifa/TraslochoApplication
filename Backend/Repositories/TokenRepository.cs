@@ -46,7 +46,7 @@ namespace Backend.Repositories
             {
                 var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey));
 
-                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                 var token = new JwtSecurityToken(
                     claims: claims,
