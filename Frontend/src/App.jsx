@@ -1,34 +1,30 @@
-// import "./App.css";
-import { useEffect, useState } from "react";
-import io from "socket.io-client";
-const userEmail = "user@example.com";
-const socket = io.connect(`http://localhost:5000?email=${userEmail}`);
+import { BrowserRouter as Router } from "react-router-dom";
+import AuthVerifyService from "./Services/Auth/AuthVerifyService";
+import AuthRoute from "./Routes/AuthRoute";
+import UsersRoute from "./Routes/UsersRoute";
 
 function App() {
-  const [message, setMessage] = useState("");
-  const [messageReceived, setMessageReceived] = useState("");
-  function sendMessage() {
-    console.log("Button clicked");
-    socket.emit("send_message", { message: message });
-  }
-  useEffect(() => {
-    socket.on("receive_message", (data) => {
-      setMessageReceived(data.message);
-    });
-  }, [socket]);
+  const authStatus = AuthVerifyService.AuthVerify();
 
-  return (
-    <div className="App">
-      <input
-        placeholder="Message"
-        onChange={(e) => {
-          setMessage(e.target.value);
-        }}
-      />
-      <button onClick={sendMessage}>Send message</button>
-      <h1>Message: {messageReceived}</h1>
-    </div>
-  );
+  if (authStatus === 0) {
+    return (
+      <Router>
+        <AuthRoute />
+      </Router>
+    );
+  }
+  if (authStatus === 1) {
+    return (
+      <Router>
+        <UsersRoute />
+      </Router>
+      // <AuthContextProvider>
+
+      // </AuthContextProvider>
+    );
+  }
+
+  return null;
 }
 
 export default App;
