@@ -11,9 +11,16 @@ const AuthVerify = () => {
     if (
       decodedToken[
         "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-      ] === "owner"
+      ] === "Owner"
     ) {
       return 1;
+    }
+    if (
+      decodedToken[
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+      ] === "Transporter"
+    ) {
+      return 2;
     }
   }
   return 0;

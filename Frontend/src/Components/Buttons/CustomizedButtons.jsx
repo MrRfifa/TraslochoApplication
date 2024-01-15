@@ -6,7 +6,7 @@ export const LabelDestinationLinkButton = ({ label, destination }) => {
     <Link
       to={destination}
       className={
-        "bg-[#FCA311] text-white md:ml-8 font-semibold px-3 py-1 rounded duration-500 md:static hover:scale-110"
+        "bg-[#FCA311] text-white font-semibold px-3 py-2 rounded duration-500 md:static hover:scale-110"
       }
     >
       {label}
@@ -15,6 +15,6 @@ export const LabelDestinationLinkButton = ({ label, destination }) => {
 };
 
 LabelDestinationLinkButton.propTypes = {
-  label: PropTypes.string.isRequired,
+  label: PropTypes.any.isRequired,
   destination: PropTypes.string.isRequired,
 };

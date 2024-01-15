@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
+const API_URL = import.meta.env.VITE_APP_API_URL;
 
-const login = (email, password) =>
-  axios
+const login = (email, password) => {
+  return axios
     .post(`${API_URL}Auth/login`, {
       email,
       password,
@@ -12,7 +12,7 @@ const login = (email, password) =>
       if (response.data && response.data.token) {
         const token = "bearer " + response.data.token;
         localStorage.setItem("token", token);
-        return { success: true, token };
+        return { success: true, message: "Logged in successfully!", token };
       } else if (response == "Not verified.") {
         return { success: false, error: "Not verified" };
       } else {
@@ -20,41 +20,63 @@ const login = (email, password) =>
       }
     })
     .catch((error) => {
-      console.error("Login error:", error);
-      return { success: false, error: error.response.data };
+      console.error("Login error:", error.response.data);
+      return {
+        success: false,
+        error: error.response.data,
+      };
     });
+};
 
-const register = (
-  firstName,
-  lastName,
-  gender,
-  dateOfBirth,
-  email,
-  password,
-  confirmPassword
-) =>
-  axios
-    .post(`${API_URL}Auth/register`, {
-      firstName,
-      lastName,
-      gender,
-      dateOfBirth,
-      email,
-      password,
-      confirmPassword,
-      role: "owner",
+const logout = (userId) => {
+  const token = localStorage.getItem("token");
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: token,
+  };
+  return axios
+    .post(`${API_URL}Auth/logout/${userId}`, {
+      headers,
     })
     .then((response) => {
-      if (response.data) {
+      if (response.status >= 200 && response.status < 300) {
+        localStorage.removeItem("token");
+        window.location.reload("/");  
+        return { success: true, message: "Logged out successfully!" };
+      } else {
+        return { success: false, error: "Logout failed" };
+      }
+    })
+    .catch((error) => {
+      console.error("Logout error:", error.response.data);
+      return {
+        success: false,
+        error: error.response.data,
+      };
+    });
+};
+
+const register = (fd, transporter) => {
+  const endpoint = transporter ? "register-transporter" : "register-owner";
+
+  return axios
+    .post(`${API_URL}Auth/${endpoint}`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((response) => {
+      if (response.status === 200) {
         return { success: true, message: "Signed up successfully!" };
       } else {
         return { success: false, error: "Registration failed" };
       }
     })
     .catch((error) => {
-      console.error("Registration error:", error);
-      return { success: false, error: error.response.data };
+      return {
+        success: false,
+        error: error.response.data.error.errors[0].errorMessage,
+      };
     });
+};
 
 const forgetPassword = (email) =>
   axios
@@ -109,14 +131,15 @@ const resetPassword = (token, password, confirmPassword) =>
       return { success: false, error: error.response.data };
     });
 
-const getUserInfo = (authToken) => {
+const getUserInfo = () => {
+  const token = localStorage.getItem("token");
   const headers = {
     "Content-Type": "application/json",
-    Authorization: authToken,
+    Authorization: token,
   };
 
   return axios
-    .get(`${API_URL}User/info`, {
+    .get(`${API_URL}User/user-info`, {
       headers,
     })
     .then((response) => {
@@ -134,14 +157,14 @@ const getUserInfo = (authToken) => {
     });
 };
 
-const getUserSpecificInfo = (userId) => {
+const getUserSpecificInfo = () => {
   const headers = {
     "Content-Type": "application/json",
     Authorization: localStorage.getItem("token"),
   };
 
   return axios
-    .get(`${API_URL}User/info/${userId}`, {
+    .get(`${API_URL}User/spec-info/`, {
       headers,
     })
     .then((response) => {
@@ -161,6 +184,7 @@ const getUserSpecificInfo = (userId) => {
 
 const AuthService = {
   login,
+  logout,
   register,
   forgetPassword,
   resetPassword,

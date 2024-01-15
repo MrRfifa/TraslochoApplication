@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import mainVideo from "../assets/home/video-1.mp4"; // Adjust the path to your video file
+import { LabelDestinationLinkButton } from "../Components/Buttons/CustomizedButtons";
 
 const Main = () => {
   const { t } = useTranslation("main");
   return (
-    <div id="home" className="flex justify-center h-screen relative -z-10 ">
+    <div id="home" className="flex justify-center h-screen relative ">
       {/* Video background */}
       <video
         className="absolute top-0 object-cover w-full h-full "
@@ -20,10 +21,11 @@ const Main = () => {
         <h1 className="text-4xl font-bold mb-4">{t("heading")}</h1>
         <p className="text-lg text-center mb-8">{t("content")}</p>
         <div className="flex space-x-4">
-          <button className="bg-[#FCA311] text-white font-semibold px-4 py-2 rounded">
-            {t("button1")}
-          </button>
-          <button className="bg-transparent text-white border border-white font-semibold px-4 py-2 rounded">
+          <LabelDestinationLinkButton
+            destination="/register"
+            label={t("button1")}
+          />
+          <button className="bg-transparent text-white border border-white font-semibold px-4 py-2 rounded hover:scale-110 duration-500">
             {t("button2")}
           </button>
         </div>
