@@ -20,13 +20,19 @@ const initializeSocket = (server) => {
       45 * 60
     );
 
+    socket.on("join_room", (data) => {
+      socket.join(data);
+      console.log(`User with email: ${socket.userEmail} joined room ${data} `);
+    });
+
     socket.on("send_message", async (data) => {
       // Example Redis Usage
       // ...
       // Example MongoDB Usage
       // ...
-
-      socket.broadcast.emit("receive_message", data);
+      // console.log(data);
+      socket.to(data.room).emit("receive_message", data);
+      // socket.broadcast.emit("receive_message", data);
     });
   });
 };
