@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using Backend.Data;
 using Backend.Dtos.Requests;
 using Backend.Interfaces;
-using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +36,7 @@ namespace Backend.Repositories
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.DateOfBirth, user.DateOfBirth.ToString()),
-                new Claim(ClaimTypes.Sid, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
             };
 

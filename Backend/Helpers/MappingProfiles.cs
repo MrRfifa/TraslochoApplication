@@ -1,10 +1,10 @@
 using AutoMapper;
-using Backend.Dtos;
 using Backend.Dtos.AddressDto;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
 using Backend.Dtos.VehicleDtos;
 using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 
 namespace Backend.Helpers
 {

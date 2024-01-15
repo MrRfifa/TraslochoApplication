@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Backend.Data;
-using Backend.Dtos;
-using Backend.Dtos.RegisterUsers;
+using Backend.Dtos.UsersDto;
 using Backend.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Backend.CachedRepositories
@@ -59,12 +55,31 @@ namespace Backend.CachedRepositories
             return token;
         }
 
-        public Task<bool> RegisterOwner(RegisterOwnerDto userCreated)
+        public async Task<bool> Logout(int userId)
+        {
+            var user = await _context.Users
+                .Where(u => u.Id == userId)
+                .FirstOrDefaultAsync();
+
+            string cacheKey = $"login_token_{user!.Email}";
+            var cachedToken = await _distributedCache.GetStringAsync(cacheKey);
+
+            if (cachedToken != null)
+            {
+                await _distributedCache.RemoveAsync(cacheKey);
+                return await _decorated.Logout(userId);
+            }
+            // If the token was not found in the cache, consider it a successful logout
+            return true;
+        }
+
+
+        public Task<bool> RegisterOwner(RegisterUserDto userCreated)
         {
             return _decorated.RegisterOwner(userCreated);
         }
 
-        public Task<bool> RegisterTransporter(RegisterTransporterDto userCreated)
+        public Task<bool> RegisterTransporter(RegisterUserDto userCreated)
         {
             return _decorated.RegisterTransporter(userCreated);
         }
@@ -78,5 +93,6 @@ namespace Backend.CachedRepositories
         {
             return _decorated.VerifyAccount(token);
         }
+
     }
 }

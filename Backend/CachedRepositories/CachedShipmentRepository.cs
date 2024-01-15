@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Backend.Data;
 using Backend.Dtos;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
+using Backend.Dtos.UsersDto;
 using Backend.Dtos.VehicleDtos;
 using Backend.Interfaces;
 using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 
@@ -190,7 +188,7 @@ namespace Backend.CachedRepositories
             return transporters;
         }
 
-        public async Task<List<Transporter>?> MatchTransporters(SearchCriteria criteria)
+        public async Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria)
         {
             string key = $"matched-transporters-{criteria.Country}-{criteria.City}-{criteria.TransporterType}";
             string? cachedMatchedTransporters = await _distributedCache.GetStringAsync(key);
@@ -247,7 +245,7 @@ namespace Backend.CachedRepositories
             _distributedCache.Remove(shipment);
             _distributedCache.Remove(shipmentDto);
             _distributedCache.Remove(shipmentExists);
-            
+
             return _decorated.NegociatePrice(shipmentId, newPrice);
         }
 
@@ -281,5 +279,6 @@ namespace Backend.CachedRepositories
             // If cachedShipment is not null, it means that the vehicle exists.
             return true;
         }
+
     }
 }

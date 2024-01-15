@@ -1,3 +1,4 @@
+using Backend.Models.classes.UsersEntities;
 using Backend.Models.enums;
 
 namespace Backend.Models.classes

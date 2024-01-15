@@ -1,5 +1,6 @@
-using Backend.Dtos;
+using System.Security.Claims;
 using Backend.Dtos.Requests;
+using Backend.Dtos.UsersDto;
 using Backend.Helpers;
 using Backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -154,7 +155,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("info")]
+        [HttpGet("user-info")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -173,15 +174,24 @@ namespace Backend.Controllers
         }
 
 
-        [HttpGet("info/{userId}")]
+        [HttpGet("spec-info")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetUserSpecificInfo(int userId)
+        public async Task<IActionResult> GetUserSpecificInfo()
         {
             try
             {
+                var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+
+                if (userIdClaim == null)
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                int userId = int.Parse(userIdClaim.Value);
+
                 var user = await _userRepository.GetUserById(userId);
 
                 if (user is null)
@@ -205,6 +215,7 @@ namespace Backend.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
 
 
     }

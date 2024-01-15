@@ -1,20 +1,15 @@
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.Serialization;
 using Backend.Models.enums;
 
-namespace Backend.Models.classes
+namespace Backend.Models.classes.UsersEntities
 {
-    [KnownType(typeof(Transporter))]
-    [KnownType(typeof(Owner))]
-    public class User
+    public class Company
     {
+
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "First name is required.")]
-        public string FirstName { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Last name is required.")]
-        public string LastName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Company name is required.")]
+        public string CompanyName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
@@ -28,9 +23,6 @@ namespace Backend.Models.classes
         [Required(ErrorMessage = "Phone Number is required.")]
         public string PhoneNumber { get; set; } = string.Empty;
 
-        [DataType(DataType.Date)]
-        public DateTime DateOfBirth { get; set; }
-
         [Required(ErrorMessage = "The address is required.")]
         public UserAddress UserAddress { get; set; } = new UserAddress();
 
@@ -41,5 +33,12 @@ namespace Backend.Models.classes
         public byte[] FileContentBase64 { get; set; } = Array.Empty<byte>();
         public UserTokens UserTokens { get; set; } = new UserTokens();
         public UserRole Role { get; set; }
+
+
+
+        public TransporterType TransporterType { get; set; }
+        public ICollection<Shipment>? Shipments { get; set; }
+        public ICollection<TransporterShipment>? TransporterShipments { get; set; }
+        public ICollection<Vehicle>? Vehicles { get; set; }
     }
 }

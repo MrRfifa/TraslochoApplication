@@ -1,9 +1,10 @@
 
-using Backend.Dtos;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
+using Backend.Dtos.UsersDto;
 using Backend.Dtos.VehicleDtos;
 using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 
 namespace Backend.Interfaces
 {
@@ -15,7 +16,7 @@ namespace Backend.Interfaces
         Task<Shipment?> GetShipmentById(int shipmentId);
         Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId);
         Task<bool> ShipmentExists(int shipmentId);
-        Task<List<Transporter>?> MatchTransporters(SearchCriteria criteria);
+        Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria);
 
         Task<bool> CreateShipment(CreateShipmentDto shipment, int transporterId, int ownerId, int transporterVehicleId);
         Task<bool> NegociatePrice(int shipmentId, int newPrice);

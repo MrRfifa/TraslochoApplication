@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Backend.Dtos.AddressDto;
-using Backend.Models.classes;
 using Backend.Models.enums;
 
-namespace Backend.Dtos.RegisterUsers
+namespace Backend.Dtos.UsersDto
 {
     public class RegisterUserDto
     {
@@ -36,7 +35,7 @@ namespace Backend.Dtos.RegisterUsers
         [Required(ErrorMessage = "Date of birth is required.")]
         public DateTime DateOfBirth { get; set; }
 
-        [Required(ErrorMessage = "Profile image is required.")]
+        [Required(ErrorMessage = "User address is required.")]
         public CreateAddressDto UserAddress { get; set; } = new CreateAddressDto();
 
         [Required(ErrorMessage = "Profile image is required.")]

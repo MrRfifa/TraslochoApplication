@@ -1,5 +1,5 @@
 
-namespace Backend.Dtos
+namespace Backend.Dtos.UsersDto
 {
     public record GetUserDto
     {

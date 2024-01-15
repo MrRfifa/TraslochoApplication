@@ -1,10 +1,9 @@
 
-using Backend.Models.classes;
 using Backend.Models.enums;
 
-namespace Backend.Dtos
+namespace Backend.Dtos.UsersDto
 {
-    public struct SearchCriteria
+    public struct SearchUserCriteria
     {
         public EUCountries Country { get; set; }
         public string City { get; set; }

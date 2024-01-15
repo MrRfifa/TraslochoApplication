@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Backend.Dtos
+using System.ComponentModel.DataAnnotations;
+
+namespace Backend.Dtos.UsersDto
 {
     public class LoginUserDto
     {
-        [Required (ErrorMessage = "Email is required.")]
+        [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; } = string.Empty;
 

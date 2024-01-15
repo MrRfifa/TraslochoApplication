@@ -34,7 +34,7 @@ namespace Backend.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("Error", ex.Message);
+                ModelState.AddModelError("error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
@@ -57,7 +57,7 @@ namespace Backend.Controllers
 
             catch (Exception ex)
             {
-                ModelState.AddModelError("Error", ex.Message);
+                ModelState.AddModelError("error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
@@ -76,14 +76,14 @@ namespace Backend.Controllers
 
                 if (!await _vehicleRepository.MarkVehicleAsUnavailable(vehicleId))
                 {
-                    ModelState.AddModelError("", "Something went wrong updating the vehicle");
+                    ModelState.AddModelError("error", "Something went wrong updating the vehicle");
                     return BadRequest(new { status = "fail", message = ModelState });
                 }
                 return Ok(new { status = "success", message = "Vehicle is marked as unavailable successfully." });
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", ex.Message);
+                ModelState.AddModelError("error", ex.Message);
                 return BadRequest(ModelState);
             }
         }
@@ -102,14 +102,14 @@ namespace Backend.Controllers
 
                 if (!await _vehicleRepository.MarkVehicleAsAvailable(vehicleId))
                 {
-                    ModelState.AddModelError("", "Something went wrong updating the vehicle");
+                    ModelState.AddModelError("error", "Something went wrong updating the vehicle");
                     return BadRequest(new { status = "fail", message = ModelState });
                 }
                 return Ok(new { status = "success", message = "Vehicle is marked as available successfully." });
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", ex.Message);
+                ModelState.AddModelError("error", ex.Message);
                 return BadRequest(ModelState);
             }
         }
@@ -129,7 +129,7 @@ namespace Backend.Controllers
             // Save the vehicle to the database
             if (!await _vehicleRepository.CreateVehicle(vehicleCreate, transporterId))
             {
-                ModelState.AddModelError("", "Something went wrong while saving the vehicle.");
+                ModelState.AddModelError("error", "Something went wrong while saving the vehicle.");
                 return StatusCode(500, ModelState);
             }
 
@@ -150,7 +150,7 @@ namespace Backend.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("Error", ex.Message);
+                ModelState.AddModelError("error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }

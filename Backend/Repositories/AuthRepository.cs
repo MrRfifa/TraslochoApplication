@@ -1,12 +1,11 @@
 using AutoMapper;
 using Backend.Data;
 using Backend.Dtos;
-using Backend.Dtos.AddressDto;
-using Backend.Dtos.RegisterUsers;
+using Backend.Dtos.UsersDto;
 using Backend.Interfaces;
 using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 using Backend.Models.enums;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories
 {
@@ -46,14 +45,14 @@ namespace Backend.Repositories
             // Verify the password
             if (!_tokenRepository.VerifyPasswordHash(userLogged.Password, user.PasswordHash, user.PasswordSalt))
             {
-                throw new Exception("Incorrect password.");
+                throw new Exception("Authentication failed. Please check your credentials.");
             }
 
             // Create and return the token
             return _tokenRepository.CreateToken(user);
         }
 
-        public async Task<bool> RegisterTransporter(RegisterTransporterDto userCreated)
+        public async Task<bool> RegisterTransporter(RegisterUserDto userCreated)
         {
             try
             {
@@ -78,7 +77,7 @@ namespace Backend.Repositories
                         FirstName = userCreated.FirstName,
                         Email = userCreated.Email,
                         Role = UserRole.Transporter,
-                        TransporterType = userCreated.TransporterType,
+                        TransporterType = TransporterType.Private,
                         DateOfBirth = userCreated.DateOfBirth,
                         PasswordHash = passwordHash,
                         PasswordSalt = passwordSalt,
@@ -89,8 +88,8 @@ namespace Backend.Repositories
                             VerificationToken = await _tokenRepository.GenerateUniqueToken()
                         },
                         UserAddress = _mapper.Map<UserAddress>(userCreated.UserAddress),
-                        FileName = file.FileName,  // Assuming FileName is a property of User
-                        FileContentBase64 = bytes  // Assuming FileContentBase64 is a property of User
+                        FileName = file.FileName,
+                        FileContentBase64 = bytes
                     };
 
                     _context.Users.Add(userEntity);
@@ -104,7 +103,7 @@ namespace Backend.Repositories
             }
         }
 
-        public async Task<bool> RegisterOwner(RegisterOwnerDto userCreated)
+        public async Task<bool> RegisterOwner(RegisterUserDto userCreated)
         {
             try
             {
@@ -140,8 +139,8 @@ namespace Backend.Repositories
                             VerificationToken = await _tokenRepository.GenerateUniqueToken()
                         },
                         UserAddress = _mapper.Map<UserAddress>(userCreated.UserAddress),
-                        FileName = file.FileName,  // Assuming FileName is a property of User
-                        FileContentBase64 = bytes  // Assuming FileContentBase64 is a property of User
+                        FileName = file.FileName,
+                        FileContentBase64 = bytes
                     };
 
                     _context.Users.Add(userEntity);
@@ -173,6 +172,13 @@ namespace Backend.Repositories
             user.UserTokens.VerifiedAt = DateTime.Now;
             return await Save();
 
+        }
+
+        public async Task<bool> Logout(int userId)
+        {
+            var user = await _userRepository.GetUserById(userId);
+            //added this just for the cached repository to delete the token from redis
+            return true;
         }
     }
 }

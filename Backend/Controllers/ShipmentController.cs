@@ -1,18 +1,14 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
 using Backend.Dtos;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
+using Backend.Dtos.UsersDto;
 using Backend.Dtos.VehicleDtos;
 using Backend.Interfaces;
-using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Backend.Controllers
 {
@@ -34,7 +30,7 @@ namespace Backend.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<GetVehicleDto>))]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        // [Authorize(Roles = "Owner")]
+        [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetAvailableVehicles([FromQuery] DateTime? shipmentDate)
         {
             try
@@ -47,7 +43,7 @@ namespace Backend.Controllers
             {
                 // Log the exception details
 
-                ModelState.AddModelError("Error", "An error occurred while retrieving data.");
+                ModelState.AddModelError("error", "An error occurred while retrieving data.");
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
@@ -58,7 +54,7 @@ namespace Backend.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        // [Authorize(Roles = "Owner")]
+        [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetTransportersWithAvailableVehicles([FromQuery] DateTime? shipmentDate)
         {
             try
@@ -71,7 +67,7 @@ namespace Backend.Controllers
             {
                 // Log the exception details
 
-                ModelState.AddModelError("Error", ex.Message);
+                ModelState.AddModelError("error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
@@ -100,7 +96,7 @@ namespace Backend.Controllers
             {
                 // Log the exception details
 
-                ModelState.AddModelError("Error", ex.Message);
+                ModelState.AddModelError("error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
@@ -204,7 +200,7 @@ namespace Backend.Controllers
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
         [Authorize(Roles = "Owner")]
-        public async Task<IActionResult> SearchTransporters(SearchCriteria criteria)
+        public async Task<IActionResult> SearchTransporters(SearchUserCriteria criteria)
         {
             List<Transporter>? matchedTransporters = await _shipmentRepository.MatchTransporters(criteria);
 

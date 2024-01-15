@@ -28,9 +28,11 @@ namespace Backend.CachedRepositories
             // Invalidate the cache entry associated with the transporters list
             string availableVehicles = "available-vehicles";
             string trasnporterVehicles = $"transporter-{transporterId}-vehicles";
+            string availableTransporters = "available-transporters-for-shipments";
 
             _distributedCache.Remove(availableVehicles);
             _distributedCache.Remove(trasnporterVehicles);
+            _distributedCache.Remove(availableTransporters);
 
             return result;
         }

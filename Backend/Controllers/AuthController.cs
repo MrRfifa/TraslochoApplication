@@ -1,11 +1,10 @@
-using Backend.Dtos;
 using Backend.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Backend.Models.classes;
 using Backend.Dtos.Requests;
 using Backend.Helpers;
 using Microsoft.AspNetCore.Authorization;
-using Backend.Dtos.RegisterUsers;
+using Backend.Models.classes.UsersEntities;
+using Backend.Dtos.UsersDto;
 
 namespace Backend.Controllers
 {
@@ -30,7 +29,7 @@ namespace Backend.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(422)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> RegisterTrasporter([FromForm] RegisterTransporterDto transporterToCreate)
+        public async Task<IActionResult> RegisterTrasporter([FromForm] RegisterUserDto transporterToCreate)
         {
             try
             {
@@ -43,14 +42,15 @@ namespace Backend.Controllers
                 bool existingUser = await _userRepository.UserExistsByEmail(transporterToCreate.Email);
                 if (existingUser)
                 {
-                    ModelState.AddModelError("", "This email already exists");
+                    ModelState.AddModelError("error", "This email already exists");
                     return StatusCode(422, ModelState);
+                    // return BadRequest(new { status = "false", message = "This email already exists" });
                 }
 
                 // Register the user
                 if (!await _authRepository.RegisterTransporter(transporterToCreate))
                 {
-                    ModelState.AddModelError("", "Something went wrong while saving");
+                    ModelState.AddModelError("error", "Something went wrong while saving");
                     return StatusCode(500, ModelState);
                 }
 
@@ -87,7 +87,7 @@ namespace Backend.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(422)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> RegisterOwner([FromForm] RegisterOwnerDto ownerToCreate)
+        public async Task<IActionResult> RegisterOwner([FromForm] RegisterUserDto ownerToCreate)
         {
             try
             {
@@ -100,14 +100,14 @@ namespace Backend.Controllers
                 bool existingUser = await _userRepository.UserExistsByEmail(ownerToCreate.Email);
                 if (existingUser)
                 {
-                    ModelState.AddModelError("", "This email already exists");
+                    ModelState.AddModelError("error", "This email already exists");
                     return StatusCode(422, ModelState);
                 }
 
                 // Register the user
                 if (!await _authRepository.RegisterOwner(ownerToCreate))
                 {
-                    ModelState.AddModelError("", "Something went wrong while saving");
+                    ModelState.AddModelError("error", "Something went wrong while saving");
                     return StatusCode(500, ModelState);
                 }
 
@@ -267,6 +267,29 @@ namespace Backend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(400, ex.Message);
+            }
+        }
+
+        [HttpPost("logout/{userId}")]
+        public async Task<IActionResult> Logout(int userId)
+        {
+            try
+            {
+                // Assuming request.UserEmail contains the email of the user to log out
+                bool logoutResult = await _authRepository.Logout(userId);
+
+                if (logoutResult)
+                {
+                    return Ok(new { status = "success", message = "Logout successful." });
+                }
+                else
+                {
+                    return BadRequest(new { status = "faied", message = "Logout failed." });
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Internal server error." });
             }
         }
 
