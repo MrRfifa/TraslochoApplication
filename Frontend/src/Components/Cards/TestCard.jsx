@@ -1,7 +1,14 @@
 import PropTypes from "prop-types";
 import { FaComment } from "react-icons/fa6";
 
-const TestCard = ({ email, imageSrc, firstName, lastName, phoneNumber }) => {
+const TestCard = ({
+  email,
+  imageSrc,
+  firstName,
+  lastName,
+  phoneNumber,
+  addContactFunction,
+}) => {
   return (
     <div className="max-w-sm mx-auto bg-white shadow-md rounded-md overflow-hidden">
       <img
@@ -20,6 +27,7 @@ const TestCard = ({ email, imageSrc, firstName, lastName, phoneNumber }) => {
             size={40}
             color="#FCA311"
             className="hover:scale-110 hover:cursor-pointer"
+            onClick={addContactFunction}
           />
         </div>
       </div>
@@ -35,4 +43,5 @@ TestCard.propTypes = {
   firstName: PropTypes.string.isRequired,
   lastName: PropTypes.string.isRequired,
   phoneNumber: PropTypes.string.isRequired,
+  addContactFunction: PropTypes.func.isRequired,
 };

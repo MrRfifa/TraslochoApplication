@@ -1,37 +1,87 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import io from "socket.io-client";
-import UserSpecInfo from "../../Redux/SlicesCalls/UserSpecInfo";
+import UserInfo from "../../Redux/SlicesCalls/UserInfo";
 import Chat from "../../Components/Chat";
-// const userEmail = "user@example.com";
+import { getContactsCall } from "../../Helpers/Services/ContactServicesCall";
+import UserContact from "../../Components/USerContact";
+import messageImg from "../../assets/messages.svg";
 
 const Messages = () => {
-  const [room, setRoom] = useState("");
+  const [contactId, setContactId] = useState("");
+  const [showChat, setShowChat] = useState(false);
 
-  const state = useSelector((state) => state.userSpecInfo.value);
+  const [contacts, setContacts] = useState([]);
+  const [selectedContactIndex, setSelectedContactIndex] = useState(null);
 
-  UserSpecInfo();
+  const state = useSelector((state) => state.userInfo.value);
 
-  const socket = io.connect(`http://localhost:5000?email=${state.email}`);
+  UserInfo();
 
-  const joinRoom = () => {
-    if (room !== "") {
-      socket.emit("join_room", room);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const contactsData = await getContactsCall(state.id);
+        setContacts(contactsData);
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
+    };
+
+    fetchData();
+  }, [state.id]);
+
+  const socket = useMemo(
+    () => io.connect(`http://localhost:5000?id=${state.id}`),
+    [state.id]
+  );
+
+  const joinRoom = (roomId) => {
+    if (roomId !== "") {
+      socket.emit("join_room", roomId);
     }
   };
 
+  const handleContactClick = (index, contactId) => {
+    setContactId(contactId);
+    setShowChat(true);
+    setSelectedContactIndex(index);
+    joinRoom(contactId);
+  };
+
   return (
-    <div className="ml-24 mt-10">
-      <h3>Messages</h3>
-      <input
-        type="text"
-        placeholder="Room ID..."
-        onChange={(event) => {
-          setRoom(event.target.value);
-        }}
-      />
-      <button onClick={joinRoom}>Join a room</button>
-      <Chat socket={socket} email={state.email} room={room} />
+    <div className="ml-28 mt-20">
+      {/* <h3>Messages</h3> */}
+      <div className="grid grid-cols-2">
+        {/* Contacts section */}
+        <div className="flex flex-col space-y-5">
+          {contacts &&
+            contacts.map((contact, index) => (
+              <UserContact
+                key={index}
+                firstName={contact.message.firstName}
+                lastName={contact.message.lastName}
+                imgSrc={contact.message.fileContentBase64}
+                selected={index === selectedContactIndex}
+                handleContactClick={() => {
+                  handleContactClick(index, contact.contactId);
+                }}
+              />
+            ))}
+        </div>
+        {/* Chat section */}
+        <div className="max-h-[600px]">
+          {showChat ? (
+            <Chat
+              socket={socket}
+              userId={state.id.toString()}
+              contactId={contactId}
+            />
+          ) : (
+            <img className="w-[500px]" src={messageImg} alt="message image" />
+          )}
+        </div>
+      </div>
     </div>
   );
 };

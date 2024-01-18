@@ -1,13 +1,15 @@
-// import { useSelector } from "react-redux";
-// import UserInfo from "./UserInfo";
-// import UserSpecInfo from "../../Redux/SlicesCalls/UserSpecInfo";
+import { useSelector } from "react-redux";
+import UserInfo from "../../Redux/SlicesCalls/UserInfo";
 import TestCard from "../../Components/Cards/TestCard";
 import ShipmentService from "../../Services/Shipments/ShipmentService";
-// import TestCard from "../../Components/Cards/TestCard";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import { addContactCall } from "../../Helpers/Services/ContactServicesCall";
 
 const Dashboard = () => {
   const [transporters, setTransporters] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTransporters = async () => {
@@ -21,31 +23,37 @@ const Dashboard = () => {
     };
 
     fetchTransporters();
-  }, []); // Empty dependency array to run the effect only once when the component mounts
+  }, []);
 
-  console.log(transporters);
+  const connectedUserId = useSelector((state) => state.userInfo.value.id);
+  UserInfo();
 
   return (
-    <div>
-      hello
-      {transporters &&
-        transporters.map((transporter, index) => (
-          <TestCard
-            key={index}
-            email={transporter.email}
-            firstName={transporter.firstName}
-            lastName={transporter.lastName}
-            imageSrc={transporter.fileContentBase64}
-            phoneNumber={
-              "+" +
-              transporter.internationalPrefix +
-              " " +
-              transporter.phoneNumber
-            }
-          />
-        ))}
-      {/* <TestCard  /> */}
-    </div>
+    <>
+      <Toaster />
+      <div>
+        {transporters &&
+          transporters.map((transporter, index) => (
+            <TestCard
+              key={index}
+              email={transporter.email}
+              firstName={transporter.firstName}
+              lastName={transporter.lastName}
+              addContactFunction={() => {
+                addContactCall(connectedUserId, transporter.id, navigate);
+              }}
+              imageSrc={transporter.fileContentBase64}
+              phoneNumber={
+                "+" +
+                transporter.internationalPrefix +
+                " " +
+                transporter.phoneNumber
+              }
+            />
+          ))}
+        {/* <TestCard  /> */}
+      </div>
+    </>
   );
 };
 

@@ -10,11 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.1.2",
+    "@emoji-mart/react": "^1.1.1",
     "@reduxjs/toolkit": "^2.0.1",
     "aos": "^2.3.4",
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.3",
     "country-cities": "^1.0.8",
+    "emoji-mart": "^5.5.2",
     "flag-icons": "^7.1.0",
     "formik": "^2.4.5",
     "i18next": "^23.7.13",
@@ -31,6 +34,7 @@
     "react-redux": "^9.0.4",
     "react-router-dom": "^6.17.0",
     "react-scroll": "^1.9.0",
+    "react-scroll-to-bottom": "^4.2.0",
     "react-spring": "^9.7.3",
     "redux": "^5.0.1",
     "socket.io-client": "^4.7.2",
