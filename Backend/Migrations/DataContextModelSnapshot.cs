@@ -205,7 +205,52 @@ namespace Backend.Migrations
                     b.ToTable("TransporterShipments");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.User", b =>
+            modelBuilder.Entity("Backend.Models.classes.UserTokens", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DeleteAccountToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DeleteAccountTokenExpires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmailChangeToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EmailChangeTokenExpires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NewEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ResetTokenExpires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VerificationToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("VerifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserTokens");
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.UsersEntities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -272,51 +317,6 @@ namespace Backend.Migrations
                     b.HasDiscriminator<string>("Discriminator").HasValue("User");
 
                     b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("Backend.Models.classes.UserTokens", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DeleteAccountToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DeleteAccountTokenExpires")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EmailChangeToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("EmailChangeTokenExpires")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("NewEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordResetToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ResetTokenExpires")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("VerificationToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("VerifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserTokens");
                 });
 
             modelBuilder.Entity("Backend.Models.classes.Vehicle", b =>
@@ -417,16 +417,16 @@ namespace Backend.Migrations
                     b.HasDiscriminator().HasValue("VehicleImage");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.Owner", b =>
+            modelBuilder.Entity("Backend.Models.classes.UsersEntities.Owner", b =>
                 {
-                    b.HasBaseType("Backend.Models.classes.User");
+                    b.HasBaseType("Backend.Models.classes.UsersEntities.User");
 
                     b.HasDiscriminator().HasValue("Owner");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.Transporter", b =>
+            modelBuilder.Entity("Backend.Models.classes.UsersEntities.Transporter", b =>
                 {
-                    b.HasBaseType("Backend.Models.classes.User");
+                    b.HasBaseType("Backend.Models.classes.UsersEntities.User");
 
                     b.Property<string>("TransporterType")
                         .IsRequired()
@@ -437,7 +437,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.OwnerShipment", b =>
                 {
-                    b.HasOne("Backend.Models.classes.Owner", "Owner")
+                    b.HasOne("Backend.Models.classes.UsersEntities.Owner", "Owner")
                         .WithMany("OwnerShipments")
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -464,13 +464,13 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
-                    b.HasOne("Backend.Models.classes.Owner", "Owner")
+                    b.HasOne("Backend.Models.classes.UsersEntities.Owner", "Owner")
                         .WithMany("Shipments")
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Backend.Models.classes.Transporter", "Transporter")
+                    b.HasOne("Backend.Models.classes.UsersEntities.Transporter", "Transporter")
                         .WithMany("Shipments")
                         .HasForeignKey("TransporterId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -497,7 +497,7 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Backend.Models.classes.Transporter", "Transporter")
+                    b.HasOne("Backend.Models.classes.UsersEntities.Transporter", "Transporter")
                         .WithMany("TransporterShipments")
                         .HasForeignKey("TransporterId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -516,7 +516,7 @@ namespace Backend.Migrations
                     b.Navigation("Vehicle");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.User", b =>
+            modelBuilder.Entity("Backend.Models.classes.UsersEntities.User", b =>
                 {
                     b.HasOne("Backend.Models.classes.UserTokens", "UserTokens")
                         .WithMany()
@@ -529,7 +529,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.Vehicle", b =>
                 {
-                    b.HasOne("Backend.Models.classes.Transporter", "Transporter")
+                    b.HasOne("Backend.Models.classes.UsersEntities.Transporter", "Transporter")
                         .WithMany("Vehicles")
                         .HasForeignKey("TransporterId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -549,7 +549,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.UserAddress", b =>
                 {
-                    b.HasOne("Backend.Models.classes.User", null)
+                    b.HasOne("Backend.Models.classes.UsersEntities.User", null)
                         .WithOne("UserAddress")
                         .HasForeignKey("Backend.Models.classes.UserAddress", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -586,7 +586,7 @@ namespace Backend.Migrations
                     b.Navigation("TransporterShipments");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.User", b =>
+            modelBuilder.Entity("Backend.Models.classes.UsersEntities.User", b =>
                 {
                     b.Navigation("UserAddress")
                         .IsRequired();
@@ -601,14 +601,14 @@ namespace Backend.Migrations
                     b.Navigation("VehicleImages");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.Owner", b =>
+            modelBuilder.Entity("Backend.Models.classes.UsersEntities.Owner", b =>
                 {
                     b.Navigation("OwnerShipments");
 
                     b.Navigation("Shipments");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.Transporter", b =>
+            modelBuilder.Entity("Backend.Models.classes.UsersEntities.Transporter", b =>
                 {
                     b.Navigation("Shipments");
 

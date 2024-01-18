@@ -1,6 +1,6 @@
 using Backend.Data;
 using Backend.Interfaces;
-using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories
@@ -169,6 +169,8 @@ namespace Backend.Repositories
             return saved > 0;
         }
 
+
+        //TODO Implement the profile image update
         public Task<bool> UpdateProfileImage(int userId, IFormFile file)
         {
             throw new NotImplementedException();

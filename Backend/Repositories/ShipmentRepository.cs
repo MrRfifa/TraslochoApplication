@@ -1,12 +1,13 @@
 using System.Net.Http.Headers;
 using AutoMapper;
 using Backend.Data;
-using Backend.Dtos;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
+using Backend.Dtos.UsersDto;
 using Backend.Dtos.VehicleDtos;
 using Backend.Interfaces;
 using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 using Backend.Models.enums;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
@@ -305,7 +306,7 @@ namespace Backend.Repositories
 
 
 
-        public async Task<List<Transporter>?> MatchTransporters(SearchCriteria criteria)
+        public async Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria)
         {
             var matchedTransporters = await _context.Transporters
                 .Include(t => t.Vehicles)
@@ -361,8 +362,6 @@ namespace Backend.Repositories
             }
             return true;
         }
-
-
 
 
     }

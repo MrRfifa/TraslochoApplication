@@ -1,4 +1,5 @@
 using Backend.Models.classes;
+using Backend.Models.classes.UsersEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Data
