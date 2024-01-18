@@ -7,14 +7,14 @@ const messageSchema = new mongoose.Schema({
   time: String,
 });
 
-messageSchema.pre("save", function (next) {
-  const currentTime = new Date();
-  this.time =
-    currentTime.getHours().toString().padStart(2, "0") +
-    ":" +
-    currentTime.getMinutes().toString().padStart(2, "0");
-  next();
-});
+// messageSchema.pre("save", function (next) {
+//   const currentTime = new Date();
+//   this.time =
+//     currentTime.getHours().toString().padStart(2, "0") +
+//     ":" +
+//     currentTime.getMinutes().toString().padStart(2, "0");
+//   next();
+// });
 
 const Message = mongoose.model("Message", messageSchema);
 

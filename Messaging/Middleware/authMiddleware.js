@@ -3,16 +3,16 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
 const verifyToken = async (socket, next) => {
-  const userEmail = socket.handshake.query.email;
+  const userId = socket.handshake.query.id;
   const secretKey = process.env.JWT_TOKEN;
 
-  if (!userEmail) {
+  if (!userId) {
     console.error("Authentication error: Email not provided");
     return next(new Error("Authentication error: Email not provided"));
   }
 
   try {
-    const cacheKey = `login_token_${userEmail}`;
+    const cacheKey = `connected_${userId}`;
     const token = await readHashValue(cacheKey, "data");
     // console.log(token);
 
@@ -31,7 +31,7 @@ const verifyToken = async (socket, next) => {
 
         // Attach token and user information to the socket for later use
         socket.userToken = token;
-        socket.userEmail = userEmail;
+        socket.userId = userId;
 
         return next();
       }
