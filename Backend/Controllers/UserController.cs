@@ -217,6 +217,37 @@ namespace Backend.Controllers
         }
 
 
+        [HttpGet("user-{userId}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetUserById(int userId)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserById(userId);
+
+                if (user is null)
+                {
+                    return NotFound("User not found");
+                }
+
+                var userToReturn = new GetUserDto
+                {
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    FileContentBase64 = user.FileContentBase64
+                };
+
+                return Ok(new { status = "success", message = userToReturn });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
 
     }
 }

@@ -27,7 +27,12 @@ namespace Backend.CachedRepositories
 
         public async Task<string> Login(LoginUserDto userLogged)
         {
-            string cacheKey = $"login_token_{userLogged.Email}";
+            var connectedUser = await _context.Users
+                .Include(u => u.UserTokens)
+                .Where(u => u.Email == userLogged.Email)
+                .FirstOrDefaultAsync();
+
+            string cacheKey = $"connected_{connectedUser!.Id}";
 
             // Try to get the token from cache
             var cachedToken = await _distributedCache.GetStringAsync(cacheKey);
@@ -57,11 +62,7 @@ namespace Backend.CachedRepositories
 
         public async Task<bool> Logout(int userId)
         {
-            var user = await _context.Users
-                .Where(u => u.Id == userId)
-                .FirstOrDefaultAsync();
-
-            string cacheKey = $"login_token_{user!.Email}";
+            string cacheKey = $"connected_{userId}";
             var cachedToken = await _distributedCache.GetStringAsync(cacheKey);
 
             if (cachedToken != null)
