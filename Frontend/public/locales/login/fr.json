@@ -1,0 +1,12 @@
+{
+    "loginTitle": "SE CONNECTER",
+    "dontHaveAccountQst": "Vous n'avez pas de compte?",
+    "forgetPassword": "Mot de passe oublié?",
+    "signInButton": "Se connecter",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "emailReq": "L'e-mail est requis",
+    "passwordReq": "Le mot de passe est requis",
+    "invalidEmail": "Adresse e-mail invalide",
+    "passwordVerif": "Le mot de passe doit comporter au moins 8 caractères"
+}

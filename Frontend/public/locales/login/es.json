@@ -1,0 +1,12 @@
+{
+    "loginTitle": "INICIAR SESIÓN",
+    "dontHaveAccountQst": "¿No tienes una cuenta?",
+    "forgetPassword": "¿Olvidaste tu contraseña?",
+    "signInButton": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "emailReq": "Correo electrónico es obligatorio",
+    "passwordReq": "Contraseña es obligatoria",
+    "invalidEmail": "Dirección de correo electrónico no válida",
+    "passwordVerif": "La contraseña debe tener al menos 8 caracteres"
+}

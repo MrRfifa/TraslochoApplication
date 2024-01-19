@@ -1,0 +1,12 @@
+{
+    "loginTitle": "SIGN IN",
+    "dontHaveAccountQst": "Don't have an account?",
+    "forgetPassword": "Forget your password?",
+    "signInButton": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "emailReq": "Email is required",
+    "passwordReq": "Password is required",
+    "invalidEmail": "Invalid email address",
+    "passwordVerif": "Password must be at least 8 characters"
+}

@@ -1,0 +1,12 @@
+{
+    "loginTitle": "ACCEDI",
+    "dontHaveAccountQst": "Non hai un account?",
+    "forgetPassword": "Hai dimenticato la password?",
+    "signInButton": "Accedi",
+    "email": "Email",
+    "password": "Password",
+    "emailReq": "L'email è obbligatoria",
+    "passwordReq": "La password è obbligatoria",
+    "invalidEmail": "Indirizzo email non valido",
+    "passwordVerif": "La password deve contenere almeno 8 caratteri"
+}

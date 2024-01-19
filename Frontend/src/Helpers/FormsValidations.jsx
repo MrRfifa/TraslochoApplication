@@ -1,4 +1,7 @@
-export const validateRegisterUsersForm = (formData, setErrors) => {
+import { useTranslation } from "react-i18next";
+
+export const ValidateRegisterUsersForm = (formData, setErrors) => {
+  const { t } = useTranslation("register");
   let isValid = true;
   const newErrors = {
     firstName: "",
@@ -19,22 +22,22 @@ export const validateRegisterUsersForm = (formData, setErrors) => {
 
   // Basic validation example, you can customize based on your requirements
   if (formData.firstName.trim() === "") {
-    newErrors.userName = "First name is required";
+    newErrors.firstName = t("fisrtNameReq");
     isValid = false;
   }
 
   if (formData.lastName.trim() === "") {
-    newErrors.userName = "Last name is required";
+    newErrors.lastName = t("lastNameReq");
     isValid = false;
   }
 
   if (formData.dateOfBirth.trim() === "") {
-    newErrors.userName = "Date of birth is required";
+    newErrors.dateOfBirth = t("dateOfBirthReq");
     isValid = false;
   }
 
   if (formData.userEmail.trim() === "") {
-    newErrors.userEmail = "Email is required";
+    newErrors.userEmail = t("emailReq");
     isValid = false;
   } else if (!/^\S+@\S+\.\S+$/.test(formData.userEmail)) {
     newErrors.userEmail = "Invalid email format";
@@ -42,7 +45,7 @@ export const validateRegisterUsersForm = (formData, setErrors) => {
   }
 
   if (formData.password.trim() === "") {
-    newErrors.password = "Password is required";
+    newErrors.password = t("passwordReq");
     isValid = false;
   } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/.test(formData.password)) {
     newErrors.password =
@@ -51,7 +54,7 @@ export const validateRegisterUsersForm = (formData, setErrors) => {
   }
 
   if (formData.confirmPassword.trim() === "") {
-    newErrors.confirmPassword = "Confirm Password is required";
+    newErrors.confirmPassword = t("retypePasswordReq");
     isValid = false;
   } else if (formData.password !== formData.confirmPassword) {
     newErrors.confirmPassword = "Passwords do not match";
@@ -59,7 +62,7 @@ export const validateRegisterUsersForm = (formData, setErrors) => {
   }
 
   if (formData.userCountryPrefix.trim() === "") {
-    newErrors.userCountryPrefix = "Prefix is required";
+    newErrors.userCountryPrefix = t("countryReq");
     isValid = false;
   }
   if (formData.userCountry.trim() === "") {
@@ -68,31 +71,31 @@ export const validateRegisterUsersForm = (formData, setErrors) => {
   }
 
   if (formData.userPhoneNumber.trim() === "") {
-    newErrors.userPhoneNumber = "Phone number is required";
+    newErrors.userPhoneNumber = t("phoneNumberReq");
     isValid = false;
   }
   if (formData.userState.trim() === "") {
-    newErrors.userState = "State is required";
+    newErrors.userState = t("stateReq");
     isValid = false;
   }
 
   if (formData.userCity.trim() === "") {
-    newErrors.userCity = "City is required";
+    newErrors.userCity = t("cityReq");
     isValid = false;
   }
 
   if (formData.userZipCode.trim() === "") {
-    newErrors.userZipCode = "Zip Code is required";
+    newErrors.userZipCode = t("zipCodeReq");
     isValid = false;
   }
 
   if (formData.userStreet.trim() === "") {
-    newErrors.userStreet = "Street is required";
+    newErrors.userStreet = t("streetReq");
     isValid = false;
   }
 
-  if (!formData.userProfileImage) {
-    newErrors.userProfileImage = "Profile Image is required";
+  if (formData.userProfileImage === null) {
+    newErrors.userProfileImage = t("profileImageReq");
     isValid = false;
   }
 

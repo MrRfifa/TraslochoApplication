@@ -6,10 +6,11 @@ import { FaArrowCircleLeft } from "react-icons/fa";
 import { dangerToast } from "../Toasts";
 import { OnFinishLoginUsersForm } from "../../Helpers/FormsSubmits";
 import { Toaster } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const SignInForm = () => {
+  const { t } = useTranslation("login");
   const [loading, setLoading] = useState(false);
-
   async function onFinish(values) {
     try {
       setLoading(true);
@@ -36,7 +37,7 @@ const SignInForm = () => {
               <FaArrowCircleLeft size={40} color="#FCA311" />
             </Link>
             <h2 className="text-2xl pl-[25%] font-bold text-[#FCA311] mb-4">
-              SIGN IN
+              {t("loginTitle")}
             </h2>
           </div>
           <Formik
@@ -46,11 +47,11 @@ const SignInForm = () => {
             }}
             validationSchema={Yup.object({
               email: Yup.string()
-                .email("Invalid email address")
-                .required("Email is required"),
+                .email(t("invalidEmail"))
+                .required(t("emailReq")),
               password: Yup.string()
-                .min(6, "Password must be at least 6 characters")
-                .required("Password is required"),
+                .min(8, t("passwordVerif"))
+                .required(t("passwordReq")),
             })}
             onSubmit={onFinish}
           >
@@ -59,7 +60,7 @@ const SignInForm = () => {
                 <Field
                   type="email"
                   name="email"
-                  placeholder="Email"
+                  placeholder={t("email")}
                   className="bg-gray-700 text-gray-200 border-0 w-[100%] rounded-md p-2 mb-4 focus:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"
                 />
                 <ErrorMessage
@@ -73,7 +74,7 @@ const SignInForm = () => {
                 <Field
                   type="password"
                   name="password"
-                  placeholder="Password"
+                  placeholder={t("password")}
                   className="bg-gray-700 text-gray-200 border-0 rounded-md w-[100%] p-2 mb-4 focus:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"
                 />
                 <ErrorMessage
@@ -89,7 +90,7 @@ const SignInForm = () => {
                     to="/register"
                     className="text-sm text-[#FCA311] -200 hover:underline mt-4"
                   >
-                    Don&apos;t have an account?
+                    {t("dontHaveAccountQst")}
                   </Link>
                 </p>
                 <p className="text-white mt-4">
@@ -97,7 +98,7 @@ const SignInForm = () => {
                     to="/forget-password"
                     className="text-sm text-[#FCA311] -200 hover:underline mt-4"
                   >
-                    Forget your password?
+                    {t("forgetPassword")}
                   </Link>
                 </p>
               </div>
@@ -105,7 +106,8 @@ const SignInForm = () => {
                 className="bg-[#14213D] text-white font-bold py-2 px-4 rounded-md mt-4 hover:bg-[#FCA311] transition ease-in-out duration-150"
                 type="submit"
               >
-                {loading ? "Signing in..." : "Sign in"}
+                {/* TODO: Add also a loading spin */}
+                {loading ? "Signing in..." : t("signInButton")}
               </button>
             </Form>
           </Formik>

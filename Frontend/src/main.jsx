@@ -26,7 +26,16 @@ i18n
     backend: {
       loadPath: "/locales/{{ns}}/{{lng}}.json",
     },
-    ns: ["main", "footer", "navbar", "about", "services", "contact"],
+    ns: [
+      "main",
+      "footer",
+      "navbar",
+      "about",
+      "services",
+      "contact",
+      "login",
+      "register",
+    ],
     react: { useSuspense: true },
   });
 
