@@ -13,9 +13,9 @@ const UserInfo = () => {
 
         dispatch(
           login({
-            id: userInfo[1].value,
-            dateOfBirth: userInfo[0].value.split(" ")[0],
-            role: userInfo[2].value,
+            id: userInfo[0].value,
+            // dateOfBirth: userInfo[0].value.split(" ")[0],
+            role: userInfo[1].value,
           })
         );
       } catch (error) {

@@ -31,3 +31,6 @@ export const countryData = [
 export const findCountry = (countryData, prefix) => {
   return countryData.find((country) => country.prefix === prefix);
 };
+export const findCountryByCode = (countryData, code) => {
+  return countryData.find((country) => country.code === code);
+};

@@ -2,6 +2,7 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import * as Yup from "yup";
+import { ImSpinner9 } from "react-icons/im";
 import { FaArrowCircleLeft } from "react-icons/fa";
 import { dangerToast } from "../Toasts";
 import { OnFinishLoginUsersForm } from "../../Helpers/FormsSubmits";
@@ -14,8 +15,13 @@ const SignInForm = () => {
   async function onFinish(values) {
     try {
       setLoading(true);
-      await OnFinishLoginUsersForm(values.email, values.password);
-      window.location.reload("/shipments");
+      const response = await OnFinishLoginUsersForm(
+        values.email,
+        values.password
+      );
+      if (response.success) {
+        window.location.reload("/shipments");
+      }
     } catch (error) {
       console.error(error);
       dangerToast("Error during form submission");
@@ -88,7 +94,7 @@ const SignInForm = () => {
                 <p className="text-white mt-4">
                   <Link
                     to="/register"
-                    className="text-sm text-[#FCA311] -200 hover:underline mt-4"
+                    className="text-sm text-[#FCA311] hover:underline mt-4"
                   >
                     {t("dontHaveAccountQst")}
                   </Link>
@@ -96,7 +102,7 @@ const SignInForm = () => {
                 <p className="text-white mt-4">
                   <Link
                     to="/forget-password"
-                    className="text-sm text-[#FCA311] -200 hover:underline mt-4"
+                    className="text-sm text-[#FCA311]  hover:underline mt-4"
                   >
                     {t("forgetPassword")}
                   </Link>
@@ -106,8 +112,14 @@ const SignInForm = () => {
                 className="bg-[#14213D] text-white font-bold py-2 px-4 rounded-md mt-4 hover:bg-[#FCA311] transition ease-in-out duration-150"
                 type="submit"
               >
-                {/* TODO: Add also a loading spin */}
-                {loading ? "Signing in..." : t("signInButton")}
+                {loading ? (
+                  <ImSpinner9
+                    className="text-white animate-spin mx-auto"
+                    size={25}
+                  />
+                ) : (
+                  t("signInButton")
+                )}
               </button>
             </Form>
           </Formik>

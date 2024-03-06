@@ -54,7 +54,7 @@ export const dangerToast = (text) => {
     position: "top-center",
     icon: "💀",
     style: {
-      backgroundColor: "#FCA311",
+      backgroundColor: "red",
       color: "white",
     },
   });

@@ -9,6 +9,7 @@ const userSpecInfoSlice = createSlice({
       lastName: "",
       filename: "",
       fileContentBase64: null,
+      dateOfBirth: "1900-01-01",
     },
   },
   reducers: {
@@ -22,6 +23,7 @@ const userSpecInfoSlice = createSlice({
         lastName: "",
         filename: "",
         fileContentBase64: null,
+        dateOfBirth: "1900-01-01",
       };
     },
   },

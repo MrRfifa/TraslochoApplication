@@ -11,6 +11,7 @@ import { OnFinishRegisterUsersForm } from "../../Helpers/FormsSubmits";
 import { RegisterUserFormStates } from "../../Helpers/FormsStates";
 import { dangerToast, errorToast, successToast } from "../Toasts";
 import { useTranslation } from "react-i18next";
+import { ImSpinner9 } from "react-icons/im";
 
 const RegisterUsersForm = ({ transporter }) => {
   const { t } = useTranslation("register");
@@ -380,8 +381,14 @@ const RegisterUsersForm = ({ transporter }) => {
                   className="bg-[#FCA311] text-white font-bold w-full py-3 px-4 rounded-md  hover:bg-indigo-600 transition ease-in-out duration-150"
                   type="submit"
                 >
-                  {/* TODO: add a loading spinner */}
-                  {loading ? "Signing up..." : t("signUpButton")}
+                  {loading ? (
+                    <ImSpinner9
+                      className="text-white animate-spin mx-auto"
+                      size={25}
+                    />
+                  ) : (
+                    t("signUpButton")
+                  )}
                 </button>
               </div>
             </div>

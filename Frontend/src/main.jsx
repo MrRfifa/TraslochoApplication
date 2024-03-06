@@ -35,6 +35,7 @@ i18n
       "contact",
       "login",
       "register",
+      "password"
     ],
     react: { useSuspense: true },
   });

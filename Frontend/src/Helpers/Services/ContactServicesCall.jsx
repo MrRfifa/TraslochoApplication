@@ -24,10 +24,10 @@ export const getContactsCall = async (userId) => {
               try {
                 const transporterDetails = await getUserByIdCall(participant);
                 const contactId = contact._id; // Modify this based on the actual property name in your contact object
-
                 transporterDetailsArray.push({
                   ...transporterDetails,
                   contactId,
+                  participant,
                 });
               } catch (getUserError) {
                 console.error(

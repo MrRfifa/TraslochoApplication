@@ -31,10 +31,12 @@ const getUserId = () => {
   if (token) {
     const decodedToken = jwtDecode(token);
     if (
-      decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid"]
+      decodedToken[
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+      ]
     ) {
       return decodedToken[
-        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid"
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
       ];
     }
   }

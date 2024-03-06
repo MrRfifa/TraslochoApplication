@@ -1,0 +1,18 @@
+{
+    "resetPasswordTitle": "Reset Password",
+    "token": "Token",
+    "password": "Password",
+    "confirmNewPassword": "Retype Password",
+    "resetButton": "Confirm",
+    "tokenReq": "Token is required",
+    "passReq": "Password is required",
+    "confPassReq": "Confirm Password is required",
+    "forgetPasswordTitle": "Forget Password",
+    "passwordError": "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+    "passwordMatch": "Passwords must match",
+    "passwordLengthError": "Password must be at least 8 characters",
+    "email": "Email",
+    "emailReq": "Email is required",
+    "emailError": "Invalid email address",
+    "forgetButton": "Send request"
+}

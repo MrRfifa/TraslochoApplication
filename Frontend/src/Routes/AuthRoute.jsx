@@ -5,6 +5,8 @@ import ForgetPasswordPage from "../Pages/GeneralPages/ForgetPasswordPage";
 import ResetPasswordPage from "../Pages/GeneralPages/ResetPasswordPage";
 import Register from "../Pages/GeneralPages/Register";
 import RegisterUsers from "../Pages/GeneralPages/RegisterUsers";
+import ConfirmAccountPage from "../Pages/GeneralPages/ConfirmAccountPage";
+import ConfirmUpdateEMail from "../Pages/LoggedInPages/ConfirmUpdateEMail";
 // import RegisterCompany from "../Pages/GeneralPages/RegisterCompany";
 
 const AuthRoute = () => {
@@ -15,6 +17,12 @@ const AuthRoute = () => {
       <Route path="/register" exact element={<Register />} />
       <Route path="/register-private" exact element={<RegisterUsers />} />
       <Route path="/register-owner" exact element={<RegisterUsers />} />
+      <Route path="/verify-account" exact element={<ConfirmAccountPage />} />
+      <Route
+        path="/confirm-update-email"
+        exact
+        element={<ConfirmUpdateEMail />}
+      />
       {/* <Route path="/register-company" exact element={<RegisterCompany />} /> */}
       <Route path="/forget-password" exact element={<ForgetPasswordPage />} />
       <Route path="/reset-password" exact element={<ResetPasswordPage />} />

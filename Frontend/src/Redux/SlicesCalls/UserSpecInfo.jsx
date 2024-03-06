@@ -18,6 +18,7 @@ const UserSpecInfo = () => {
             lastName: userSpecInfo.lastName,
             filename: userSpecInfo.fileName,
             fileContentBase64: userSpecInfo.fileContentBase64,
+            dateOfBirth: userSpecInfo.dateOfBirth.split(" ")[0],
           })
         );
       } catch (error) {

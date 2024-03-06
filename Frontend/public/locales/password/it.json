@@ -1,0 +1,18 @@
+{
+    "resetPasswordTitle": "Reimposta la password",
+    "token": "Token",
+    "password": "Password",
+    "confirmNewPassword": "Conferma Nuova Password",
+    "resetButton": "Conferma",
+    "tokenReq": "Il token è obbligatorio",
+    "passReq": "La password è obbligatoria",
+    "confPassReq": "La conferma della password è obbligatoria",
+    "forgetPasswordTitle": "Password dimenticata",
+    "passwordError": "La password deve contenere almeno una lettera maiuscola, una lettera minuscola e un numero",
+    "passwordMatch": "Le password devono corrispondere",
+    "passwordLengthError": "La password deve essere lunga almeno 8 caratteri",
+    "email": "Email",
+    "emailReq": "L'email è obbligatoria",
+    "emailError": "Indirizzo email non valido",
+    "forgetButton": "Invia richiesta"
+}

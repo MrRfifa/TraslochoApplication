@@ -1,0 +1,18 @@
+{
+    "resetPasswordTitle": "Restablecer contraseña",
+    "token": "Token",
+    "password": "Contraseña",
+    "confirmNewPassword": "Confirmar nueva contraseña",
+    "resetButton": "Confirmar",
+    "tokenReq": "Se requiere un token",
+    "passReq": "Se requiere una contraseña",
+    "confPassReq": "Se requiere confirmar la contraseña",
+    "forgetPasswordTitle": "Olvidé mi contraseña",
+    "passwordError": "La contraseña debe contener al menos una letra mayúscula, una letra minúscula y un número",
+    "passwordMatch": "Las contraseñas deben coincidir",
+    "passwordLengthError": "La contraseña debe tener al menos 8 caracteres",
+    "email": "Correo electrónico",
+    "emailReq": "Se requiere un correo electrónico",
+    "emailError": "Dirección de correo electrónico no válida",
+    "forgetButton": "Enviar solicitud"
+}

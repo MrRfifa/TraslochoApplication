@@ -1,0 +1,18 @@
+{
+    "resetPasswordTitle": "Réinitialiser le mot de passe",
+    "token": "Jeton",
+    "password": "Mot de passe",
+    "confirmNewPassword": "Confirmer le nouveau mot de passe",
+    "resetButton": "Confirmer",
+    "tokenReq": "Le jeton est requis",
+    "passReq": "Le mot de passe est requis",
+    "confPassReq": "Confirmer le mot de passe est requis",
+    "forgetPasswordTitle": "Mot de passe oublié",
+    "passwordError": "Le mot de passe doit contenir au moins une lettre majuscule, une lettre minuscule et un chiffre",
+    "passwordMatch": "Les mots de passe doivent correspondre",
+    "passwordLengthError": "Le mot de passe doit comporter au moins 8 caractères",
+    "email": "Email",
+    "emailReq": "L'email est requis",
+    "emailError": "Adresse email invalide",
+    "forgetButton": "Envoyer la demande"
+}

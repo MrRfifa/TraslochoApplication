@@ -41,7 +41,7 @@ const logout = (userId) => {
     .then((response) => {
       if (response.status >= 200 && response.status < 300) {
         localStorage.removeItem("token");
-        window.location.reload("/");  
+        window.location.reload("/");
         return { success: true, message: "Logged out successfully!" };
       } else {
         return { success: false, error: "Logout failed" };
@@ -131,6 +131,34 @@ const resetPassword = (token, password, confirmPassword) =>
       return { success: false, error: error.response.data };
     });
 
+const verifyAccount = (token) => {
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  return axios
+    .get(`${API_URL}Auth/verify?token=${token}`, {
+      headers,
+    })
+    .then((response) => {
+      if (response.data.status === "success") {
+        return {
+          success: true,
+          message: response.data.message,
+        };
+      } else if (response.data.status === "failed") {
+        return {
+          success: false,
+          message: response.data.message,
+        };
+      }
+    })
+    .catch((error) => {
+      console.error("Error handled when verifying the account:", error);
+      return { success: false, error: error.response.data };
+    });
+};
+
 const getUserInfo = () => {
   const token = localStorage.getItem("token");
   const headers = {
@@ -188,6 +216,7 @@ const AuthService = {
   register,
   forgetPassword,
   resetPassword,
+  verifyAccount,
   getUserInfo,
   getUserSpecificInfo,
 };

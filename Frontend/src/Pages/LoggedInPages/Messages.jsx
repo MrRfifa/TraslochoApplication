@@ -10,7 +10,7 @@ import messageImg from "../../assets/messages.svg";
 const Messages = () => {
   const [contactId, setContactId] = useState("");
   const [showChat, setShowChat] = useState(false);
-
+  const [connectedUsers, setConnectedUsers] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [selectedContactIndex, setSelectedContactIndex] = useState(null);
 
@@ -36,6 +36,16 @@ const Messages = () => {
     [state.id]
   );
 
+  useEffect(() => {
+    // Listen for updateConnectedUsers event from the server
+    socket.on("updateConnectedUsers", (users) => {
+      setConnectedUsers(users);
+    });
+
+    return () => {
+      socket.off("updateConnectedUsers");
+    };
+  }, [socket]);
   const joinRoom = (roomId) => {
     if (roomId !== "") {
       socket.emit("join_room", roomId);
@@ -50,11 +60,10 @@ const Messages = () => {
   };
 
   return (
-    <div className="ml-28 mt-20">
-      {/* <h3>Messages</h3> */}
+    <div className="ml-28 mt-0">
       <div className="grid grid-cols-2">
         {/* Contacts section */}
-        <div className="flex flex-col space-y-5">
+        <div className="flex flex-col space-y-5 mt-5">
           {contacts &&
             contacts.map((contact, index) => (
               <UserContact
@@ -63,6 +72,9 @@ const Messages = () => {
                 lastName={contact.message.lastName}
                 imgSrc={contact.message.fileContentBase64}
                 selected={index === selectedContactIndex}
+                connected={connectedUsers.includes(
+                  contact.participant.toString()
+                )}
                 handleContactClick={() => {
                   handleContactClick(index, contact.contactId);
                 }}
@@ -70,7 +82,7 @@ const Messages = () => {
             ))}
         </div>
         {/* Chat section */}
-        <div className="max-h-[600px]">
+        <div className="max-h-screen">
           {showChat ? (
             <Chat
               socket={socket}
@@ -78,7 +90,11 @@ const Messages = () => {
               contactId={contactId}
             />
           ) : (
-            <img className="w-[500px]" src={messageImg} alt="message image" />
+            <img
+              className="w-[500px] pt-40"
+              src={messageImg}
+              alt="message image"
+            />
           )}
         </div>
       </div>
