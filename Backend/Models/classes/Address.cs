@@ -1,4 +1,5 @@
 
+using System.Text.Json.Serialization;
 using Backend.Models.enums;
 
 namespace Backend.Models.classes
@@ -10,6 +11,8 @@ namespace Backend.Models.classes
         public string City { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public string PostalCode { get; set; } = string.Empty;
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public EUCountries Country { get; set; }
     }
 }

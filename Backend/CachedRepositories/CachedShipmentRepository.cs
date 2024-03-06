@@ -163,7 +163,7 @@ namespace Backend.CachedRepositories
         public async Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate)
         {
             // return _decorated.GetTransportersWithAvailableVehicles(shipmentDate);
-            string key = $"available-trasnporters-{shipmentDate:yyyy-MM-dd}";
+            string key = $"available-transporters-{shipmentDate:yyyy-MM-dd}";
             string? cachedTransporters = await _distributedCache.GetStringAsync(key);
             ICollection<GetTransporterDto>? transporters;
 

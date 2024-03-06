@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Backend.Helpers
 {
@@ -45,11 +41,10 @@ namespace Backend.Helpers
                     <body>
                     <p>Hi {{RecipientName}},</p>
                     <p>Click the following link to confirm your email:</p>
-                    <a href=""https://localhost:7201/api/Auth/verify?token=" + confirmationToken + @""">Confirm Email</a>
+                    <a href=""http://localhost:5173/verify-account?token=" + confirmationToken + @""">Confirm Email</a>
                     </body>
                     </html>
                     ";
-
             // Replace placeholders with actual values
             return ReplacePlaceholders(template, recipientName, confirmationToken);
         }
@@ -60,7 +55,7 @@ namespace Backend.Helpers
                     <!DOCTYPE HTML PUBLIC ""-//W3C//DTD XHTML 1.0 Transitional //EN"" ""http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"">
                     <html xmlns=""http://www.w3.org/1999/xhtml"" xmlns:v=""urn:schemas-microsoft-com:vml"" xmlns:o=""urn:schemas-microsoft-com:office:office"">
                     <head>
-                    <>
+                    <style>
                         body {
                             font-family: Arial, sans-serif;
                             background-color: #f1f1f1;
@@ -82,11 +77,11 @@ namespace Backend.Helpers
                     </head>
                     <body>
                     <p>Hi {{RecipientName}},</p>
-                    <p>Click the following link to confirm your new email:</p>
-                    <a href=""https://localhost:7201/api/User/verify?token={{ConfirmationToken}}"">Confirm new Email</a>
+                    <p>Click the following link to confirm your email:</p>
+                    <a href=""http://localhost:5173/confirm-update-email?token=" + confirmationToken + @""">Confirm Email</a>
                     </body>
                     </html>
-                            ";
+                    ";
 
             // Replace placeholders with actual values
             return ReplacePlaceholders(template, recipientName, confirmationToken);
@@ -150,31 +145,10 @@ namespace Backend.Helpers
                             <p>This is your token for resetting your password:</p>
                             <div id=""confirmationTokenContainer"">
                                 <p id=""confirmationToken"">{{ConfirmationToken}}</p>
-                                <button id=""resetLink"">Copy 📋</button>
                             </div>
                             <div>
                                 <a href=""http://localhost:5173/reset-password"" target=""_blank"">Reset your password</a>
                             </div>
-
-                            <script>
-                                document.getElementById(""resetLink"").addEventListener(""click"", function() {
-                                    // Get the ConfirmationToken from the HTML
-                                    var confirmationToken = document.getElementById(""confirmationToken"").textContent;
-
-                                    // Create a temporary textarea element to hold the ConfirmationToken
-                                    var textArea = document.createElement(""textarea"");
-                                    textArea.value = confirmationToken;
-
-                                    // Append the textarea element to the document
-                                    document.body.appendChild(textArea);
-
-                                    // Select the text in the textarea
-                                    textArea.select();
-
-                                    // Copy the selected text to the clipboard
-                                    document.execCommand(""copy"");
-                                });
-                            </script>
                             </body>
                             </html>
                             ";
@@ -242,31 +216,10 @@ namespace Backend.Helpers
                     <p>This is your token for deleting your account:</p>
                     <div id=""confirmationTokenContainer"">
                         <p id=""deletionToken"">" + deletionToken + @"</p>
-                        <button id=""resetLink"">Copy 📋</button>
                     </div>
                     <div>
                         <a href=""http://localhost:5173/delete-account"" target=""_blank"">Delete account</a>
                     </div>
-
-                    <script>
-                        document.getElementById(""resetLink"").addEventListener(""click"", function() {
-                            // Get the DeletionToken from the HTML
-                            var deletionToken = document.getElementById(""deletionToken"").textContent;
-
-                            // Create a temporary textarea element to hold the deletionToken
-                            var textArea = document.createElement(""textarea"");
-                            textArea.value = deletionToken;
-
-                            // Append the textarea element to the document
-                            document.body.appendChild(textArea);
-
-                            // Select the text in the textarea
-                            textArea.select();
-
-                            // Copy the selected text to the clipboard
-                            document.execCommand(""copy"");
-                        });
-                    </script>
                     </body>
                     </html>
                     ";

@@ -1,5 +1,7 @@
 
+using Backend.Models.classes;
 using Backend.Models.classes.UsersEntities;
+using Backend.Models.enums;
 
 namespace Backend.Interfaces
 {
@@ -23,9 +25,13 @@ namespace Backend.Interfaces
         //User Changes
         public Task<bool> UpdateProfileImage(int userId, IFormFile file);
         Task<bool> ChangeNames(int userId, string newFirstname, string newLastname, string currentPassword);
+        Task<bool> ChangeDob(int userId, DateTime newDob, string currentPassword);
+        Task<bool> ChangeAddress(int userId, string newStreet, string newCity, string newState, string newPostalCode, string newCountry, string password);
         public Task<User> GetUserByDeleteAccountToken(string token);
         Task<bool> ChangePassword(int userId, string currentPassword, string newPassword, string confirmPassword);
         Task<bool> ChangeEmail(int userId, string newEmail, string currentPassword);
         Task<bool> Save();
+
+        Task<UserAddress> GetUserAddress(int userId);
     }
 }

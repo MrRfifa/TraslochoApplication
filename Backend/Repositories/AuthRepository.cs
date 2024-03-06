@@ -166,7 +166,12 @@ namespace Backend.Repositories
 
             if (user is null)
             {
-                throw new Exception("hhhh");
+                throw new Exception("User not found");
+            }
+
+            if (user.UserTokens.VerifiedAt != DateTime.MinValue)
+            {
+                return false;
             }
 
             user.UserTokens.VerifiedAt = DateTime.Now;

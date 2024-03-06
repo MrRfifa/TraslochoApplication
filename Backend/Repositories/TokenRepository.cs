@@ -35,7 +35,7 @@ namespace Backend.Repositories
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.DateOfBirth, user.DateOfBirth.ToString()),
+                // new Claim(ClaimTypes.DateOfBirth, user.DateOfBirth.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
             };
@@ -65,7 +65,7 @@ namespace Backend.Repositories
 
         public string CreateVerificationTokens()
         {
-            return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+            return Convert.ToHexString(RandomNumberGenerator.GetBytes(10));
         }
 
         public async Task<string> GenerateUniqueToken()

@@ -180,7 +180,7 @@ namespace Backend.Controllers
 
                 if (!userToVerify)
                 {
-                    return BadRequest("Error handled when verifying the account");
+                    return Ok(new { status = "failed", message = "User already verified" });
                 }
 
                 return Ok(new { status = "success", message = "User verified! :)" });

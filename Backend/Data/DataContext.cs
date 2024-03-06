@@ -25,47 +25,45 @@ namespace Backend.Data
         {
             // Configure OwnerShipment relationship
             modelBuilder.Entity<OwnerShipment>()
-                .HasKey(os => new { os.OwnerShipmentId });
+                .HasKey(os => os.OwnerShipmentId);
 
             modelBuilder.Entity<OwnerShipment>()
-                .HasOne(o => o.Owner)
-                .WithMany(u => u.OwnerShipments)
-                .HasForeignKey(o => o.OwnerId)
+                .HasOne(os => os.Owner)
+                .WithMany(o => o.OwnerShipments)
+                .HasForeignKey(os => os.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OwnerShipment>()
-                .HasOne(o => o.Vehicle)
-                .WithMany(i => i.OwnerShipments)
-                .HasForeignKey(o => o.VehicleId)
+                .HasOne(os => os.Vehicle)
+                .WithMany(v => v.OwnerShipments)
+                .HasForeignKey(os => os.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OwnerShipment>()
-                .HasOne(o => o.Shipment)
-                .WithMany(i => i.OwnerShipments)
-                .HasForeignKey(o => o.ShipmentId);
+                .HasOne(os => os.Shipment)
+                .WithMany(s => s.OwnerShipments)
+                .HasForeignKey(os => os.ShipmentId);
 
             // Configure TransporterShipment relationship
             modelBuilder.Entity<TransporterShipment>()
-                .HasKey(os => new { os.TransporterShipmentId });
+                .HasKey(ts => ts.TransporterShipmentId);
 
             modelBuilder.Entity<TransporterShipment>()
-                .HasOne(o => o.Transporter)
-                .WithMany(u => u.TransporterShipments)
-                .HasForeignKey(o => o.TransporterId)
+                .HasOne(ts => ts.Transporter)
+                .WithMany(t => t.TransporterShipments)
+                .HasForeignKey(ts => ts.TransporterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TransporterShipment>()
-                .HasOne(o => o.Vehicle)
-                .WithMany(i => i.TransporterShipments)
-                .HasForeignKey(o => o.VehicleId)
+                .HasOne(ts => ts.Vehicle)
+                .WithMany(v => v.TransporterShipments)
+                .HasForeignKey(ts => ts.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TransporterShipment>()
-                .HasOne(o => o.Shipment)
-                .WithMany(i => i.TransporterShipments)
-                .HasForeignKey(o => o.ShipmentId);
-
-
+                .HasOne(ts => ts.Shipment)
+                .WithMany(s => s.TransporterShipments)
+                .HasForeignKey(ts => ts.ShipmentId);
 
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.Transporter)
@@ -75,41 +73,23 @@ namespace Backend.Data
 
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.Owner)
-                .WithMany(t => t.Shipments)
+                .WithMany(o => o.Shipments)
                 .HasForeignKey(s => s.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.DestinationAddress)
                 .WithOne()
-                //.HasForeignKey<Shipment>(s => s.DestinationAddressId)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<User>()
-                .HasOne(s => s.UserAddress)
-                .WithOne()
-                //.HasForeignKey<Shipment>(s => s.DestinationAddressId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Shipment>()
-                .HasMany(v => v.Images)
+                .HasMany(s => s.Images)
                 .WithOne()
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.UserAddress)
-                .WithOne()
-                .HasForeignKey<UserAddress>(ua => ua.UserId)  // Assuming UserAddress has a UserId property
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Shipment>()
-                .HasOne(u => u.DestinationAddress)
-                .WithOne()
-                .HasForeignKey<ShipmentAddress>(ua => ua.ShipmentId)  // Assuming UserAddress has a UserId property
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Vehicle>()
-                .HasOne(v => v.Transporter)       // A Vehicle has one Transporter
-                .WithMany(t => t.Vehicles)        // A Transporter can have many Vehicles
+                .HasOne(v => v.Transporter)
+                .WithMany(t => t.Vehicles)
                 .HasForeignKey(v => v.TransporterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -118,9 +98,10 @@ namespace Backend.Data
                 .WithOne()
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Shipment>()
-                .HasMany(v => v.Images)
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.UserAddress)
                 .WithOne()
+                .HasForeignKey<UserAddress>(ua => ua.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configure profile image column type
@@ -130,27 +111,27 @@ namespace Backend.Data
 
             // Configure enums conversions
             modelBuilder.Entity<Owner>()
-                .Property(u => u.Role)
+                .Property(o => o.Role)
                 .HasConversion<string>();
 
             modelBuilder.Entity<Transporter>()
-                .Property(u => u.Role)
+                .Property(t => t.Role)
                 .HasConversion<string>();
 
             modelBuilder.Entity<Transporter>()
-                .Property(u => u.TransporterType)
+                .Property(t => t.TransporterType)
                 .HasConversion<string>();
 
             modelBuilder.Entity<Shipment>()
-                .Property(u => u.ShipmentStatus)
+                .Property(s => s.ShipmentStatus)
                 .HasConversion<string>();
 
             modelBuilder.Entity<Shipment>()
-                .Property(u => u.ShipmentType)
+                .Property(s => s.ShipmentType)
                 .HasConversion<string>();
 
             modelBuilder.Entity<Vehicle>()
-                .Property(u => u.VehicleType)
+                .Property(v => v.VehicleType)
                 .HasConversion<string>();
 
             modelBuilder.Entity<User>()

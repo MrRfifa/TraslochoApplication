@@ -1,6 +1,9 @@
+using AutoMapper;
 using Backend.Data;
 using Backend.Interfaces;
+using Backend.Models.classes;
 using Backend.Models.classes.UsersEntities;
+using Backend.Models.enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories
@@ -81,6 +84,65 @@ namespace Backend.Repositories
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
 
+            return await Save();
+        }
+
+        public async Task<bool> ChangeAddress(int userId, string newStreet, string newCity, string newState, string newPostalCode, string newCountry, string password)
+        {
+            var user = await GetUserById(userId);
+
+            if (user is null)
+            {
+                throw new Exception($"User with ID {userId} not found");
+            }
+
+            // Verify the user's password
+            if (!_tokenRepository.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            {
+                throw new Exception("Incorrect password. Address change request denied.");
+            }
+
+            var address = await GetUserAddress(userId);
+
+            if (address is null)
+            {
+                throw new Exception($"Address for user with ID {userId} not found");
+            }
+
+            var country = Enum.GetValues(typeof(EUCountries))
+                              .Cast<EUCountries>()
+                              .FirstOrDefault(c => c.ToString().ToLower() == newCountry.ToLower());
+
+            if (country == default(EUCountries))
+            {
+                throw new Exception($"Invalid country: {newCountry}");
+            }
+
+            address.Street = newStreet;
+            address.City = newCity;
+            address.State = newState;
+            address.PostalCode = newPostalCode;
+            address.Country = country;
+
+            return await Save();
+        }
+
+        public async Task<bool> ChangeDob(int userId, DateTime newDob, string currentPassword)
+        {
+            var user = await GetUserById(userId);
+
+            if (user is null)
+            {
+                throw new Exception($"User with ID {userId} not found");
+            }
+
+            // Verify the user's password
+            if (!_tokenRepository.VerifyPasswordHash(currentPassword, user.PasswordHash, user.PasswordSalt))
+            {
+                throw new Exception("Incorrect password. Names change request denied.");
+            }
+
+            user.DateOfBirth = newDob;
             return await Save();
         }
 
@@ -171,9 +233,26 @@ namespace Backend.Repositories
 
 
         //TODO Implement the profile image update
-        public Task<bool> UpdateProfileImage(int userId, IFormFile file)
+        public async Task<bool> UpdateProfileImage(int userId, IFormFile file)
         {
-            throw new NotImplementedException();
+            var user = await GetUserById(userId);
+
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms);
+
+                // Convert the image to a base64-encoded string.
+                byte[] bytes = ms.ToArray();
+                string base64Image = Convert.ToBase64String(bytes);
+
+                user.FileName = file.FileName;
+                user.FileContentBase64 = bytes;
+            }
+            return await Save();
         }
 
         public async Task<bool> UserExistsById(int userId)
@@ -225,6 +304,21 @@ namespace Backend.Repositories
             }
             return true;
         }
+
+        public async Task<UserAddress> GetUserAddress(int userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.UserAddress)
+                .FirstOrDefaultAsync(u => u.UserAddress.UserId == userId);
+
+            if (user is null || user.UserAddress is null)
+            {
+                throw new Exception("User or user address not found");
+            }
+
+            return user.UserAddress;
+        }
+
     }
 
 }

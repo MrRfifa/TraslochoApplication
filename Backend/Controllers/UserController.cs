@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Backend.Dtos.AddressDto;
 using Backend.Dtos.Requests;
 using Backend.Dtos.UsersDto;
 using Backend.Helpers;
@@ -77,18 +78,22 @@ namespace Backend.Controllers
         public async Task<IActionResult> VerifyEmailChange(string token)
         {
             var user = await _userRepository.GetUserByEmailChangeToken(token);
+            if (user.UserTokens.EmailChangeToken == token)
+            {
+                return BadRequest(new { status = "failed", message = "You have updated your email" });
+            }
             if (user == null)
             {
-                return BadRequest("User not found");
+                return BadRequest(new { status = "failed", message = "User not found" });
             }
             if (user.UserTokens.EmailChangeTokenExpires < DateTime.Now)
             {
-                return BadRequest("Invalid token.");
+                return BadRequest(new { status = "failed", message = "Invalid token." });
             }
 
             user.Email = user.UserTokens.NewEmail;
             user.UserTokens.NewEmail = string.Empty;
-            user.UserTokens.EmailChangeToken = string.Empty;
+            // user.UserTokens.EmailChangeToken = string.Empty;
             user.UserTokens.EmailChangeTokenExpires = DateTime.MinValue;
             await _userRepository.Save();
 
@@ -155,6 +160,130 @@ namespace Backend.Controllers
             }
         }
 
+
+        [HttpPut("{userId}/account/address")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> ChangeAddress(int userId, [FromBody] UpdateAddressDto updateAddressDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var changeNamesResult = await _userRepository.ChangeAddress(
+                                                userId, updateAddressDto.Street,
+                                                updateAddressDto.City, updateAddressDto.State,
+                                                updateAddressDto.PostalCode, updateAddressDto.Country,
+                                                updateAddressDto.Password);
+
+                if (changeNamesResult)
+                {
+                    return Ok(new { status = "success", message = "Address changed successfully." });
+                }
+                else
+                {
+                    return BadRequest(changeNamesResult);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("{userId}/account/dob")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [AllowAnonymous]
+        public async Task<IActionResult> ChangeDateOfBirth(int userId, [FromBody] ChangeDobRequest changeDobRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var changeNamesResult = await _userRepository.ChangeDob(userId, changeDobRequest.newDob, changeDobRequest.CurrentPassword);
+
+                if (changeNamesResult)
+                {
+                    return Ok(new { status = "success", message = "Date of birth changed successfully." });
+                }
+                else
+                {
+                    return BadRequest(changeNamesResult);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("{userId}/account/profile-image")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UploadProfileImage(int userId, IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest("Invalid file.");
+                }
+                var user = await _userRepository.GetUserById(userId);
+
+                if (user == null)
+                {
+                    throw new Exception("User not found");
+                }
+                var profileImageUploaded = await _userRepository.UpdateProfileImage(userId, file);
+                if (!profileImageUploaded)
+                {
+                    throw new Exception("Image not saved successfully");
+                }
+
+                return Ok(new { status = "success", message = "Profile image uploaded successfully." });
+
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception, log it, or return an error response.
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing the request: " + ex.Message);
+            }
+        }
+
+        [HttpGet("user-address/{userId}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetUserAddress(int userId)
+        {
+            try
+            {
+                var address = await _userRepository.GetUserAddress(userId);
+
+                if (address is null)
+                {
+                    return NotFound("User not found");
+                }
+
+                return Ok(new { status = "success", message = address });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("user-info")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
@@ -205,7 +334,8 @@ namespace Backend.Controllers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     FileName = user.FileName,
-                    FileContentBase64 = user.FileContentBase64
+                    FileContentBase64 = user.FileContentBase64,
+                    DateOfBirth = user.DateOfBirth
                 };
 
                 return Ok(new { status = "success", message = userToReturn });
