@@ -11,6 +11,8 @@ namespace Backend.Data
 
         // Define DbSet for each entity
         public DbSet<Address> Addresses { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
+        public DbSet<ShipmentAddress> ShipmentAddresses { get; set; }
         public DbSet<Owner> Owners { get; set; }
         public DbSet<Shipment> Shipments { get; set; }
         public DbSet<Transporter> Transporters { get; set; }
@@ -18,6 +20,7 @@ namespace Backend.Data
         public DbSet<UserTokens> UserTokens { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<ImageFile> Images { get; set; }
+        public DbSet<Review> Reviews { get; set; }
         public DbSet<TransporterShipment> TransporterShipments { get; set; }
         public DbSet<OwnerShipment> OwnerShipments { get; set; }
 
@@ -79,7 +82,14 @@ namespace Backend.Data
 
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.DestinationAddress)
-                .WithOne()
+                .WithMany()
+                .HasForeignKey(s => s.DestinationAddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Shipment>()
+                .HasOne(s => s.OriginAddress)
+                .WithMany()
+                .HasForeignKey(s => s.OriginAddressId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Shipment>()
@@ -138,7 +148,21 @@ namespace Backend.Data
                 .Property(u => u.InternationalPrefix)
                 .HasConversion<string>();
 
+            //Reviews
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Owner)
+                .WithMany(o => o.OwnerReviews)
+                .HasForeignKey(r => r.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Transporter)
+                .WithMany(t => t.TransporterReviews)
+                .HasForeignKey(r => r.TransporterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             base.OnModelCreating(modelBuilder);
         }
+
     }
 }

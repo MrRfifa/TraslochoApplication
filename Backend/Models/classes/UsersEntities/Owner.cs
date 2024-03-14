@@ -7,5 +7,6 @@ namespace Backend.Models.classes.UsersEntities
     {
         public ICollection<OwnerShipment>? OwnerShipments { get; set; }
         public ICollection<Shipment>? Shipments { get; set; }
+        public ICollection<Review>? OwnerReviews { get; set; }
     }
 }

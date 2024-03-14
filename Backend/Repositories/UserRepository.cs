@@ -232,7 +232,6 @@ namespace Backend.Repositories
         }
 
 
-        //TODO Implement the profile image update
         public async Task<bool> UpdateProfileImage(int userId, IFormFile file)
         {
             var user = await GetUserById(userId);

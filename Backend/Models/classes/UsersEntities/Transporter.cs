@@ -8,5 +8,6 @@ namespace Backend.Models.classes.UsersEntities
         public ICollection<Shipment>? Shipments { get; set; }
         public ICollection<TransporterShipment>? TransporterShipments { get; set; }
         public ICollection<Vehicle>? Vehicles { get; set; }
+        public ICollection<Review>? TransporterReviews { get; set; }
     }
 }

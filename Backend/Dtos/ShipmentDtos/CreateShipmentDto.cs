@@ -14,9 +14,9 @@ namespace Backend.Dtos.Shipment
         [Required(ErrorMessage = "Shipment Date is required.")]
         public DateTime ShipmentDate { get; set; }
 
-        // [Required(ErrorMessage = "Destination Address is required.")]
-        public int Price { get; set; }
-
+        [Required(ErrorMessage = "Origin Address is required.")]
+        public CreateAddressDto OriginAddress { get; set; } = new CreateAddressDto();
+        
         [Required(ErrorMessage = "Destination Address is required.")]
         public CreateAddressDto DestinationAddress { get; set; } = new CreateAddressDto();
 

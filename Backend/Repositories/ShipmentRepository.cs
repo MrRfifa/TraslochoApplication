@@ -17,10 +17,11 @@ namespace Backend.Repositories
     public class ShipmentRepository : IShipmentRepository
     {
         private readonly DataContext _context;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
 
-        public ShipmentRepository(IMapper mapper, DataContext context)
+        public ShipmentRepository(IMapper mapper, DataContext context, IUserRepository userRepository)
         {
             DotNetEnv.Env.Load();
 
@@ -32,6 +33,7 @@ namespace Backend.Repositories
             _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Host", rapidAPIService);
             _mapper = mapper;
             _context = context;
+            _userRepository = userRepository;
         }
 
         public async Task<bool> AcceptShipment(int shipmentId, int transporterId)
@@ -111,11 +113,9 @@ namespace Backend.Repositories
         {
             try
             {
-                // Map shipment DTO to entity
-                var shipmentEntity = _mapper.Map<Shipment>(shipmentToCreate);
-
-                // Process the vehicle images
+                // Process the Shipment images
                 var shipmentImages = new List<ShipmentImage>();
+                var transporter = await _userRepository.GetUserById(transporterId);
 
                 foreach (var formFile in shipmentToCreate.ShipmentImages)
                 {
@@ -140,58 +140,79 @@ namespace Backend.Repositories
                     }
                 }
 
-                var user = await _context.Transporters
-                            .Include(u => u.UserAddress)
-                            .Where(u => u.Id == transporterId)
-                            .FirstOrDefaultAsync();
+                float distanceBetweenOriginDestination = await GetDistanceBetweenCities(
+                    shipmentToCreate.OriginAddress.Country,
+                    shipmentToCreate.OriginAddress.City,
+                    shipmentToCreate.DestinationAddress.Country,
+                    shipmentToCreate.DestinationAddress.City);
 
-                if (user != null)
+                //TODO fix this because it returns always 0 : return -1
+                float distanceBetweenOriginUser = await GetDistanceBetweenCities(
+                    transporter.UserAddress.Country.ToString(),
+                    transporter.UserAddress.City,
+                    shipmentToCreate.OriginAddress.Country,
+                    shipmentToCreate.OriginAddress.City);
+
+                // Map origin and destination addresses
+                ShipmentAddress originAddressEntity = _mapper.Map<ShipmentAddress>(shipmentToCreate.OriginAddress);
+                ShipmentAddress destinationAddressEntity = _mapper.Map<ShipmentAddress>(shipmentToCreate.DestinationAddress);
+
+                // Map shipment DTO to entity
+                var shipmentEntity = new Shipment
                 {
-                    shipmentEntity.DistanceBetweenAddresses = await GetDistanceBetweenCities(user.UserAddress.Country.ToString(),
-                                                                                        user.UserAddress.City,
-                                                                                        shipmentToCreate.DestinationAddress.Country,
-                                                                                        shipmentToCreate.DestinationAddress.City);
-                    shipmentEntity.OwnerId = ownerId;
-                    shipmentEntity.TransporterId = transporterId;
-                    shipmentEntity.ShipmentStatus = ShipmentStatus.Pending;
-                    shipmentEntity.VehicleId = transporterVehicleId;
-                    shipmentEntity.Images = shipmentImages;
+                    ShipmentType = shipmentToCreate.ShipmentType,
+                    ShipmentStatus = ShipmentStatus.Pending,
+                    ShipmentDate = shipmentToCreate.ShipmentDate,
+                    Price = 3 * ((int)(distanceBetweenOriginDestination + distanceBetweenOriginUser)),
+                    DistanceBetweenAddresses = distanceBetweenOriginDestination,
+                    Description = shipmentToCreate.Description,
+                    OwnerId = ownerId,
+                    TransporterId = transporterId,
+                    VehicleId = transporterVehicleId,
+                    Images = shipmentImages, // Assign images to the shipment entity
+                    OriginAddress = originAddressEntity,
+                    DestinationAddress = destinationAddressEntity,
+                };
 
-                    _context.Add(shipmentEntity);
-                    await Save();
+                // Add shipment entity to the context
+                _context.Shipments.Add(shipmentEntity);
+                await Save();
 
-                    TransporterShipment transporterShipment = new TransporterShipment
-                    {
-                        TransporterId = transporterId,
-                        ShipmentId = shipmentEntity.Id,
-                        VehicleId = transporterVehicleId,
-                        ShipmentStatus = ShipmentStatus.Pending
-                    };
+                originAddressEntity.ShipmentId = shipmentEntity.Id;
+                destinationAddressEntity.ShipmentId = shipmentEntity.Id;
+                await Save();
 
-                    OwnerShipment ownerShipment = new OwnerShipment
-                    {
-                        OwnerId = ownerId,
-                        ShipmentId = shipmentEntity.Id,
-                        VehicleId = transporterVehicleId,
-                        ShipmentStatus = ShipmentStatus.Pending
-                    };
-
-                    _context.Add(transporterShipment);
-                    _context.Add(ownerShipment);
-
-                    return await Save();
-
-                }
-                else
+                // Create transporter and owner shipment entities
+                TransporterShipment transporterShipment = new TransporterShipment
                 {
-                    throw new Exception("A problem occured when getting the owner");
-                }
+                    TransporterId = transporterId,
+                    ShipmentId = shipmentEntity.Id,
+                    VehicleId = transporterVehicleId,
+                    ShipmentStatus = ShipmentStatus.Pending
+                };
+
+                OwnerShipment ownerShipment = new OwnerShipment
+                {
+                    OwnerId = ownerId,
+                    ShipmentId = shipmentEntity.Id,
+                    VehicleId = transporterVehicleId,
+                    ShipmentStatus = ShipmentStatus.Pending
+                };
+
+                // Add transporter and owner shipment entities to context
+                _context.TransporterShipments.Add(transporterShipment);
+                _context.OwnerShipments.Add(ownerShipment);
+
+                // Save changes to the database
+                return await Save();
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                // Log or handle the exception
+                throw new Exception("Failed to create shipment", ex);
             }
         }
+
 
         public async Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate)
         {

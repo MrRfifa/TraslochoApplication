@@ -125,6 +125,39 @@ namespace Backend.Migrations
                     b.ToTable("OwnerShipments");
                 });
 
+            modelBuilder.Entity("Backend.Models.classes.Review", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReviewTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TransporterId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("TransporterId");
+
+                    b.ToTable("Reviews");
+                });
+
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
                     b.Property<int>("Id")
@@ -137,8 +170,14 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("DestinationAddressId")
+                        .HasColumnType("int");
+
                     b.Property<float>("DistanceBetweenAddresses")
                         .HasColumnType("real");
+
+                    b.Property<int>("OriginAddressId")
+                        .HasColumnType("int");
 
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
@@ -164,6 +203,10 @@ namespace Backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DestinationAddressId");
+
+                    b.HasIndex("OriginAddressId");
 
                     b.HasIndex("OwnerId");
 
@@ -372,10 +415,6 @@ namespace Backend.Migrations
                     b.Property<int>("ShipmentId")
                         .HasColumnType("int");
 
-                    b.HasIndex("ShipmentId")
-                        .IsUnique()
-                        .HasFilter("[ShipmentId] IS NOT NULL");
-
                     b.HasDiscriminator().HasValue("ShipmentAddress");
                 });
 
@@ -462,8 +501,39 @@ namespace Backend.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("Backend.Models.classes.Review", b =>
+                {
+                    b.HasOne("Backend.Models.classes.UsersEntities.Owner", "Owner")
+                        .WithMany("OwnerReviews")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.classes.UsersEntities.Transporter", "Transporter")
+                        .WithMany("TransporterReviews")
+                        .HasForeignKey("TransporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("Transporter");
+                });
+
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
+                    b.HasOne("Backend.Models.classes.ShipmentAddress", "DestinationAddress")
+                        .WithMany()
+                        .HasForeignKey("DestinationAddressId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.classes.ShipmentAddress", "OriginAddress")
+                        .WithMany()
+                        .HasForeignKey("OriginAddressId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.classes.UsersEntities.Owner", "Owner")
                         .WithMany("Shipments")
                         .HasForeignKey("OwnerId")
@@ -481,6 +551,10 @@ namespace Backend.Migrations
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DestinationAddress");
+
+                    b.Navigation("OriginAddress");
 
                     b.Navigation("Owner");
 
@@ -538,15 +612,6 @@ namespace Backend.Migrations
                     b.Navigation("Transporter");
                 });
 
-            modelBuilder.Entity("Backend.Models.classes.ShipmentAddress", b =>
-                {
-                    b.HasOne("Backend.Models.classes.Shipment", null)
-                        .WithOne("DestinationAddress")
-                        .HasForeignKey("Backend.Models.classes.ShipmentAddress", "ShipmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Backend.Models.classes.UserAddress", b =>
                 {
                     b.HasOne("Backend.Models.classes.UsersEntities.User", null)
@@ -576,9 +641,6 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.Shipment", b =>
                 {
-                    b.Navigation("DestinationAddress")
-                        .IsRequired();
-
                     b.Navigation("Images");
 
                     b.Navigation("OwnerShipments");
@@ -603,6 +665,8 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.UsersEntities.Owner", b =>
                 {
+                    b.Navigation("OwnerReviews");
+
                     b.Navigation("OwnerShipments");
 
                     b.Navigation("Shipments");
@@ -611,6 +675,8 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.classes.UsersEntities.Transporter", b =>
                 {
                     b.Navigation("Shipments");
+
+                    b.Navigation("TransporterReviews");
 
                     b.Navigation("TransporterShipments");
 
