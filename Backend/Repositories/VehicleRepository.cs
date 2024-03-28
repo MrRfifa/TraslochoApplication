@@ -22,54 +22,64 @@ namespace Backend.Repositories
 
         public async Task<bool> CreateVehicle(CreateVehicleDto vehicleDto, int transporterId)
         {
-            // Map the DTO to the entity
-            var vehicleEntity = _mapper.Map<Vehicle>(vehicleDto);
-
-            // Process the vehicle images
-            var vehicleImages = new List<VehicleImage>();
-
-            foreach (var formFile in vehicleDto.VehicleImages)
+            try
             {
-                // Read the stream directly from the form file
-                using (var stream = formFile.OpenReadStream())
+                bool transporterHasVehicle = _context.Vehicles.Any(v => v.TransporterId == transporterId);
+                if (transporterHasVehicle)
                 {
-                    // Convert the image to a byte array
-                    using (var ms = new MemoryStream())
+                    return false;
+                }
+                // Map the DTO to the entity
+                var vehicleEntity = _mapper.Map<Vehicle>(vehicleDto);
+                // Process the vehicle images
+                var vehicleImages = new List<VehicleImage>();
+
+                foreach (var formFile in vehicleDto.VehicleImages)
+                {
+                    // Read the stream directly from the form file
+                    using (var stream = formFile.OpenReadStream())
                     {
-                        await stream.CopyToAsync(ms);
-                        byte[] bytes = ms.ToArray();
-
-                        var vehicleImage = new VehicleImage
+                        // Convert the image to a byte array
+                        using (var ms = new MemoryStream())
                         {
-                            FileName = formFile.FileName,
-                            UploadDate = DateTime.Now,
-                            FileContentBase64 = bytes,
-                        };
+                            await stream.CopyToAsync(ms);
+                            byte[] bytes = ms.ToArray();
 
-                        vehicleImages.Add(vehicleImage);
+                            var vehicleImage = new VehicleImage
+                            {
+                                FileName = formFile.FileName,
+                                UploadDate = DateTime.Now,
+                                FileContentBase64 = bytes,
+                            };
+
+                            vehicleImages.Add(vehicleImage);
+                        }
                     }
                 }
+
+                Vehicle vehicle = new Vehicle
+                {
+                    Manufacture = vehicleEntity.Manufacture,
+                    Model = vehicleEntity.Model,
+                    Year = vehicleEntity.Year,
+                    Color = vehicleEntity.Color,
+                    VehicleType = vehicleEntity.VehicleType,
+                    Length = vehicleEntity.Length,
+                    Height = vehicleEntity.Height,
+                    VehicleImages = vehicleImages,
+                    IsAvailable = true,
+                    TransporterId = transporterId,
+                };
+
+                await _context.Vehicles.AddAsync(vehicle);
+                // return await Save();
+                await _context.SaveChangesAsync(); // Assuming SaveChangesAsync is used here
+                return true;
             }
-
-            Vehicle vehicle = new Vehicle
+            catch (Exception ex)
             {
-                Manufacture = vehicleEntity.Manufacture,
-                Model = vehicleEntity.Model,
-                Year = vehicleEntity.Year,
-                Color = vehicleEntity.Color,
-                VehicleType = vehicleEntity.VehicleType,
-                Length = vehicleEntity.Length,
-                Height = vehicleEntity.Height,
-                VehicleImages = vehicleImages,
-                IsAvailable = true,
-                TransporterId = transporterId,
-            };
-
-            // Add the vehicle entity to the context
-            await _context.Vehicles.AddAsync(vehicle);
-
-            // Save changes to the database
-            return await Save();
+                throw new Exception("Failed to create vehicle.", ex);
+            }
         }
 
         public async Task<Vehicle?> GetVehicleById(int vehicleId)
@@ -79,7 +89,7 @@ namespace Backend.Repositories
                             .FirstOrDefaultAsync(v => v.Id == vehicleId);
             if (vehicle is null)
             {
-                throw new Exception("Vehicle to delete not found");
+                return null;
             }
             return vehicle;
         }
@@ -95,7 +105,7 @@ namespace Backend.Repositories
             return vehicleDtos;
         }
 
-        public async Task<ICollection<Vehicle>?> GetVehiclesByTransporterId(int transporterId)
+        public async Task<Vehicle?> GetVehicleByTransporterId(int transporterId)
         {
             var transporterExists = await _context.Transporters.AnyAsync(v => v.Id == transporterId);
 
@@ -106,8 +116,7 @@ namespace Backend.Repositories
 
             var transporterVehicles = await _context.Vehicles
                                 .Include(v => v.VehicleImages)
-                                .Where(v => v.TransporterId == transporterId)
-                                .ToListAsync();
+                                .FirstOrDefaultAsync(v => v.TransporterId == transporterId);
             return transporterVehicles;
         }
 
@@ -150,5 +159,78 @@ namespace Backend.Repositories
             }
         }
 
+        public async Task<bool> UpdateVehicle(int vehicleId, UpdateVehicleDto vehicleDto)
+        {
+            try
+            {
+                var vehicleExists = await VehicleExists(vehicleId);
+
+                if (!vehicleExists)
+                {
+                    return false;
+                }
+
+                Vehicle? existingVehicle = await GetVehicleById(vehicleId);
+
+                existingVehicle!.Manufacture = vehicleDto.Manufacture;
+                existingVehicle.Model = vehicleDto.Model;
+                existingVehicle.Year = vehicleDto.Year;
+                existingVehicle.Color = vehicleDto.Color;
+                existingVehicle.VehicleType = vehicleDto.VehicleType;
+                existingVehicle.Length = vehicleDto.Length;
+                existingVehicle.Height = vehicleDto.Height;
+
+                return await Save();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to update vehicle.", ex);
+            }
+        }
+
+        public async Task<bool> UpdateVehicleImages(int vehicleId, UpdateVehicleImagesDto vehicleImagesDto)
+        {
+            try
+            {
+                Vehicle? vehicleToUpdate = await GetVehicleById(vehicleId);
+                if (vehicleToUpdate is null)
+                {
+                    return false;
+                }
+                else
+                {
+                    var oldImages = vehicleToUpdate.VehicleImages?.ToList() ?? new List<VehicleImage>();
+                    _context.Images.RemoveRange(oldImages);
+                    vehicleToUpdate?.VehicleImages?.Clear();
+                    foreach (var formFile in vehicleImagesDto.VehicleImages)
+                    {
+                        using (var ms = new MemoryStream())
+                        {
+                            await formFile.CopyToAsync(ms);
+                            byte[] bytes = ms.ToArray();
+
+                            var vehicleImage = new VehicleImage
+                            {
+                                FileName = formFile.FileName,
+                                UploadDate = DateTime.Now,
+                                FileContentBase64 = bytes,
+                            };
+
+                            vehicleToUpdate?.VehicleImages?.Add(vehicleImage);
+                        }
+                    }
+                    return await Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to update vehicle images.", ex);
+            }
+        }
+
+        public async Task<bool> TransporterHasAvailableVehicle(int transporterId)
+        {
+            return await _context.Vehicles.AnyAsync(v => v.IsAvailable && v.TransporterId == transporterId);
+        }
     }
 }

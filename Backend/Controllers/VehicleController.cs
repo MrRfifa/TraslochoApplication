@@ -62,7 +62,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPost("available/{vehicleId}")]
+        [HttpPost("unavailable/{vehicleId}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -88,7 +88,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPost("unavailable/{vehicleId}")]
+        [HttpPost("available/{vehicleId}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -126,27 +126,37 @@ namespace Backend.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new { status = "fail", message = ModelState });
 
-            // Save the vehicle to the database
-            if (!await _vehicleRepository.CreateVehicle(vehicleCreate, transporterId))
+            try
             {
-                ModelState.AddModelError("error", "Something went wrong while saving the vehicle.");
-                return StatusCode(500, ModelState);
-            }
+                // Save the vehicle to the database
+                bool created = await _vehicleRepository.CreateVehicle(vehicleCreate, transporterId);
 
-            return Ok(new { status = "success", message = "Vehicle created successfully." });
+                if (!created)
+                {
+                    return BadRequest(new { status = "fail", message = "User already has a vehicle registered." });
+                }
+
+                return Ok(new { status = "success", message = "Vehicle created successfully." });
+            }
+            catch (Exception)
+            {
+                // Log the exception or handle it appropriately
+                return StatusCode(500, new { status = "fail", message = "An error occurred while creating the vehicle." });
+            }
         }
 
+
         [HttpGet("transporter/{tranposrterId}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<GetVehicleDto>))]
+        [ProducesResponseType(200, Type = typeof(GetVehicleDto))]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetVehiclesByTransporterId(int tranposrterId)
+        public async Task<IActionResult> GetVehicleByTransporterId(int tranposrterId)
         {
             try
             {
-                var vehicles = await _vehicleRepository.GetVehiclesByTransporterId(tranposrterId);
-                var vehiclesDto = _mapper.Map<List<GetVehicleDto>>(vehicles);
-                return Ok(new { status = "success", message = vehiclesDto });
+                var vehicle = await _vehicleRepository.GetVehicleByTransporterId(tranposrterId);
+                var vehicleDto = _mapper.Map<GetVehicleDto>(vehicle);
+                return Ok(new { status = "success", message = vehicleDto });
             }
             catch (Exception ex)
             {
@@ -154,6 +164,67 @@ namespace Backend.Controllers
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
+
+        [HttpPut("{vehicleId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateVehicle(int vehicleId, [FromForm] UpdateVehicleDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                return BadRequest(new { status = "fail", message = "Update data is null." });
+            }
+
+            try
+            {
+                bool updated = await _vehicleRepository.UpdateVehicle(vehicleId, updateDto);
+
+                if (!updated)
+                {
+                    return NotFound(new { status = "fail", message = "Vehicle not found." });
+                }
+
+                return Ok(new { status = "success", message = "Vehicle updated successfully." });
+            }
+            catch (Exception)
+            {
+                // Log the exception or handle it appropriately
+                return StatusCode(500, new { status = "fail", message = "An error occurred while updating the vehicle." });
+            }
+        }
+
+        [HttpPut("images/{vehicleId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateVehicleImages(int vehicleId, [FromForm] UpdateVehicleImagesDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                return BadRequest(new { status = "fail", message = "Update data is null." });
+            }
+
+            try
+            {
+                bool updated = await _vehicleRepository.UpdateVehicleImages(vehicleId, updateDto);
+
+                if (!updated)
+                {
+                    return NotFound(new { status = "fail", message = "Vehicle not found." });
+                }
+
+                return Ok(new { status = "success", message = "Vehicle updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it appropriately
+                return StatusCode(500, new { status = "fail", message = ex });
+            }
+        }
+
 
     }
 }

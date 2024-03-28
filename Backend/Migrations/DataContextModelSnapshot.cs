@@ -108,21 +108,40 @@ namespace Backend.Migrations
                     b.Property<int>("ShipmentId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ShipmentStatus")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VehicleId")
-                        .HasColumnType("int");
-
                     b.HasKey("OwnerShipmentId");
 
                     b.HasIndex("OwnerId");
 
                     b.HasIndex("ShipmentId");
 
-                    b.HasIndex("VehicleId");
-
                     b.ToTable("OwnerShipments");
+                });
+
+            modelBuilder.Entity("Backend.Models.classes.Request", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ShipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TransporterId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.HasIndex("TransporterId");
+
+                    b.ToTable("Requests");
                 });
 
             modelBuilder.Entity("Backend.Models.classes.Review", b =>
@@ -196,10 +215,10 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TransporterId")
+                    b.Property<int?>("TransporterId")
                         .HasColumnType("int");
 
-                    b.Property<int>("VehicleId")
+                    b.Property<int?>("VehicleId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -228,13 +247,7 @@ namespace Backend.Migrations
                     b.Property<int>("ShipmentId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ShipmentStatus")
-                        .HasColumnType("int");
-
                     b.Property<int>("TransporterId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VehicleId")
                         .HasColumnType("int");
 
                     b.HasKey("TransporterShipmentId");
@@ -242,8 +255,6 @@ namespace Backend.Migrations
                     b.HasIndex("ShipmentId");
 
                     b.HasIndex("TransporterId");
-
-                    b.HasIndex("VehicleId");
 
                     b.ToTable("TransporterShipments");
                 });
@@ -403,7 +414,8 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TransporterId");
+                    b.HasIndex("TransporterId")
+                        .IsUnique();
 
                     b.ToTable("Vehicles");
                 });
@@ -488,17 +500,26 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Backend.Models.classes.Vehicle", "Vehicle")
-                        .WithMany("OwnerShipments")
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Owner");
 
                     b.Navigation("Shipment");
+                });
 
-                    b.Navigation("Vehicle");
+            modelBuilder.Entity("Backend.Models.classes.Request", b =>
+                {
+                    b.HasOne("Backend.Models.classes.Shipment", null)
+                        .WithMany("Requests")
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.classes.UsersEntities.Transporter", "Transporter")
+                        .WithMany("Requests")
+                        .HasForeignKey("TransporterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Transporter");
                 });
 
             modelBuilder.Entity("Backend.Models.classes.Review", b =>
@@ -543,14 +564,11 @@ namespace Backend.Migrations
                     b.HasOne("Backend.Models.classes.UsersEntities.Transporter", "Transporter")
                         .WithMany("Shipments")
                         .HasForeignKey("TransporterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Backend.Models.classes.Vehicle", "Vehicle")
                         .WithMany()
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("VehicleId");
 
                     b.Navigation("DestinationAddress");
 
@@ -577,17 +595,9 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Backend.Models.classes.Vehicle", "Vehicle")
-                        .WithMany("TransporterShipments")
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Shipment");
 
                     b.Navigation("Transporter");
-
-                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("Backend.Models.classes.UsersEntities.User", b =>
@@ -604,8 +614,8 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.classes.Vehicle", b =>
                 {
                     b.HasOne("Backend.Models.classes.UsersEntities.Transporter", "Transporter")
-                        .WithMany("Vehicles")
-                        .HasForeignKey("TransporterId")
+                        .WithOne("Vehicle")
+                        .HasForeignKey("Backend.Models.classes.Vehicle", "TransporterId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -645,6 +655,8 @@ namespace Backend.Migrations
 
                     b.Navigation("OwnerShipments");
 
+                    b.Navigation("Requests");
+
                     b.Navigation("TransporterShipments");
                 });
 
@@ -656,10 +668,6 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.Vehicle", b =>
                 {
-                    b.Navigation("OwnerShipments");
-
-                    b.Navigation("TransporterShipments");
-
                     b.Navigation("VehicleImages");
                 });
 
@@ -674,13 +682,15 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.classes.UsersEntities.Transporter", b =>
                 {
+                    b.Navigation("Requests");
+
                     b.Navigation("Shipments");
 
                     b.Navigation("TransporterReviews");
 
                     b.Navigation("TransporterShipments");
 
-                    b.Navigation("Vehicles");
+                    b.Navigation("Vehicle");
                 });
 #pragma warning restore 612, 618
         }

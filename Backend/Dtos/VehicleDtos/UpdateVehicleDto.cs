@@ -1,11 +1,10 @@
-using Backend.Models.classes.UsersEntities;
+
 using Backend.Models.enums;
 
-namespace Backend.Models.classes
+namespace Backend.Dtos.VehicleDtos
 {
-    public class Vehicle
+    public record UpdateVehicleDto
     {
-        public int Id { get; set; }
         public string Manufacture { get; set; } = string.Empty;
         public string Model { get; set; } = string.Empty;
         public int Year { get; set; }
@@ -13,11 +12,5 @@ namespace Backend.Models.classes
         public VehicleType VehicleType { get; set; }
         public float Length { get; set; }
         public float Height { get; set; }
-
-        // Foreign key for Transporter
-        public int TransporterId { get; set; }
-        public Transporter? Transporter { get; set; }
-        public ICollection<VehicleImage>? VehicleImages { get; set; }
-        public bool IsAvailable { get; set; }
     }
 }

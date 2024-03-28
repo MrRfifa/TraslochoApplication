@@ -32,6 +32,8 @@ builder.Services.AddStackExchangeRedisCache(redisOptions =>
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 
 // builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
 
@@ -45,7 +47,8 @@ builder.Services.Decorate<IShipmentRepository, CachedShipmentRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.Decorate<IAuthRepository, CachedAuthRepository>();
 
-
+//TODO Reshape the backend so it becomes like "upwork"/"bolt"
+//TODO Add a notification system using signalR if possible, else use any other solution (simple crud)
 
 // Enable CORS
 var corsOrigin = Environment.GetEnvironmentVariable("CORS");

@@ -10,20 +10,21 @@ namespace Backend.Interfaces
 {
     public interface IShipmentRepository
     {
-        Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate);
-        Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate);
 
         Task<Shipment?> GetShipmentById(int shipmentId);
         Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId);
         Task<bool> ShipmentExists(int shipmentId);
-        Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria);
-
-        Task<bool> CreateShipment(CreateShipmentDto shipment, int transporterId, int ownerId, int transporterVehicleId);
-        Task<bool> NegociatePrice(int shipmentId, int newPrice);
+        Task<bool> CreateShipment(CreateShipmentDto shipment, int transporterId);
         Task<bool> ModifyShipmentDate(int shipmentId, DateTime newDate);
-        Task<bool> AcceptShipment(int shipmentId, int transporterId);
         Task<bool> CancelShipment(int shipmentId);
         Task<float> GetDistanceBetweenCities(string originCountry, string originCity, string destinationCountry, string destinationCity);
         Task<bool> Save();
+
+        // Task<bool> AcceptShipment(int shipmentId, int transporterId);
+        // Task<bool> SendRequestShipment(int shipmentId, int transporterId);
+        // Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate);
+        // Task<bool> NegociatePrice(int shipmentId, int newPrice);
+        // Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate);
+        // Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria);
     }
 }

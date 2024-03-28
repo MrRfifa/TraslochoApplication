@@ -9,7 +9,6 @@ namespace Backend.Data
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         { }
 
-        // Define DbSet for each entity
         public DbSet<Address> Addresses { get; set; }
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<ShipmentAddress> ShipmentAddresses { get; set; }
@@ -23,6 +22,7 @@ namespace Backend.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<TransporterShipment> TransporterShipments { get; set; }
         public DbSet<OwnerShipment> OwnerShipments { get; set; }
+        public DbSet<Request> Requests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,12 +34,6 @@ namespace Backend.Data
                 .HasOne(os => os.Owner)
                 .WithMany(o => o.OwnerShipments)
                 .HasForeignKey(os => os.OwnerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<OwnerShipment>()
-                .HasOne(os => os.Vehicle)
-                .WithMany(v => v.OwnerShipments)
-                .HasForeignKey(os => os.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OwnerShipment>()
@@ -55,12 +49,6 @@ namespace Backend.Data
                 .HasOne(ts => ts.Transporter)
                 .WithMany(t => t.TransporterShipments)
                 .HasForeignKey(ts => ts.TransporterId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<TransporterShipment>()
-                .HasOne(ts => ts.Vehicle)
-                .WithMany(v => v.TransporterShipments)
-                .HasForeignKey(ts => ts.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TransporterShipment>()
@@ -97,10 +85,10 @@ namespace Backend.Data
                 .WithOne()
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Vehicle>()
-                .HasOne(v => v.Transporter)
-                .WithMany(t => t.Vehicles)
-                .HasForeignKey(v => v.TransporterId)
+            modelBuilder.Entity<Transporter>()
+                .HasOne(t => t.Vehicle)
+                .WithOne(v => v.Transporter)
+                .HasForeignKey<Vehicle>(v => v.TransporterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Vehicle>()
@@ -148,6 +136,10 @@ namespace Backend.Data
                 .Property(u => u.InternationalPrefix)
                 .HasConversion<string>();
 
+            modelBuilder.Entity<Request>()
+                .Property(r => r.Status)
+                .HasConversion<string>();
+
             //Reviews
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Owner)
@@ -160,6 +152,20 @@ namespace Backend.Data
                 .WithMany(t => t.TransporterReviews)
                 .HasForeignKey(r => r.TransporterId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //Shipment requests
+            modelBuilder.Entity<Request>()
+                .HasKey(sr => sr.Id);
+
+            modelBuilder.Entity<Request>()
+                .HasOne<Shipment>()
+                .WithMany(s => s.Requests)
+                .HasForeignKey(sr => sr.ShipmentId);
+
+            modelBuilder.Entity<Request>()
+                .HasOne(sr => sr.Transporter)
+                .WithMany(t => t.Requests)
+                .HasForeignKey(sr => sr.TransporterId);
 
             base.OnModelCreating(modelBuilder);
         }

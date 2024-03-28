@@ -1,5 +1,7 @@
 using AutoMapper;
 using Backend.Dtos.AddressDto;
+using Backend.Dtos.RequestDto;
+using Backend.Dtos.ReviewsDto;
 using Backend.Dtos.Shipment;
 using Backend.Dtos.TransporterDto;
 using Backend.Dtos.VehicleDtos;
@@ -23,6 +25,12 @@ namespace Backend.Helpers
 
             CreateMap<CreateAddressDto, ShipmentAddress>();
             CreateMap<CreateAddressDto, UserAddress>();
+
+            CreateMap<Review, GetReviewDto>();
+            CreateMap<CreateReviewDto, Review>();
+
+            CreateMap<Request, GetRequestDto>();
+            CreateMap<CreateRequestDto, Request>();
 
         }
     }

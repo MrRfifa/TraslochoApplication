@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 
 namespace Backend.CachedRepositories
 {
+    //TODO take a loook here
     public class CachedVehicleRepository : IVehicleRepository
     {
         private readonly IVehicleRepository _decorated;
@@ -137,39 +138,36 @@ namespace Backend.CachedRepositories
             return vehicles;
         }
 
-        public async Task<ICollection<Vehicle>?> GetVehiclesByTransporterId(int transporterId)
+        public async Task<Vehicle?> GetVehicleByTransporterId(int transporterId)
         {
-            string key = $"transporter-{transporterId}-vehicles";
-            string? cachedVehicles = await _distributedCache.GetStringAsync(key);
-            ICollection<Vehicle>? vehicles;
+            string key = $"transporter-{transporterId}-vehicle";
+            string? cachedVehicle = await _distributedCache.GetStringAsync(key);
+            Vehicle? vehicle;
 
-            if (string.IsNullOrEmpty(cachedVehicles))
+            if (string.IsNullOrEmpty(cachedVehicle))
             {
-                vehicles = await _decorated.GetVehiclesByTransporterId(transporterId);
+                vehicle = await _decorated.GetVehicleByTransporterId(transporterId);
 
-                if (vehicles is null)
+                if (vehicle is null)
                 {
-                    return vehicles;
+                    return vehicle;
                 }
 
                 await _distributedCache.SetStringAsync(
                     key,
-                    JsonConvert.SerializeObject(vehicles)
+                    JsonConvert.SerializeObject(vehicle)
                 );
-                return vehicles;
+                return vehicle;
             }
 
-            vehicles = JsonConvert.DeserializeObject<ICollection<Vehicle>>(cachedVehicles);
+            vehicle = JsonConvert.DeserializeObject<Vehicle>(cachedVehicle);
 
-            if (vehicles is not null)
+            if (vehicle is not null)
             {
-                foreach (var vehicle in vehicles)
-                {
-                    _context.Set<Vehicle>().Attach(vehicle);
-                }
+                _context.Set<Vehicle>().Attach(vehicle);
             }
 
-            return vehicles;
+            return vehicle;
         }
 
         public async Task<bool> VehicleExists(int vehicleId)
@@ -201,6 +199,25 @@ namespace Backend.CachedRepositories
         public Task<bool> Save()
         {
             return _decorated.Save();
+        }
+
+        public Task<bool> UpdateVehicle(int vehicleId, UpdateVehicleDto vehicleDto)
+        {
+            var result = _decorated.UpdateVehicle(vehicleId, vehicleDto);
+
+            return result;
+        }
+
+        public Task<bool> UpdateVehicleImages(int vehicleId, UpdateVehicleImagesDto vehicleImagesDto)
+        {
+            var result = _decorated.UpdateVehicleImages(vehicleId, vehicleImagesDto);
+            return result;
+        }
+
+        public Task<bool> TransporterHasAvailableVehicle(int transporterId)
+        {
+            var result = _decorated.TransporterHasAvailableVehicle(transporterId);
+            return result;
         }
     }
 }

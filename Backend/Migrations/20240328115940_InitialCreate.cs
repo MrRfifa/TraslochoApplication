@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class initialMigration : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -159,8 +159,8 @@ namespace Backend.Migrations
                     DistanceBetweenAddresses = table.Column<float>(type: "real", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OwnerId = table.Column<int>(type: "int", nullable: false),
-                    TransporterId = table.Column<int>(type: "int", nullable: false),
-                    VehicleId = table.Column<int>(type: "int", nullable: false),
+                    TransporterId = table.Column<int>(type: "int", nullable: true),
+                    VehicleId = table.Column<int>(type: "int", nullable: true),
                     OriginAddressId = table.Column<int>(type: "int", nullable: false),
                     DestinationAddressId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -195,8 +195,7 @@ namespace Backend.Migrations
                         name: "FK_Shipments_Vehicles_VehicleId",
                         column: x => x.VehicleId,
                         principalTable: "Vehicles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -236,9 +235,7 @@ namespace Backend.Migrations
                     OwnerShipmentId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OwnerId = table.Column<int>(type: "int", nullable: false),
-                    ShipmentId = table.Column<int>(type: "int", nullable: false),
-                    VehicleId = table.Column<int>(type: "int", nullable: false),
-                    ShipmentStatus = table.Column<int>(type: "int", nullable: false)
+                    ShipmentId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -255,12 +252,33 @@ namespace Backend.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Requests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransporterId = table.Column<int>(type: "int", nullable: false),
+                    ShipmentId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Requests", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OwnerShipments_Vehicles_VehicleId",
-                        column: x => x.VehicleId,
-                        principalTable: "Vehicles",
+                        name: "FK_Requests_Shipments_ShipmentId",
+                        column: x => x.ShipmentId,
+                        principalTable: "Shipments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Requests_Users_TransporterId",
+                        column: x => x.TransporterId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -270,9 +288,7 @@ namespace Backend.Migrations
                     TransporterShipmentId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TransporterId = table.Column<int>(type: "int", nullable: false),
-                    ShipmentId = table.Column<int>(type: "int", nullable: false),
-                    VehicleId = table.Column<int>(type: "int", nullable: false),
-                    ShipmentStatus = table.Column<int>(type: "int", nullable: false)
+                    ShipmentId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -287,12 +303,6 @@ namespace Backend.Migrations
                         name: "FK_TransporterShipments_Users_TransporterId",
                         column: x => x.TransporterId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_TransporterShipments_Vehicles_VehicleId",
-                        column: x => x.VehicleId,
-                        principalTable: "Vehicles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -325,9 +335,14 @@ namespace Backend.Migrations
                 column: "ShipmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OwnerShipments_VehicleId",
-                table: "OwnerShipments",
-                column: "VehicleId");
+                name: "IX_Requests_ShipmentId",
+                table: "Requests",
+                column: "ShipmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Requests_TransporterId",
+                table: "Requests",
+                column: "TransporterId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_OwnerId",
@@ -375,11 +390,6 @@ namespace Backend.Migrations
                 column: "TransporterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TransporterShipments_VehicleId",
-                table: "TransporterShipments",
-                column: "VehicleId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Users_UserTokensId",
                 table: "Users",
                 column: "UserTokensId");
@@ -387,7 +397,8 @@ namespace Backend.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Vehicles_TransporterId",
                 table: "Vehicles",
-                column: "TransporterId");
+                column: "TransporterId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -398,6 +409,9 @@ namespace Backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "OwnerShipments");
+
+            migrationBuilder.DropTable(
+                name: "Requests");
 
             migrationBuilder.DropTable(
                 name: "Reviews");

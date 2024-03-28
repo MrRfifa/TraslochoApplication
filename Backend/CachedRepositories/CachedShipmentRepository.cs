@@ -25,19 +25,19 @@ namespace Backend.CachedRepositories
             _context = context;
         }
 
-        public Task<bool> AcceptShipment(int shipmentId, int transporterId)
-        {
+        // public Task<bool> AcceptShipment(int shipmentId, int transporterId)
+        // {
 
-            string shipment = $"shipment-{shipmentId}";
-            string shipmentDto = $"shipment-dto-{shipmentId}";
-            string shipmentExists = $"shipment-exists-{shipmentId}";
+        //     string shipment = $"shipment-{shipmentId}";
+        //     string shipmentDto = $"shipment-dto-{shipmentId}";
+        //     string shipmentExists = $"shipment-exists-{shipmentId}";
 
-            _distributedCache.Remove(shipment);
-            _distributedCache.Remove(shipmentDto);
-            _distributedCache.Remove(shipmentExists);
+        //     _distributedCache.Remove(shipment);
+        //     _distributedCache.Remove(shipmentDto);
+        //     _distributedCache.Remove(shipmentExists);
 
-            return _decorated.AcceptShipment(shipmentId, transporterId);
-        }
+        //     return _decorated.AcceptShipment(shipmentId, transporterId);
+        // }
 
         public Task<bool> CancelShipment(int shipmentId)
         {
@@ -51,44 +51,9 @@ namespace Backend.CachedRepositories
             return _decorated.CancelShipment(shipmentId);
         }
 
-        public Task<bool> CreateShipment(CreateShipmentDto shipment, int transporterId, int ownerId, int transporterVehicleId)
+        public Task<bool> CreateShipment(CreateShipmentDto shipment, int ownerId)
         {
-            return _decorated.CreateShipment(shipment, transporterId, ownerId, transporterVehicleId);
-        }
-
-        public async Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate)
-        {
-            string key = $"available-transporters-for-shipments";
-            string? cachedShipments = await _distributedCache.GetStringAsync(key);
-            ICollection<GetVehicleDto>? transporters;
-
-            if (string.IsNullOrEmpty(cachedShipments))
-            {
-                transporters = await _decorated.GetAvailableVehicles(shipmentDate);
-
-                if (transporters is null)
-                {
-                    return transporters;
-                }
-
-                await _distributedCache.SetStringAsync(
-                    key,
-                    JsonConvert.SerializeObject(transporters)
-                );
-                return transporters;
-            }
-
-            transporters = JsonConvert.DeserializeObject<ICollection<GetVehicleDto>>(cachedShipments);
-
-            // if (transporters is not null)
-            // {
-            //     foreach (var vehicle in transporters)
-            //     {
-            //         _context.Set<GetVehicleDto>().Attach(vehicle);
-            //     }
-            // }
-
-            return transporters;
+            return _decorated.CreateShipment(shipment, ownerId);
         }
 
         public Task<float> GetDistanceBetweenCities(string originCountry, string originCity, string destinationCountry, string destinationCity)
@@ -160,69 +125,6 @@ namespace Backend.CachedRepositories
             return shipment;
         }
 
-        public async Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate)
-        {
-            // return _decorated.GetTransportersWithAvailableVehicles(shipmentDate);
-            string key = $"available-transporters-{shipmentDate:yyyy-MM-dd}";
-            string? cachedTransporters = await _distributedCache.GetStringAsync(key);
-            ICollection<GetTransporterDto>? transporters;
-
-            if (string.IsNullOrEmpty(cachedTransporters))
-            {
-                transporters = await _decorated.GetTransportersWithAvailableVehicles(shipmentDate);
-
-                if (transporters is null)
-                {
-                    return transporters;
-                }
-
-                await _distributedCache.SetStringAsync(
-                    key,
-                    JsonConvert.SerializeObject(transporters)
-                );
-                return transporters;
-            }
-
-            transporters = JsonConvert.DeserializeObject<ICollection<GetTransporterDto>>(cachedTransporters);
-
-            return transporters;
-        }
-
-        public async Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria)
-        {
-            string key = $"matched-transporters-{criteria.Country}-{criteria.City}-{criteria.TransporterType}";
-            string? cachedMatchedTransporters = await _distributedCache.GetStringAsync(key);
-            List<Transporter>? transporters;
-
-            if (string.IsNullOrEmpty(cachedMatchedTransporters))
-            {
-                transporters = await _decorated.MatchTransporters(criteria);
-
-                if (transporters is null)
-                {
-                    return transporters;
-                }
-
-                await _distributedCache.SetStringAsync(
-                    key,
-                    JsonConvert.SerializeObject(transporters)
-                );
-                return transporters;
-            }
-
-            transporters = JsonConvert.DeserializeObject<List<Transporter>>(cachedMatchedTransporters);
-
-            if (transporters is not null)
-            {
-                foreach (var vehicle in transporters)
-                {
-                    _context.Set<List<Transporter>>().Attach(transporters);
-                }
-            }
-
-            return transporters;
-        }
-
         public Task<bool> ModifyShipmentDate(int shipmentId, DateTime newDate)
         {
             string shipment = $"shipment-{shipmentId}";
@@ -234,19 +136,6 @@ namespace Backend.CachedRepositories
             _distributedCache.Remove(shipmentExists);
 
             return _decorated.ModifyShipmentDate(shipmentId, newDate);
-        }
-
-        public Task<bool> NegociatePrice(int shipmentId, int newPrice)
-        {
-            string shipment = $"shipment-{shipmentId}";
-            string shipmentDto = $"shipment-dto-{shipmentId}";
-            string shipmentExists = $"shipment-exists-{shipmentId}";
-
-            _distributedCache.Remove(shipment);
-            _distributedCache.Remove(shipmentDto);
-            _distributedCache.Remove(shipmentExists);
-
-            return _decorated.NegociatePrice(shipmentId, newPrice);
         }
 
         public Task<bool> Save()
@@ -279,6 +168,116 @@ namespace Backend.CachedRepositories
             // If cachedShipment is not null, it means that the vehicle exists.
             return true;
         }
+
+        // public async Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate)
+        // {
+        //     string key = $"available-transporters-for-shipments";
+        //     string? cachedShipments = await _distributedCache.GetStringAsync(key);
+        //     ICollection<GetVehicleDto>? transporters;
+
+        //     if (string.IsNullOrEmpty(cachedShipments))
+        //     {
+        //         transporters = await _decorated.GetAvailableVehicles(shipmentDate);
+
+        //         if (transporters is null)
+        //         {
+        //             return transporters;
+        //         }
+
+        //         await _distributedCache.SetStringAsync(
+        //             key,
+        //             JsonConvert.SerializeObject(transporters)
+        //         );
+        //         return transporters;
+        //     }
+
+        //     transporters = JsonConvert.DeserializeObject<ICollection<GetVehicleDto>>(cachedShipments);
+
+        //     // if (transporters is not null)
+        //     // {
+        //     //     foreach (var vehicle in transporters)
+        //     //     {
+        //     //         _context.Set<GetVehicleDto>().Attach(vehicle);
+        //     //     }
+        //     // }
+
+        //     return transporters;
+        // }
+
+        //         public Task<bool> NegociatePrice(int shipmentId, int newPrice)
+        // {
+        //     string shipment = $"shipment-{shipmentId}";
+        //     string shipmentDto = $"shipment-dto-{shipmentId}";
+        //     string shipmentExists = $"shipment-exists-{shipmentId}";
+
+        //     _distributedCache.Remove(shipment);
+        //     _distributedCache.Remove(shipmentDto);
+        //     _distributedCache.Remove(shipmentExists);
+
+        //     return _decorated.NegociatePrice(shipmentId, newPrice);
+        // }
+        // public async Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria)
+        // {
+        //     string key = $"matched-transporters-{criteria.Country}-{criteria.City}-{criteria.TransporterType}";
+        //     string? cachedMatchedTransporters = await _distributedCache.GetStringAsync(key);
+        //     List<Transporter>? transporters;
+
+        //     if (string.IsNullOrEmpty(cachedMatchedTransporters))
+        //     {
+        //         transporters = await _decorated.MatchTransporters(criteria);
+
+        //         if (transporters is null)
+        //         {
+        //             return transporters;
+        //         }
+
+        //         await _distributedCache.SetStringAsync(
+        //             key,
+        //             JsonConvert.SerializeObject(transporters)
+        //         );
+        //         return transporters;
+        //     }
+
+        //     transporters = JsonConvert.DeserializeObject<List<Transporter>>(cachedMatchedTransporters);
+
+        //     if (transporters is not null)
+        //     {
+        //         foreach (var vehicle in transporters)
+        //         {
+        //             _context.Set<List<Transporter>>().Attach(transporters);
+        //         }
+        //     }
+
+        //     return transporters;
+        // }
+
+        // public async Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate)
+        // {
+        //     // return _decorated.GetTransportersWithAvailableVehicles(shipmentDate);
+        //     string key = $"available-transporters-{shipmentDate:yyyy-MM-dd}";
+        //     string? cachedTransporters = await _distributedCache.GetStringAsync(key);
+        //     ICollection<GetTransporterDto>? transporters;
+
+        //     if (string.IsNullOrEmpty(cachedTransporters))
+        //     {
+        //         transporters = await _decorated.GetTransportersWithAvailableVehicles(shipmentDate);
+
+        //         if (transporters is null)
+        //         {
+        //             return transporters;
+        //         }
+
+        //         await _distributedCache.SetStringAsync(
+        //             key,
+        //             JsonConvert.SerializeObject(transporters)
+        //         );
+        //         return transporters;
+        //     }
+
+        //     transporters = JsonConvert.DeserializeObject<ICollection<GetTransporterDto>>(cachedTransporters);
+
+        //     return transporters;
+        // }
 
     }
 }
