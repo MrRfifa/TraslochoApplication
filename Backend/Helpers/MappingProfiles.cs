@@ -1,12 +1,13 @@
+
 using AutoMapper;
-using Backend.Dtos.AddressDto;
-using Backend.Dtos.RequestDto;
-using Backend.Dtos.ReviewsDto;
-using Backend.Dtos.Shipment;
-using Backend.Dtos.TransporterDto;
-using Backend.Dtos.VehicleDtos;
-using Backend.Models.classes;
-using Backend.Models.classes.UsersEntities;
+using Backend.DTOs.Address;
+using Backend.DTOs.Request;
+using Backend.DTOs.Review;
+using Backend.DTOs.Shipment;
+using Backend.DTOs.Vehicle;
+using Backend.Models.Classes;
+using Backend.Models.Classes.AddressesEntities;
+using Backend.Models.Classes.UsersEntities;
 
 namespace Backend.Helpers
 {
@@ -17,7 +18,6 @@ namespace Backend.Helpers
             CreateMap<Vehicle, GetVehicleDto>();
             CreateMap<CreateVehicleDto, Vehicle>()
             .ForMember(dest => dest.VehicleImages, opt => opt.Ignore());
-            CreateMap<Transporter, GetTransporterDto>();
             CreateMap<CreateShipmentDto, Shipment>()
             .ForMember(dest => dest.Images, opt => opt.Ignore());
 
@@ -31,7 +31,6 @@ namespace Backend.Helpers
 
             CreateMap<Request, GetRequestDto>();
             CreateMap<CreateRequestDto, Request>();
-
         }
     }
 }

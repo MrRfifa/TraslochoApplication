@@ -1,14 +1,14 @@
+
 using System.Net.Http.Headers;
 using AutoMapper;
 using Backend.Data;
-using Backend.Dtos.Shipment;
-using Backend.Dtos.TransporterDto;
-using Backend.Dtos.UsersDto;
-using Backend.Dtos.VehicleDtos;
+using Backend.DTOs.Address;
+using Backend.DTOs.Shipment;
 using Backend.Interfaces;
-using Backend.Models.classes;
-using Backend.Models.classes.UsersEntities;
-using Backend.Models.enums;
+using Backend.Models.Classes;
+using Backend.Models.Classes.AddressesEntities;
+using Backend.Models.Classes.ImagesEntities;
+using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 
@@ -16,13 +16,11 @@ namespace Backend.Repositories
 {
     public class ShipmentRepository : IShipmentRepository
     {
-        private readonly DataContext _context;
-        // private readonly IUserRepository _userRepository;
+        private readonly ApplicationDBContext _context;
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
 
-        public ShipmentRepository(IMapper mapper, DataContext context)
-        // IUserRepository userRepository)
+        public ShipmentRepository(IMapper mapper, ApplicationDBContext context)
         {
             DotNetEnv.Env.Load();
 
@@ -34,118 +32,146 @@ namespace Backend.Repositories
             _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Host", rapidAPIService);
             _mapper = mapper;
             _context = context;
-            // _userRepository = userRepository;
         }
 
-        public async Task<bool> CancelShipment(int shipmentId)
+        public async Task<int> AddShipmentAddresses(int shipmentId, CreateAddressDto originAddress, CreateAddressDto destinationAddress)
+        {
+            try
+            {
+                // Fetch the shipment to update
+                Shipment? shipmentToUpdate = await GetShipmentById(shipmentId);
+
+                if (shipmentToUpdate is null)
+                {
+                    return -1;  // Shipment not found
+                }
+                if (shipmentToUpdate.DestinationAddress is not null || shipmentToUpdate.DestinationAddressId is not null)
+                {
+                    return -2;
+                }
+
+                // Map DTO to ShipmentAddress entities
+                ShipmentAddress originAddressEntity = _mapper.Map<ShipmentAddress>(originAddress);
+                ShipmentAddress destinationAddressEntity = _mapper.Map<ShipmentAddress>(destinationAddress);
+
+                // Set the ShipmentId for both addresses
+                originAddressEntity.ShipmentId = shipmentId;
+                destinationAddressEntity.ShipmentId = shipmentId;
+
+                // Add the new addresses to the database (explicitly adding them)
+                _context.ShipmentAddresses.Add(originAddressEntity);
+                _context.ShipmentAddresses.Add(destinationAddressEntity);
+
+                // Save addresses first
+                if (!await Save())
+                {
+                    return 0;  // Failed to save addresses
+                }
+
+                // Calculate distance between the origin and destination
+                float distanceBetweenOriginDestination = await GetDistanceBetweenCities(
+                    originAddress.Country,
+                    originAddress.City,
+                    destinationAddress.Country,
+                    destinationAddress.City
+                );
+
+                // Update shipment with the new addresses and calculated data
+                shipmentToUpdate.OriginAddressId = originAddressEntity.Id;
+                shipmentToUpdate.DestinationAddressId = destinationAddressEntity.Id;
+                shipmentToUpdate.DistanceBetweenAddresses = distanceBetweenOriginDestination;
+                shipmentToUpdate.Price = 5 * (int)distanceBetweenOriginDestination;
+
+                // Save the updated shipment
+                if (await Save())
+                {
+                    return 1;  // Success
+                }
+                else
+                {
+                    return 0;  // Failed to save shipment update
+                }
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
+        public async Task<int> CancelShipment(int shipmentId)
         {
             // Get the shipment
             Shipment? shipment = await GetShipmentById(shipmentId);
 
-            int daysDifference = (shipment!.ShipmentDate - DateTime.Now).Days;
-
-            if (daysDifference > 7)
+            if (shipment == null)
             {
-                // Get the corresponding OwnerShipment
-                OwnerShipment? ownerShipment = await _context.OwnerShipments
-                    .Where(os => os.ShipmentId == shipmentId)
-                    .FirstOrDefaultAsync();
-                // Get the corresponding TransporterShipment
-                TransporterShipment? transporterShipment = await _context.TransporterShipments
-                    .Where(os => os.ShipmentId == shipmentId)
-                    .FirstOrDefaultAsync();
-
-                if (ownerShipment == null || transporterShipment == null)
-                {
-                    // Handle the case where the OwnerShipment is not found
-                    throw new Exception($"Shipment ID {shipmentId} not found");
-                }
-                // Update the shipment status
-                shipment.ShipmentStatus = ShipmentStatus.Canceled;
-
-                // Save changes to the database
-                return await Save();
+                return -1; // Or throw an exception if needed for missing shipment
             }
-            else
+
+            int daysDifference = (shipment.ShipmentDate - DateTime.Now).Days;
+
+            if (daysDifference <= 3)
             {
-                throw new Exception("Invalid shipment cancel. The shipment cancel date can only be modified if the difference is greater than 3 days.");
+                return 0; // Return false for invalid cancellation attempt
             }
+
+            // Update the shipment status
+            shipment.ShipmentStatus = ShipmentStatus.Canceled;
+
+            // Save changes to the database
+            await Save();
+            return 1;
         }
 
         public async Task<bool> CreateShipment(CreateShipmentDto shipmentToCreate, int ownerId)
         {
-            try
+            // Ensure that the owner doesn't have more than one shipment on the same day
+            bool hasShipmentOnDate = await _context.Shipments.AnyAsync(s => s.OwnerId == ownerId
+                && s.ShipmentDate.Date == shipmentToCreate.ShipmentDate.Date);
+
+            if (hasShipmentOnDate)
             {
-                // Process the Shipment images
-                var shipmentImages = new List<ShipmentImage>();
-                // var transporter = await _userRepository.GetUserById(transporterId);
+                throw new InvalidOperationException("You can only create one shipment per day.");
+            }
+            // Process the Shipment images
+            var shipmentImages = new List<ShipmentImage>();
 
-                foreach (var formFile in shipmentToCreate.ShipmentImages)
+            foreach (var formFile in shipmentToCreate.ShipmentImages)
+            {
+                // Read the stream directly from the form file
+                using (var stream = formFile.OpenReadStream())
                 {
-                    // Read the stream directly from the form file
-                    using (var stream = formFile.OpenReadStream())
+                    // Convert the image to a byte array
+                    using (var ms = new MemoryStream())
                     {
-                        // Convert the image to a byte array
-                        using (var ms = new MemoryStream())
+                        await stream.CopyToAsync(ms);
+                        byte[] bytes = ms.ToArray();
+
+                        var shipmentImage = new ShipmentImage
                         {
-                            await stream.CopyToAsync(ms);
-                            byte[] bytes = ms.ToArray();
+                            FileName = formFile.FileName,
+                            UploadDate = DateTime.Now,
+                            FileContentBase64 = bytes,
+                        };
 
-                            var shipmentImage = new ShipmentImage
-                            {
-                                FileName = formFile.FileName,
-                                UploadDate = DateTime.Now,
-                                FileContentBase64 = bytes,
-                            };
-
-                            shipmentImages.Add(shipmentImage);
-                        }
+                        shipmentImages.Add(shipmentImage);
                     }
                 }
-
-                float distanceBetweenOriginDestination = await GetDistanceBetweenCities(
-                    shipmentToCreate.OriginAddress.Country,
-                    shipmentToCreate.OriginAddress.City,
-                    shipmentToCreate.DestinationAddress.Country,
-                    shipmentToCreate.DestinationAddress.City);
-
-                ShipmentAddress originAddressEntity = _mapper.Map<ShipmentAddress>(shipmentToCreate.OriginAddress);
-                ShipmentAddress destinationAddressEntity = _mapper.Map<ShipmentAddress>(shipmentToCreate.DestinationAddress);
-
-                var shipmentEntity = new Shipment
-                {
-                    ShipmentType = shipmentToCreate.ShipmentType,
-                    ShipmentStatus = ShipmentStatus.Pending,
-                    ShipmentDate = shipmentToCreate.ShipmentDate,
-                    Price = 5 * ((int)distanceBetweenOriginDestination),
-                    DistanceBetweenAddresses = distanceBetweenOriginDestination,
-                    Description = shipmentToCreate.Description,
-                    OwnerId = ownerId,
-                    // TransporterId = transporterId,
-                    // VehicleId = transporterVehicleId,
-                    Images = shipmentImages,
-                    OriginAddress = originAddressEntity,
-                    DestinationAddress = destinationAddressEntity,
-                };
-
-                _context.Shipments.Add(shipmentEntity);
-                await Save();
-                originAddressEntity.ShipmentId = shipmentEntity.Id;
-                destinationAddressEntity.ShipmentId = shipmentEntity.Id;
-                // return await Save();
-                OwnerShipment ownerShipment = new OwnerShipment
-                {
-                    OwnerId = ownerId,
-                    ShipmentId = shipmentEntity.Id,
-                };
-                _context.OwnerShipments.Add(ownerShipment);
-                return await Save();
             }
-            catch (Exception ex)
+
+            var shipmentEntity = new Shipment
             {
-                // Log or handle the exception
-                throw new Exception("Failed to create shipment", ex);
-            }
+                ShipmentType = shipmentToCreate.ShipmentType,
+                ShipmentStatus = ShipmentStatus.Pending,
+                ShipmentDate = shipmentToCreate.ShipmentDate,
+                Price = 0,
+                DistanceBetweenAddresses = 0,
+                Description = shipmentToCreate.Description,
+                OwnerId = ownerId,
+                Images = shipmentImages,
+            };
+            _context.Shipments.Add(shipmentEntity);
+            return await Save();
         }
 
         public async Task<float> GetDistanceBetweenCities(string originCountry, string originCity, string destinationCountry, string destinationCity)
@@ -197,60 +223,61 @@ namespace Backend.Repositories
 
         public async Task<Shipment?> GetShipmentById(int shipmentId)
         {
-            if (!await ShipmentExists(shipmentId))
-            {
-                throw new Exception($"Shipment with ID {shipmentId} not found");
-            }
-
             var shipment = await _context.Shipments
-                .Where(u => u.Id == shipmentId)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(u => u.Id == shipmentId);
 
-            if (shipment == null)
-            {
-                throw new Exception($"Shipment with ID {shipmentId} not found");
-            }
-
-            return shipment;
+            return shipment; // Return null if not found
         }
 
         public async Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId)
         {
-            if (!await ShipmentExists(shipmentId))
-            {
-                throw new Exception($"Shipment with ID {shipmentId} not found");
-            }
-
             var shipment = await _context.Shipments
-                .Where(u => u.Id == shipmentId)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(u => u.Id == shipmentId);
 
             if (shipment == null)
             {
-                throw new Exception($"Shipment with ID {shipmentId} not found");
+                return null; // Return null if shipment not found
             }
 
+            // Map to GetShipmentDto using AutoMapper
             GetShipmentDto shipmentDto = _mapper.Map<GetShipmentDto>(shipment);
 
             return shipmentDto;
         }
 
-        public async Task<bool> ModifyShipmentDate(int shipmentId, DateTime newDate)
+        public async Task<ICollection<Shipment>?> GetShipmentsByOwnerId(int ownerId)
         {
-            Shipment? shipment = await GetShipmentById(shipmentId);
+            // Fetch shipments from the database where OwnerId matches the given ownerId
+            var shipments = await _context.Shipments
+                .Where(s => s.OwnerId == ownerId)
+                .ToListAsync();
 
-            int daysDifference = (shipment!.ShipmentDate - DateTime.Now).Days;
+            // Return the result
+            return shipments.Count > 0 ? shipments : null;
+        }
+
+        public async Task<int> ModifyShipmentDate(int shipmentId, DateTime newDate)
+        {
+            var shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.Id == shipmentId);
+
+            if (shipment == null)
+            {
+                return -1; // Return null if shipment is not found
+            }
+
+            int daysDifference = (shipment.ShipmentDate - DateTime.Now).Days;
 
             if (daysDifference > 3)
             {
                 shipment.ShipmentDate = newDate;
                 shipment.ShipmentStatus = ShipmentStatus.Pending;
 
-                return await Save();
+                await Save(); // Assuming Save returns a boolean
+                return 1;
             }
             else
             {
-                throw new Exception("Invalid shipment date update. The shipment date can only be modified if the difference is greater than 3 days.");
+                return 0; // Return false if the shipment can't be modified
             }
         }
 
@@ -262,91 +289,8 @@ namespace Backend.Repositories
 
         public async Task<bool> ShipmentExists(int shipmentId)
         {
-            var shipmentExists = await _context.Shipments.AnyAsync(s => s.Id == shipmentId);
-            if (!shipmentExists)
-            {
-                return false;
-            }
-            return true;
+            return await _context.Shipments.AnyAsync(s => s.Id == shipmentId);
         }
-
-
-        //  public async Task<bool> NegociatePrice(int shipmentId, int newPrice)
-        // {
-        //     Shipment? shipment = await GetShipmentById(shipmentId);
-        //     shipment!.Price = newPrice;
-
-        //     return await Save();
-        // }
-        // public async Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria)
-        // {
-        //     var matchedTransporters = await _context.Transporters
-        //         .Include(t => t.Vehicles)
-        //         .Where(t =>
-        //             t.UserAddress.Country == criteria.Country ||
-        //             t.UserAddress.City == criteria.City ||
-        //             t.Vehicles!.Any(v => v.VehicleType == criteria.VehicleType) ||
-        //             t.TransporterType == criteria.TransporterType)
-        //         .ToListAsync();
-
-        //     return matchedTransporters;
-        // }
-
-        // public async Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate)
-        // {
-        //     var availableVehicles = await _context.Vehicles
-        //         .Include(v => v.VehicleImages)
-        //         .Where(v => v.IsAvailable && !v.TransporterShipments!.Any(ts => ts.Shipment!.ShipmentDate == shipmentDate))
-        //         .OrderBy(v => v.Id)
-        //         .ToListAsync();
-
-        //     var availableVehiclesDto = _mapper.Map<ICollection<GetVehicleDto>>(availableVehicles);
-
-        //     return availableVehiclesDto;
-        // }
-        // public async Task<bool> AcceptShipment(int shipmentId, int transporterId)
-        // {
-
-        //     Shipment? shipment = await GetShipmentById(shipmentId);
-
-        //     OwnerShipment? ownerShipment = await _context.OwnerShipments
-        //             .Where(os => os.ShipmentId == shipmentId)
-        //             .FirstOrDefaultAsync();
-        //     // Get the corresponding TransporterShipment
-        //     TransporterShipment? transporterShipment = await _context.TransporterShipments
-        //             .Where(os => os.ShipmentId == shipmentId)
-        //             .FirstOrDefaultAsync();
-
-        //     if (ownerShipment == null || transporterShipment == null)
-        //     {
-        //         // Handle the case where the OwnerShipment is not found
-        //         throw new Exception($"Transporter Shipment/Owner Shipment ID {shipmentId} not found");
-        //     }
-
-        //     if (shipment!.ShipmentStatus == ShipmentStatus.Canceled && transporterId == shipment.TransporterId)
-        //     {
-        //         throw new Exception($"Transporter with ID {shipmentId} has canceled the shipment!");
-        //     }
-        //     if (shipment.ShipmentStatus == ShipmentStatus.Accepted && transporterId == shipment.TransporterId)
-        //     {
-        //         throw new Exception($"Transporter with ID {shipmentId} has already accepted the shipment!");
-        //     }
-
-        //     shipment.ShipmentStatus = ShipmentStatus.Accepted;
-
-        //     return await Save();
-        // }
-        //TODO: After fixing ideas see if this service is utile or not. 
-        // public async Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate)
-        // {
-        //     var transportersWithAvailableVehicles = await _context.Transporters
-        //         .Include(t => t.Vehicle)
-        //         .Where(t => t.Vehicle!.Any(v => v.IsAvailable && !v.TransporterShipments!.Any(ts => ts.Shipment!.ShipmentDate == shipmentDate)))
-        //         .OrderBy(t => t.Id)
-        //         .ToListAsync();
-
-        //     return _mapper.Map<ICollection<GetTransporterDto>>(transportersWithAvailableVehicles);
-        // }
 
     }
 }

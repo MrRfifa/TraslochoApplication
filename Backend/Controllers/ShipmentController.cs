@@ -1,209 +1,177 @@
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
-using Backend.Dtos;
-using Backend.Dtos.Shipment;
-using Backend.Dtos.TransporterDto;
-using Backend.Dtos.UsersDto;
-using Backend.Dtos.VehicleDtos;
+using Backend.DTOs.Address;
+using Backend.DTOs.Shipment;
 using Backend.Interfaces;
-using Backend.Models.classes.UsersEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
-//TODO Review shipment controller/repository/interface/cache: all of it.
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Owner")]
-
     public class ShipmentController : ControllerBase
     {
         private readonly IShipmentRepository _shipmentRepository;
-        private readonly IMapper _mapper;
-        public ShipmentController(IShipmentRepository shipmentRepository, IMapper mapper)
+        public ShipmentController(IShipmentRepository shipmentRepository)
         {
-            _mapper = mapper;
             _shipmentRepository = shipmentRepository;
-
         }
 
-        [HttpPost("create-shipment")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
+        [HttpPut("cancel/{shipmentId:int}")]
+        [ProducesResponseType(200)] // OK: Shipment canceled successfully
+        [ProducesResponseType(400)] // Bad Request: Less than 3 days left for the shipment
+        [ProducesResponseType(404)] // Not Found: Shipment not found
+        [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
+        public async Task<IActionResult> CancelShipment(int shipmentId)
+        {
+            // Call the CancelShipment method in the service
+            var result = await _shipmentRepository.CancelShipment(shipmentId);
+
+            if (result == -1)
+            {
+                // Shipment not found
+                return NotFound(new { message = "Shipment not found." });
+            }
+            else if (result == 0)
+            {
+                // Shipment cannot be canceled because it's less than 3 days away
+                return BadRequest(new { message = "Invalid shipment cancel. The shipment can only be canceled if the difference is greater than 3 days." });
+            }
+            else if (result == 1)
+            {
+                // Shipment canceled successfully
+                return Ok(new { message = "Shipment has been successfully canceled." });
+            }
+            else
+            {
+                // Handle unexpected cases
+                return StatusCode(500, new { message = "An unexpected error occurred while canceling the shipment." });
+            }
+        }
+
+        [HttpGet("{shipmentId:int}")]
+        [ProducesResponseType(200, Type = typeof(GetShipmentDto))]
+        [ProducesResponseType(404)]
         [ProducesResponseType(401)]
-        //TODO fix this
+
+        public async Task<IActionResult> GetShipmentDtoById(int shipmentId)
+        {
+            var shipmentDto = await _shipmentRepository.GetShipmentDtoById(shipmentId);
+
+            if (shipmentDto == null)
+            {
+                return NotFound(new { message = $"Shipment with ID {shipmentId:int} not found." });
+            }
+
+            return Ok(shipmentDto);
+        }
+
+        [HttpPut("update-date/{shipmentId:int}")]
+        [ProducesResponseType(200)] // OK: Shipment date updated successfully
+        [ProducesResponseType(400)] // Bad Request: Invalid shipment date update (less than 3 days)
+        [ProducesResponseType(404)] // Not Found: Shipment not found
+        [ProducesResponseType(401)] // Unauthorized: If authentication is required
+        public async Task<IActionResult> ModifyShipmentDate(int shipmentId, [FromForm, Required] DateTime newDate)
+        {
+            var result = await _shipmentRepository.ModifyShipmentDate(shipmentId, newDate);
+
+            if (result == -1)
+            {
+                // Shipment not found
+                return NotFound(new { message = "Shipment with ID not found." });
+            }
+            else if (result == 0)
+            {
+                // Invalid shipment date update (less than 3 days)
+                return BadRequest(new { message = "Invalid shipment date update. The shipment date can only be modified if the difference is greater than 3 days." });
+            }
+            else if (result == 1)
+            {
+                // Shipment date updated successfully
+                return Ok(new { message = "Shipment date updated successfully." });
+            }
+            else
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
+
+        [HttpPost("create-shipment/{ownerId:int}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
         public async Task<IActionResult> CreateShipment([FromForm] CreateShipmentDto shipmentToCreate, int ownerId)
         {
             try
             {
                 var success = await _shipmentRepository.CreateShipment(shipmentToCreate, ownerId);
 
-                if (success)
-                {
-                    return Ok(new { status = "success", message = "Shipment created successfully!" });
-                }
-                else
+                if (!success)
                 {
                     return BadRequest(new { status = "fail", message = "Failed to create shipment." });
                 }
+                return Ok(new { status = "success", message = "Shipment created successfully!" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { status = "fail", message = ex.Message });
             }
             catch (Exception ex)
             {
-                // Log the exception details
-
                 ModelState.AddModelError("error", ex.Message);
                 return BadRequest(new { status = "fail", message = ModelState });
             }
         }
 
-        [HttpGet("{shipmentId}")]
-        [ProducesResponseType(200, Type = typeof(GetShipmentDto))]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        
-        public async Task<IActionResult> GetShipmentDtoById(int shipmentId)
+        [HttpPost("add-addresses/{shipmentId:int}")]
+        [ProducesResponseType(200)]  // Success
+        [ProducesResponseType(404)]  // Shipment not found
+        [ProducesResponseType(400)]  // Validation error
+        public async Task<IActionResult> AddShipmentAddresses(int shipmentId, [FromForm] ShipmentAddressesDto shipmentAddressesDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                var shipment = await _shipmentRepository.GetShipmentById(shipmentId);
-
-                return Ok(new { status = "success", message = shipment });
+                return BadRequest(new { status = "fail", message = "Invalid data", errors = ModelState });
             }
-            catch (Exception)
+
+            // Call service to add addresses
+            var result = await _shipmentRepository.AddShipmentAddresses(shipmentId, shipmentAddressesDto.OriginAddress, shipmentAddressesDto.DestinationAddress);
+
+            if (result == -1)
             {
-                return NotFound(new { status = "fail", message = "Shipment not found." });
+                return NotFound(new { status = "fail", message = "Shipment not found" });
+            }
+            else if (result == -2)
+            {
+                return BadRequest(new { status = "fail", message = "Shipment has already addresses" });
+            }
+            else if (result == 1)
+            {
+                return Ok(new { status = "success", message = "Addresses added successfully" });
+            }
+            else
+            {
+                return BadRequest(new { status = "fail", message = "Failed to add shipment addresses" });
             }
         }
 
-
-
-        [HttpPost("cancel/{shipmentId}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> CancelShipment(int shipmentId)
+        [HttpGet("all-shipments/{ownerId:int}")]
+        [ProducesResponseType(200)] // OK: Shipments retrieved successfully
+        [ProducesResponseType(404)] // Not Found: No shipments found for the owner
+        [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
+        public async Task<IActionResult> GetShipmentsByOwnerId(int ownerId)
         {
-            try
-            {
-                var success = await _shipmentRepository.CancelShipment(shipmentId);
+            var shipments = await _shipmentRepository.GetShipmentsByOwnerId(ownerId);
 
-                return Ok(new { status = "success", message = "Shipment canceled with success" });
-            }
-            catch (Exception ex)
+            if (shipments == null || shipments.Count == 0)
             {
-                return NotFound(new { status = "fail", message = ex.Message });
+                return NotFound(new { message = "No shipments found for the specified owner." });
             }
+
+            return Ok(shipments);
         }
-
-        [HttpPost("update-date/{shipmentId}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> ModifyShipmentDate(int shipmentId, [FromForm, Required] DateTime newDate)
-        {
-            try
-            {
-                var success = await _shipmentRepository.ModifyShipmentDate(shipmentId, newDate);
-
-                return Ok(new { status = "success", message = "Shipment date updated successfully" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { status = "fail", message = ex.Message });
-            }
-        }
-
-        // [HttpGet("search-transporters")]
-        // [ProducesResponseType(200, Type = typeof(GetShipmentDto))]
-        // [ProducesResponseType(404)]
-        // [ProducesResponseType(401)]
-        // [Authorize(Roles = "Owner")]
-        // public async Task<IActionResult> SearchTransporters(SearchUserCriteria criteria)
-        // {
-        //     List<Transporter>? matchedTransporters = await _shipmentRepository.MatchTransporters(criteria);
-
-        //     return Ok(matchedTransporters);
-        // }
-        // [HttpPost("accept/{shipmentId}")]
-        // [ProducesResponseType(200)]
-        // [ProducesResponseType(404)]
-        // [ProducesResponseType(401)]
-        // [Authorize(Roles = "Transporter")]
-        // public async Task<IActionResult> AcceptShipment(int shipmentId, [FromForm, Required] int transporterId)
-        // {
-        //     try
-        //     {
-        //         var success = await _shipmentRepository.AcceptShipment(shipmentId, transporterId);
-
-        //         return Ok(new { status = "success", message = "Shipment accepted with success" });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return NotFound(new { status = "fail", message = ex.Message });
-        //     }
-        // }
-
-        // [HttpGet("get-available-vehicles")]
-        // [ProducesResponseType(200, Type = typeof(IEnumerable<GetVehicleDto>))]
-        // [ProducesResponseType(400)]
-        // [ProducesResponseType(401)]
-        // [Authorize(Roles = "Owner")]
-        // public async Task<IActionResult> GetAvailableVehicles([FromQuery] DateTime? shipmentDate)
-        // {
-        //     try
-        //     {
-        //         var vehicles = await _shipmentRepository.GetAvailableVehicles(shipmentDate ?? DateTime.Now);
-
-        //         return Ok(new { status = "success", message = vehicles });
-        //     }
-        //     catch (Exception)
-        //     {
-        //         // Log the exception details
-
-        //         ModelState.AddModelError("error", "An error occurred while retrieving data.");
-        //         return BadRequest(new { status = "fail", message = ModelState });
-        //     }
-        // }
-
-        // [HttpPost("modify-price/{shipmentId}")]
-        // [ProducesResponseType(204)]
-        // [ProducesResponseType(404)]
-        // [ProducesResponseType(401)]
-        // [Authorize]
-        // public async Task<IActionResult> NegotiatePrice(int shipmentId, [FromForm, Required] int newPrice)
-        // {
-        //     var success = await _shipmentRepository.NegociatePrice(shipmentId, newPrice);
-
-        //     if (!success)
-        //     {
-        //         return NotFound(new { status = "fail", message = "Shipment not found." });
-        //     }
-
-        //     return NoContent();
-        // }
-        // [HttpGet("get-available-transporters")]
-        // [ProducesResponseType(200, Type = typeof(ICollection<Transporter>))]
-        // [ProducesResponseType(200)]
-        // [ProducesResponseType(400)]
-        // [ProducesResponseType(401)]
-        // [Authorize(Roles = "Owner")]
-        // public async Task<IActionResult> GetTransportersWithAvailableVehicles([FromQuery] DateTime? shipmentDate)
-        // {
-        //     try
-        //     {
-        //         IEnumerable<GetTransporterDto>? transporters = await _shipmentRepository.GetTransportersWithAvailableVehicles(shipmentDate ?? DateTime.Now);
-
-        //         return Ok(new { status = "success", message = transporters });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         // Log the exception details
-
-        //         ModelState.AddModelError("error", ex.Message);
-        //         return BadRequest(new { status = "fail", message = ModelState });
-        //     }
-        // }
 
     }
 }

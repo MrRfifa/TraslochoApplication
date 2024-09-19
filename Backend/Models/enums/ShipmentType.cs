@@ -1,14 +1,14 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace Backend.Models.enums
+namespace Backend.Models.Enums
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ShipmentType
     {
         [EnumMember(Value = "Transporting")]
-        Transporting,
+        Transporting = 0,
         [EnumMember(Value = "Throwing")]
-        Throwing
+        Throwing = 1
     }
 }

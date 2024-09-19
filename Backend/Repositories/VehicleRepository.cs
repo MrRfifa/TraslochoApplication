@@ -1,25 +1,24 @@
 
 using AutoMapper;
 using Backend.Data;
-using Backend.Dtos;
-using Backend.Dtos.VehicleDtos;
+using Backend.DTOs.Vehicle;
 using Backend.Interfaces;
-using Backend.Models.classes;
+using Backend.Models.Classes;
+using Backend.Models.Classes.ImagesEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories
 {
     public class VehicleRepository : IVehicleRepository
     {
-        private readonly DataContext _context;
+        private readonly ApplicationDBContext _context;
         private readonly IMapper _mapper;
 
-        public VehicleRepository(DataContext context, IMapper mapper)
+        public VehicleRepository(ApplicationDBContext context, IMapper mapper)
         {
             _mapper = mapper;
             _context = context;
         }
-
         public async Task<bool> CreateVehicle(CreateVehicleDto vehicleDto, int transporterId)
         {
             try
@@ -94,30 +93,61 @@ namespace Backend.Repositories
             return vehicle;
         }
 
+        public async Task<GetVehicleDto?> GetVehicleByTransporterId(int transporterId)
+        {
+            var transporterVehicle = await _context.Vehicles
+                                        .Include(v => v.VehicleImages)
+                                        .FirstOrDefaultAsync(v => v.TransporterId == transporterId);
+
+            if (transporterVehicle is null)
+            {
+                return null;
+            }
+
+            var vehicleEntity = _mapper.Map<GetVehicleDto>(transporterVehicle);
+            return vehicleEntity;
+        }
+
         public async Task<ICollection<GetVehicleDto>?> GetVehicles()
         {
             var vehicles = await _context.Vehicles
-                .Include(v => v.VehicleImages)
-                .OrderBy(v => v.Id)
-                .ToListAsync();
+               .Include(v => v.VehicleImages)
+               .OrderBy(v => v.Id)
+               .ToListAsync();
 
             var vehicleDtos = _mapper.Map<ICollection<GetVehicleDto>>(vehicles);
             return vehicleDtos;
         }
 
-        public async Task<Vehicle?> GetVehicleByTransporterId(int transporterId)
+        public async Task<bool> VehicleIsAvailable(int vehicleId)
         {
-            var transporterExists = await _context.Transporters.AnyAsync(v => v.Id == transporterId);
+            return await _context.Vehicles.AnyAsync(v => v.Id == vehicleId && v.IsAvailable);
+        }
 
-            if (!transporterExists)
+        public async Task<bool> MarkVehicleAsAvailable(int vehicleId)
+        {
+            var vehicle = await GetVehicleById(vehicleId);
+
+            if (vehicle is null)
             {
-                throw new Exception("Transporter not found");
+                return false; // Return false if the vehicle doesn't exist
             }
+            vehicle.IsAvailable = true;
+            // Save the changes and return the result
+            return await Save();
+        }
 
-            var transporterVehicles = await _context.Vehicles
-                                .Include(v => v.VehicleImages)
-                                .FirstOrDefaultAsync(v => v.TransporterId == transporterId);
-            return transporterVehicles;
+        public async Task<bool> MarkVehicleAsUnavailable(int vehicleId)
+        {
+            var vehicle = await GetVehicleById(vehicleId);
+
+            if (vehicle is null)
+            {
+                return false; // Return false if the vehicle doesn't exist
+            }
+            vehicle.IsAvailable = false;
+            // Save the changes and return the result
+            return await Save();
         }
 
         public async Task<bool> Save()
@@ -126,37 +156,9 @@ namespace Backend.Repositories
             return saved > 0;
         }
 
-        public async Task<bool> VehicleExists(int vehicleId)
+        public async Task<bool> TransporterHasAvailableVehicle(int transporterId)
         {
-            return await _context.Vehicles.AnyAsync(e => e.Id == vehicleId);
-        }
-
-        public async Task<bool> MarkVehicleAsAvailable(int vehicleId)
-        {
-            var vehicle = await GetVehicleById(vehicleId);
-            if (vehicle is not null)
-            {
-                vehicle.IsAvailable = true;
-                return await Save();
-            }
-            else
-            {
-                throw new Exception($"Vehicle with Id {vehicleId} is not found.");
-            }
-        }
-
-        public async Task<bool> MarkVehicleAsUnavailable(int vehicleId)
-        {
-            var vehicle = await GetVehicleById(vehicleId);
-            if (vehicle is not null)
-            {
-                vehicle.IsAvailable = false;
-                return await Save();
-            }
-            else
-            {
-                throw new Exception($"Vehicle with Id {vehicleId} is not found.");
-            }
+            return await _context.Vehicles.AnyAsync(v => v.IsAvailable && v.TransporterId == transporterId);
         }
 
         public async Task<bool> UpdateVehicle(int vehicleId, UpdateVehicleDto vehicleDto)
@@ -228,9 +230,17 @@ namespace Backend.Repositories
             }
         }
 
-        public async Task<bool> TransporterHasAvailableVehicle(int transporterId)
+        public async Task<bool> VehicleExists(int vehicleId)
         {
-            return await _context.Vehicles.AnyAsync(v => v.IsAvailable && v.TransporterId == transporterId);
+            return await _context.Vehicles.AnyAsync(e => e.Id == vehicleId);
         }
+
+        public async Task<bool> TransporterHasShipmentOnDate(int transporterId, DateTime date)
+        {
+            return await _context.Shipments.AnyAsync(s =>
+                s.TransporterId == transporterId &&
+                s.ShipmentDate.Date == date.Date);
+        }
+
     }
 }

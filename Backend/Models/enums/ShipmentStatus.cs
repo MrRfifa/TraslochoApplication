@@ -1,18 +1,18 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace Backend.Models.enums
+namespace Backend.Models.Enums
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ShipmentStatus
     {
         [EnumMember(Value = "Pending")]
-        Pending,
+        Pending = 0,
         [EnumMember(Value = "Accepted")]
-        Accepted,
+        Accepted = 1,
         [EnumMember(Value = "Completed")]
-        Completed,
+        Completed = 2,
         [EnumMember(Value = "Canceled")]
-        Canceled
+        Canceled = 3
     }
 }

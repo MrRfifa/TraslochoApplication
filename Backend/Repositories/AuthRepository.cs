@@ -1,28 +1,27 @@
 using AutoMapper;
 using Backend.Data;
-using Backend.Dtos;
-using Backend.Dtos.UsersDto;
+using Backend.DTOs.User;
 using Backend.Interfaces;
-using Backend.Models.classes;
-using Backend.Models.classes.UsersEntities;
-using Backend.Models.enums;
+using Backend.Models.Classes;
+using Backend.Models.Classes.AddressesEntities;
+using Backend.Models.Classes.UsersEntities;
+using Backend.Models.Enums;
 
 namespace Backend.Repositories
 {
     public class AuthRepository : IAuthRepository
     {
-        private readonly DataContext _context;
+        private readonly ApplicationDBContext _context;
         private readonly IUserRepository _userRepository;
         private readonly ITokenRepository _tokenRepository;
-
         private readonly IMapper _mapper;
 
-        public AuthRepository(DataContext context, IUserRepository userRepository, ITokenRepository tokenRepository, IMapper mapper)
+        public AuthRepository(ApplicationDBContext context, ITokenRepository tokenRepository, IUserRepository userRepository, IMapper mapper)
         {
-            _mapper = mapper;
             _tokenRepository = tokenRepository;
             _userRepository = userRepository;
             _context = context;
+            _mapper = mapper;
         }
         public async Task<bool> ForgetPassword(string email)
         {
@@ -52,55 +51,11 @@ namespace Backend.Repositories
             return _tokenRepository.CreateToken(user);
         }
 
-        public async Task<bool> RegisterTransporter(RegisterUserDto userCreated)
+        public async Task<bool> Logout(int userId)
         {
-            try
-            {
-                _tokenRepository.CreatePasswordHash(userCreated.Password, out byte[] passwordHash, out byte[] passwordSalt);
-
-                var file = userCreated.ProfileImage;
-                if (file is null)
-                {
-                    throw new Exception("Profile image file is required");
-                }
-                using (var ms = new MemoryStream())
-                {
-                    await file.CopyToAsync(ms);
-
-                    // Convert the image to a base64-encoded string.
-                    byte[] bytes = ms.ToArray();
-                    string base64Image = Convert.ToBase64String(bytes);
-                    // Use userEntity instead of user for setting properties
-                    var userEntity = new Transporter
-                    {
-                        LastName = userCreated.LastName,
-                        FirstName = userCreated.FirstName,
-                        Email = userCreated.Email,
-                        Role = UserRole.Transporter,
-                        TransporterType = TransporterType.Private,
-                        DateOfBirth = userCreated.DateOfBirth,
-                        PasswordHash = passwordHash,
-                        PasswordSalt = passwordSalt,
-                        InternationalPrefix = userCreated.InternationalPrefix,
-                        PhoneNumber = userCreated.PhoneNumber,
-                        UserTokens = new UserTokens
-                        {
-                            VerificationToken = await _tokenRepository.GenerateUniqueToken()
-                        },
-                        UserAddress = _mapper.Map<UserAddress>(userCreated.UserAddress),
-                        FileName = file.FileName,
-                        FileContentBase64 = bytes
-                    };
-
-                    _context.Users.Add(userEntity);
-
-                    return await Save();
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            var user = await _userRepository.GetUserById(userId);
+            //added this just for the cached repository to delete the token from redis
+            return true;
         }
 
         public async Task<bool> RegisterOwner(RegisterUserDto userCreated)
@@ -134,7 +89,58 @@ namespace Backend.Repositories
                         PasswordSalt = passwordSalt,
                         InternationalPrefix = userCreated.InternationalPrefix,
                         PhoneNumber = userCreated.PhoneNumber,
-                        UserTokens = new UserTokens
+                        UserTokens = new UserToken
+                        {
+                            VerificationToken = await _tokenRepository.GenerateUniqueToken()
+                        },
+                        UserAddress = _mapper.Map<UserAddress>(userCreated.UserAddress),
+                        FileName = file.FileName,
+                        FileContentBase64 = bytes
+                    };
+
+                    _context.Users.Add(userEntity);
+
+                    return await Save();
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RegisterTransporter(RegisterUserDto userCreated)
+        {
+            try
+            {
+                _tokenRepository.CreatePasswordHash(userCreated.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+                var file = userCreated.ProfileImage;
+                if (file is null)
+                {
+                    throw new Exception("Profile image file is required");
+                }
+                using (var ms = new MemoryStream())
+                {
+                    await file.CopyToAsync(ms);
+
+                    // Convert the image to a base64-encoded string.
+                    byte[] bytes = ms.ToArray();
+                    string base64Image = Convert.ToBase64String(bytes);
+                    // Use userEntity instead of user for setting properties
+                    var userEntity = new Transporter
+                    {
+                        LastName = userCreated.LastName,
+                        FirstName = userCreated.FirstName,
+                        Email = userCreated.Email,
+                        Role = UserRole.Transporter,
+                        TransporterType = TransporterType.Private,
+                        DateOfBirth = userCreated.DateOfBirth,
+                        PasswordHash = passwordHash,
+                        PasswordSalt = passwordSalt,
+                        InternationalPrefix = userCreated.InternationalPrefix,
+                        PhoneNumber = userCreated.PhoneNumber,
+                        UserTokens = new UserToken
                         {
                             VerificationToken = await _tokenRepository.GenerateUniqueToken()
                         },
@@ -159,9 +165,9 @@ namespace Backend.Repositories
             var saved = await _context.SaveChangesAsync();
             return saved > 0;
         }
+
         public async Task<bool> VerifyAccount(string token)
         {
-
             var user = await _userRepository.GetUserByVerificationToken(token);
 
             if (user is null)
@@ -176,14 +182,8 @@ namespace Backend.Repositories
 
             user.UserTokens.VerifiedAt = DateTime.Now;
             return await Save();
-
-        }
-
-        public async Task<bool> Logout(int userId)
-        {
-            var user = await _userRepository.GetUserById(userId);
-            //added this just for the cached repository to delete the token from redis
-            return true;
         }
     }
+
+
 }

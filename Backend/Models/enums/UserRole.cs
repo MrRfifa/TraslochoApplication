@@ -1,14 +1,14 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace Backend.Models.enums
+namespace Backend.Models.Enums
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum UserRole
     {
         [EnumMember(Value = "Owner")]
-        Owner,
+        Owner = 0,
         [EnumMember(Value = "Transporter")]
-        Transporter
+        Transporter = 1
     }
 }

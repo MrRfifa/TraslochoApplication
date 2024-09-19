@@ -1,20 +1,17 @@
-// using System.Text.Json.Serialization;
-using Backend.Models.classes.UsersEntities;
-using Backend.Models.enums;
+using Backend.Models.Classes.UsersEntities;
+using Backend.Models.Enums;
 
-namespace Backend.Models.classes
+namespace Backend.Models.Classes
 {
     public class Request
     {
-        public int Id { get; set; }
-        public int TransporterId { get; set; }
+        public int RequestId { get; set; } // Unique identifier for easier lookups
         public int ShipmentId { get; set; }
+        public int TransporterId { get; set; }
         public RequestStatus Status { get; set; }
 
         // Navigation properties
+        public Shipment? Shipment { get; set; }
         public Transporter? Transporter { get; set; }
-
-        // [JsonIgnore]
-        // public Shipment? Shipment { get; set; }
     }
 }

@@ -1,7 +1,5 @@
-
-using Backend.Models.classes;
-using Backend.Models.classes.UsersEntities;
-using Backend.Models.enums;
+using Backend.Models.Classes.AddressesEntities;
+using Backend.Models.Classes.UsersEntities;
 
 namespace Backend.Interfaces
 {
@@ -21,6 +19,7 @@ namespace Backend.Interfaces
         //User Existence
         Task<bool> UserExistsById(int userId);
         Task<bool> UserExistsByEmail(string email);
+        Task<bool> UserExistsByPhoneNumber(string phoneNumber);
 
         //User Changes
         public Task<bool> UpdateProfileImage(int userId, IFormFile file);

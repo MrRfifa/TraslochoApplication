@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Backend.Helpers
 {
@@ -227,9 +231,5 @@ namespace Backend.Helpers
             // Replace placeholders with actual values
             return ReplacePlaceholders(template, recipientName, deletionToken);
         }
-
-
-
-
     }
 }

@@ -1,7 +1,8 @@
 using System.Security.Claims;
-using Backend.Dtos.AddressDto;
-using Backend.Dtos.Requests;
-using Backend.Dtos.UsersDto;
+using Backend.DTOs;
+using Backend.DTOs.Address;
+using Backend.DTOs.User;
+using Backend.DTOs.UserRequests;
 using Backend.Helpers;
 using Backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +24,7 @@ namespace Backend.Controllers
             _tokenRepository = tokenRepository;
         }
 
-        [HttpPut("{userId}/account/email")]
+        [HttpPut("{userId:int}/account/email")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -80,15 +81,15 @@ namespace Backend.Controllers
             var user = await _userRepository.GetUserByEmailChangeToken(token);
             if (user.UserTokens.EmailChangeToken == token)
             {
-                return BadRequest(new { status = "failed", message = "You have updated your email" });
+                return BadRequest(new { status = "fail", message = "You have updated your email" });
             }
             if (user == null)
             {
-                return BadRequest(new { status = "failed", message = "User not found" });
+                return BadRequest(new { status = "fail", message = "User not found" });
             }
             if (user.UserTokens.EmailChangeTokenExpires < DateTime.Now)
             {
-                return BadRequest(new { status = "failed", message = "Invalid token." });
+                return BadRequest(new { status = "fail", message = "Invalid token." });
             }
 
             user.Email = user.UserTokens.NewEmail;
@@ -100,7 +101,7 @@ namespace Backend.Controllers
             return Ok(new { status = "success", message = "Email change successfully verified." });
         }
 
-        [HttpPut("{userId}/account/password")]
+        [HttpPut("{userId:int}/account/password")]
         [ProducesResponseType(400)]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
@@ -130,7 +131,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPut("{userId}/account/names")]
+        [HttpPut("{userId:int}/account/names")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -161,7 +162,7 @@ namespace Backend.Controllers
         }
 
 
-        [HttpPut("{userId}/account/address")]
+        [HttpPut("{userId:int}/account/address")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -195,7 +196,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPut("{userId}/account/dob")]
+        [HttpPut("{userId:int}/account/dob")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -226,7 +227,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPut("{userId}/account/profile-image")]
+        [HttpPut("{userId:int}/account/profile-image")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
@@ -260,7 +261,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("user-address/{userId}")]
+        [HttpGet("user-address/{userId:int}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
@@ -347,7 +348,7 @@ namespace Backend.Controllers
         }
 
 
-        [HttpGet("user-{userId}")]
+        [HttpGet("user-{userId:int}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]

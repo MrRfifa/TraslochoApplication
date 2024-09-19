@@ -1,10 +1,11 @@
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Backend.Data;
-using Backend.Dtos.Requests;
+using Backend.DTOs;
 using Backend.Interfaces;
-using Backend.Models.classes.UsersEntities;
+using Backend.Models.Classes.UsersEntities;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +17,12 @@ namespace Backend.Repositories
 {
     public class TokenRepository : ITokenRepository
     {
-        private readonly DataContext _context;
-        public TokenRepository(DataContext context)
+        private readonly ApplicationDBContext _context;
+        public TokenRepository(ApplicationDBContext context)
         {
             _context = context;
-        }
 
+        }
         public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA256())
@@ -89,6 +90,7 @@ namespace Backend.Repositories
             throw new Exception("Unable to generate a unique token after multiple attempts.");
         }
 
+
         public bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA256(passwordSalt))
@@ -127,6 +129,5 @@ namespace Backend.Repositories
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
-
     }
 }

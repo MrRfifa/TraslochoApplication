@@ -1,30 +1,21 @@
-
-using Backend.Dtos.Shipment;
-using Backend.Dtos.TransporterDto;
-using Backend.Dtos.UsersDto;
-using Backend.Dtos.VehicleDtos;
-using Backend.Models.classes;
-using Backend.Models.classes.UsersEntities;
+using Backend.DTOs.Address;
+using Backend.DTOs.Shipment;
+using Backend.Models.Classes;
 
 namespace Backend.Interfaces
 {
     public interface IShipmentRepository
     {
-
+        //TODO add an update addresses method
         Task<Shipment?> GetShipmentById(int shipmentId);
+        Task<ICollection<Shipment>?> GetShipmentsByOwnerId(int ownerId);
         Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId);
         Task<bool> ShipmentExists(int shipmentId);
-        Task<bool> CreateShipment(CreateShipmentDto shipment, int transporterId);
-        Task<bool> ModifyShipmentDate(int shipmentId, DateTime newDate);
-        Task<bool> CancelShipment(int shipmentId);
+        Task<bool> CreateShipment(CreateShipmentDto shipment, int ownerId);
+        Task<int> AddShipmentAddresses(int shipmentId, CreateAddressDto originAddress, CreateAddressDto destinationAddress);
+        Task<int> ModifyShipmentDate(int shipmentId, DateTime newDate);
+        Task<int> CancelShipment(int shipmentId);
         Task<float> GetDistanceBetweenCities(string originCountry, string originCity, string destinationCountry, string destinationCity);
         Task<bool> Save();
-
-        // Task<bool> AcceptShipment(int shipmentId, int transporterId);
-        // Task<bool> SendRequestShipment(int shipmentId, int transporterId);
-        // Task<ICollection<GetTransporterDto>?> GetTransportersWithAvailableVehicles(DateTime shipmentDate);
-        // Task<bool> NegociatePrice(int shipmentId, int newPrice);
-        // Task<ICollection<GetVehicleDto>?> GetAvailableVehicles(DateTime shipmentDate);
-        // Task<List<Transporter>?> MatchTransporters(SearchUserCriteria criteria);
     }
 }

@@ -1,13 +1,13 @@
 using System.Runtime.Serialization;
 
-namespace Backend.Models.enums
+namespace Backend.Models.Enums
 {
     public enum TransporterType
     {
         [EnumMember(Value = "Private")]
-        Private,
+        Private=0,
 
         [EnumMember(Value = "Society")]
-        Society
+        Society=1
     }
 }

@@ -1,33 +1,30 @@
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using Backend.Data;
-using Backend.Dtos.ReviewsDto;
+using Backend.DTOs;
+using Backend.DTOs.Review;
 using Backend.Interfaces;
-using Backend.Models.classes;
-using Backend.Models.enums;
+using Backend.Models.Classes;
+using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories
 {
     public class ReviewRepository : IReviewRepository
     {
-        private readonly DataContext _context;
+        private readonly ApplicationDBContext _context;
         private readonly IMapper _mapper;
 
-        public ReviewRepository(DataContext context, IMapper mapper)
+        public ReviewRepository(ApplicationDBContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
         }
-
         public async Task<bool> CreateReview(CreateReviewDto review, int transporterId, int ownerId)
         {
-            // Input validation
-            if (review.Rating < 1 || review.Rating > 5 || string.IsNullOrEmpty(review.Comment))
-            {
-                throw new ArgumentException("Invalid input data.");
-            }
-
             bool completedShipment = _context.Shipments.Any(
                 s => s.TransporterId == transporterId && s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Completed
             );
@@ -51,15 +48,11 @@ namespace Backend.Repositories
 
         public async Task<bool> DeleteReview(int reviewId)
         {
-            if (await ReviewExists(reviewId))
+            var review = await _context.Reviews.FindAsync(reviewId);
+            if (review != null)
             {
-                var review = await _context.Reviews.FindAsync(reviewId);
-                if (review != null)
-                {
-                    _context.Reviews.Remove(review);
-                    return await Save();
-                }
-                return false;
+                _context.Reviews.Remove(review);
+                return await Save();
             }
             return false;
         }
@@ -73,37 +66,30 @@ namespace Backend.Repositories
 
         public async Task<GetReviewDto?> GetReviewById(int reviewId)
         {
-            if (await ReviewExists(reviewId))
+            var review = await _context.Reviews.FindAsync(reviewId);
+            if (review == null)
             {
-                var review = await _context.Reviews.FirstOrDefaultAsync(v => v.Id == reviewId);
-                return _mapper.Map<GetReviewDto>(review);
+                return null;
             }
-            return null;
+
+            return _mapper.Map<GetReviewDto>(review);
+        }
+
+        public async Task<ICollection<GetReviewDto>?> GetReviewsByOwnerId(int ownerId)
+        {
+            var transporterReviews = await _context.Reviews
+                .Where(r => r.OwnerId == ownerId)
+                .ToListAsync();
+
+            return _mapper.Map<ICollection<GetReviewDto>>(transporterReviews);
         }
 
         public async Task<ICollection<GetReviewDto>?> GetReviewsByTransporterId(int transporterId)
         {
-            var transporterExists = await _context.Transporters.AnyAsync(t => t.Id == transporterId);
-
-            if (transporterExists)
-            {
-                var transporterReviews = await _context.Reviews
-                    .Where(r => r.TransporterId == transporterId)
-                    .ToListAsync();
-
-                if (transporterReviews.Any())
-                {
-                    return _mapper.Map<ICollection<GetReviewDto>>(transporterReviews);
-                }
-                else
-                {
-                    return Enumerable.Empty<GetReviewDto>().ToList();
-                }
-            }
-            else
-            {
-                return null;
-            }
+            var transporterReviews = await _context.Reviews
+                .Where(r => r.TransporterId == transporterId)
+                .ToListAsync();
+            return _mapper.Map<ICollection<GetReviewDto>>(transporterReviews);
         }
 
         public async Task<bool> ReviewExists(int reviewId)
@@ -119,27 +105,16 @@ namespace Backend.Repositories
 
         public async Task<bool> UpdateReview(int reviewId, CreateReviewDto reviewDto)
         {
-            bool isValid = reviewDto.Rating > 0 && reviewDto.Rating < 5 && !string.IsNullOrEmpty(reviewDto.Comment);
             var reviewEntity = await _context.Reviews.FindAsync(reviewId);
+            if (reviewEntity is null)
+            {
+                return false; // Review not found
+            }
 
-            if (reviewEntity is not null)
-            {
-                if (isValid)
-                {
-                    reviewEntity.Rating = reviewDto.Rating;
-                    reviewEntity.Comment = reviewDto.Comment;
-                    reviewEntity.ReviewTime = DateTime.UtcNow;
-                    return await Save();
-                }
-                else
-                {
-                    throw new ArgumentException("Invalid review data. Rating must be between 1 and 5, and comment must not be empty.");
-                }
-            }
-            else
-            {
-                return false;
-            }
+            reviewEntity.Rating = reviewDto.Rating;
+            reviewEntity.Comment = reviewDto.Comment;
+            reviewEntity.ReviewTime = DateTime.UtcNow;
+            return await Save();
         }
 
     }

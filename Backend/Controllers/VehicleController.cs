@@ -1,5 +1,5 @@
 using AutoMapper;
-using Backend.Dtos.VehicleDtos;
+using Backend.DTOs.Vehicle;
 using Backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,102 +19,7 @@ namespace Backend.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<GetVehicleDto>))]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> GetVehicles()
-        {
-            try
-            {
-                var vehicles = await _vehicleRepository.GetVehicles();
-                // var vehicleDtos = _mapper.Map<List<GetVehicleDto>>(vehicles);
-
-                return Ok(new { status = "success", message = vehicles });
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("error", ex.Message);
-                return BadRequest(new { status = "fail", message = ModelState });
-            }
-        }
-
-
-        [HttpGet("vehicle/{vehicleId}")]
-        [ProducesResponseType(200, Type = typeof(GetVehicleDto))]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> GetVehicleById(int vehicleId)
-        {
-            try
-            {
-                if (!await _vehicleRepository.VehicleExists(vehicleId))
-                    return NotFound();
-                var vehicle = await _vehicleRepository.GetVehicleById(vehicleId);
-                var vehicleDto = _mapper.Map<GetVehicleDto>(vehicle);
-                return Ok(new { status = "success", message = vehicleDto });
-            }
-
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("error", ex.Message);
-                return BadRequest(new { status = "fail", message = ModelState });
-            }
-        }
-
-        [HttpPost("unavailable/{vehicleId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> MarkVehicleAsUnavailable(int vehicleId)
-        {
-            try
-            {
-                if (!await _vehicleRepository.VehicleExists(vehicleId))
-                    return NotFound();
-
-                if (!await _vehicleRepository.MarkVehicleAsUnavailable(vehicleId))
-                {
-                    ModelState.AddModelError("error", "Something went wrong updating the vehicle");
-                    return BadRequest(new { status = "fail", message = ModelState });
-                }
-                return Ok(new { status = "success", message = "Vehicle is marked as unavailable successfully." });
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("error", ex.Message);
-                return BadRequest(ModelState);
-            }
-        }
-
-        [HttpPost("available/{vehicleId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> MarkVehicleAsAvailable(int vehicleId)
-        {
-            try
-            {
-                if (!await _vehicleRepository.VehicleExists(vehicleId))
-                    return NotFound();
-
-                if (!await _vehicleRepository.MarkVehicleAsAvailable(vehicleId))
-                {
-                    ModelState.AddModelError("error", "Something went wrong updating the vehicle");
-                    return BadRequest(new { status = "fail", message = ModelState });
-                }
-                return Ok(new { status = "success", message = "Vehicle is marked as available successfully." });
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("error", ex.Message);
-                return BadRequest(ModelState);
-            }
-        }
-
-        [HttpPost("{transporterId}")]
+        [HttpPost("{transporterId:int}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
@@ -145,16 +50,115 @@ namespace Backend.Controllers
             }
         }
 
-
-        [HttpGet("transporter/{tranposrterId}")]
-        [ProducesResponseType(200, Type = typeof(GetVehicleDto))]
+        [HttpGet]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<GetVehicleDto>))]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetVehicleByTransporterId(int tranposrterId)
+        public async Task<IActionResult> GetVehicles()
         {
             try
             {
-                var vehicle = await _vehicleRepository.GetVehicleByTransporterId(tranposrterId);
+                var vehicles = await _vehicleRepository.GetVehicles();
+                // var vehicleDtos = _mapper.Map<List<GetVehicleDto>>(vehicles);
+
+                return Ok(new { status = "success", message = vehicles });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("error", ex.Message);
+                return BadRequest(new { status = "fail", message = ModelState });
+            }
+        }
+
+        [HttpGet("vehicle/{vehicleId:int}")]
+        [ProducesResponseType(200, Type = typeof(GetVehicleDto))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetVehicleById(int vehicleId)
+        {
+            try
+            {
+                if (!await _vehicleRepository.VehicleExists(vehicleId))
+                    return NotFound();
+                var vehicle = await _vehicleRepository.GetVehicleById(vehicleId);
+                var vehicleDto = _mapper.Map<GetVehicleDto>(vehicle);
+                return Ok(new { status = "success", message = vehicleDto });
+            }
+
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("error", ex.Message);
+                return BadRequest(new { status = "fail", message = ModelState });
+            }
+        }
+
+        [HttpPut("unavailable/{vehicleId:int}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> MarkVehicleAsUnavailable(int vehicleId)
+        {
+            // Check if the vehicle exists
+            if (!await _vehicleRepository.VehicleExists(vehicleId))
+                return NotFound(new { status = "fail", message = "Vehicle not found" });
+
+            // Check if the vehicle is already available
+            bool isVehicleAvailable = await _vehicleRepository.VehicleIsAvailable(vehicleId);
+            if (!isVehicleAvailable)
+            {
+                return BadRequest(new { status = "fail", message = "Vehicle is already unavailable" });
+            }
+
+            // Attempt to mark the vehicle as available
+            bool updateSuccess = await _vehicleRepository.MarkVehicleAsUnavailable(vehicleId);
+            if (!updateSuccess)
+            {
+                return StatusCode(500, new { status = "error", message = "Something went wrong updating the vehicle" });
+            }
+
+            // If successful, return an OK response
+            return Ok(new { status = "success", message = "Vehicle marked as unavailable successfully." });
+        }
+
+        [HttpPut("available/{vehicleId:int}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> MarkVehicleAsAvailable(int vehicleId)
+        {
+            // Check if the vehicle exists
+            if (!await _vehicleRepository.VehicleExists(vehicleId))
+                return NotFound(new { status = "fail", message = "Vehicle not found" });
+
+            // Check if the vehicle is already available
+            bool isVehicleAvailable = await _vehicleRepository.VehicleIsAvailable(vehicleId);
+            if (isVehicleAvailable)
+            {
+                return BadRequest(new { status = "fail", message = "Vehicle is already available" });
+            }
+
+            // Attempt to mark the vehicle as available
+            bool updateSuccess = await _vehicleRepository.MarkVehicleAsAvailable(vehicleId);
+            if (!updateSuccess)
+            {
+                return StatusCode(500, new { status = "error", message = "Something went wrong updating the vehicle" });
+            }
+
+            // If successful, return an OK response
+            return Ok(new { status = "success", message = "Vehicle marked as available successfully." });
+        }
+
+        [HttpGet("transporter/{transporterId:int}")]
+        [ProducesResponseType(200, Type = typeof(GetVehicleDto))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetVehicleByTransporterId(int transporterId)
+        {
+            try
+            {
+                var vehicle = await _vehicleRepository.GetVehicleByTransporterId(transporterId);
                 var vehicleDto = _mapper.Map<GetVehicleDto>(vehicle);
                 return Ok(new { status = "success", message = vehicleDto });
             }
@@ -165,7 +169,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPut("{vehicleId}")]
+        [HttpPut("{vehicleId:int}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -195,7 +199,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPut("images/{vehicleId}")]
+        [HttpPut("images/{vehicleId:int}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -224,7 +228,6 @@ namespace Backend.Controllers
                 return StatusCode(500, new { status = "fail", message = ex });
             }
         }
-
 
     }
 }

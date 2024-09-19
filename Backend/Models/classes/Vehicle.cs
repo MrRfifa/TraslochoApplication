@@ -1,7 +1,12 @@
-using Backend.Models.classes.UsersEntities;
-using Backend.Models.enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Backend.Models.Classes.ImagesEntities;
+using Backend.Models.Classes.UsersEntities;
+using Backend.Models.Enums;
 
-namespace Backend.Models.classes
+namespace Backend.Models.Classes
 {
     public class Vehicle
     {

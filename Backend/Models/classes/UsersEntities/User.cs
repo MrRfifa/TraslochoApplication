@@ -1,8 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using Backend.Models.enums;
+using Backend.Models.Classes.AddressesEntities;
+using Backend.Models.Enums;
 
-namespace Backend.Models.classes.UsersEntities
+namespace Backend.Models.Classes.UsersEntities
 {
     [KnownType(typeof(Transporter))]
     [KnownType(typeof(Owner))]
@@ -19,6 +22,7 @@ namespace Backend.Models.classes.UsersEntities
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; } = string.Empty;
+
         public byte[] PasswordHash { get; set; } = Array.Empty<byte>();
         public byte[] PasswordSalt { get; set; } = Array.Empty<byte>();
 
@@ -39,7 +43,8 @@ namespace Backend.Models.classes.UsersEntities
 
         [Required(ErrorMessage = "File Content is required.")]
         public byte[] FileContentBase64 { get; set; } = Array.Empty<byte>();
-        public UserTokens UserTokens { get; set; } = new UserTokens();
+
+        public UserToken UserTokens { get; set; } = new UserToken();
         public UserRole Role { get; set; }
     }
 }

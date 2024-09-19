@@ -1,5 +1,5 @@
-using Backend.Dtos.Requests;
-using Backend.Models.classes.UsersEntities;
+using Backend.DTOs;
+using Backend.Models.Classes.UsersEntities;
 
 namespace Backend.Interfaces
 {

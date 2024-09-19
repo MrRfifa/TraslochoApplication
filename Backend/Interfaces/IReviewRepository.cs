@@ -1,4 +1,5 @@
-using Backend.Dtos.ReviewsDto;
+using Backend.DTOs;
+using Backend.DTOs.Review;
 
 namespace Backend.Interfaces
 {
@@ -7,6 +8,7 @@ namespace Backend.Interfaces
         Task<ICollection<GetReviewDto>?> GetAllReviews();
         Task<GetReviewDto?> GetReviewById(int reviewId);
         Task<ICollection<GetReviewDto>?> GetReviewsByTransporterId(int transporterId);
+        Task<ICollection<GetReviewDto>?> GetReviewsByOwnerId(int ownerId);
         Task<bool> ReviewExists(int reviewId);
         Task<bool> CreateReview(CreateReviewDto review, int transporterId, int ownerId);
         Task<bool> UpdateReview(int reviewId, CreateReviewDto reviewDto);

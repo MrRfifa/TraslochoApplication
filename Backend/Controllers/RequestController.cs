@@ -1,4 +1,4 @@
-using Backend.Dtos.RequestDto;
+using Backend.DTOs.Request;
 using Backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,72 +16,10 @@ namespace Backend.Controllers
             _requestRepository = requestRepository;
         }
 
-        [HttpGet]
+        [HttpGet("requests-by-transporter/{transporterId:int}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<GetRequestDto>))]
+        [ProducesResponseType(404)]
         [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [Authorize]
-        public async Task<IActionResult> GetRequests()
-        {
-            try
-            {
-                var requests = await _requestRepository.GetAllRequests();
-                return Ok(new { status = "success", message = requests });
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("error", ex.Message);
-                return BadRequest(new { status = "fail", message = ModelState });
-            }
-        }
-
-        [HttpGet("{requestId}")]
-        [ProducesResponseType(200, Type = typeof(GetRequestDto))]
-        [ProducesResponseType(404)] // Changed from 400 to 404 for "Not Found"
-        [ProducesResponseType(401)]
-        [Authorize]
-        public async Task<IActionResult> GetRequestById(int requestId)
-        {
-            try
-            {
-                var request = await _requestRepository.GetRequestById(requestId);
-                if (request == null)
-                    return NotFound(new { status = "fail", message = "Request not found" });
-
-                return Ok(new { status = "success", message = request });
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("error", ex.Message);
-                return BadRequest(new { status = "fail", message = ModelState });
-            }
-        }
-
-        [HttpPost("create-request/{shipmentId}/{transporterId}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [Authorize(Roles = "Transporter")]
-        public async Task<IActionResult> CreateRequest(int shipmentId, int transporterId)
-        {
-            try
-            {
-                var requestCreated = await _requestRepository.CreateRequest(transporterId, shipmentId);
-
-                return Ok(new { status = "success", message = "Request sent successfully." });
-            }
-            catch (ArgumentException ex)
-            {
-                // ModelState.AddModelError("error", ex.Message);
-                return BadRequest(new { status = "fail", message = ex.Message });
-            }
-        }
-
-
-        [HttpGet("requests/by-transporter/{transporterId}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<GetRequestDto>))]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
         [Authorize(Roles = "Transporter")]
         public async Task<IActionResult> GetRequestsByTransporterId(int transporterId)
         {
@@ -91,21 +29,21 @@ namespace Backend.Controllers
 
                 if (requests == null)
                 {
-                    return BadRequest(new { status = "fail", message = "Transporter not found." });
+                    return NotFound(new { status = "fail", message = "Transporter not found." });
                 }
 
                 return Ok(new { status = "success", message = requests });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { status = "fail", message = ex.Message });
+                return BadRequest(new { status = "fail", message = "An error occurred while fetching requests." });
             }
         }
 
-        [HttpGet("requests/by-shipment/{shipmentId}")]
+        [HttpGet("requests-by-shipment/{shipmentId:int}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<GetRequestDto>))]
+        [ProducesResponseType(404)]
         [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> GetRequestsByShipmentId(int shipmentId)
         {
@@ -115,75 +53,146 @@ namespace Backend.Controllers
 
                 if (requests == null)
                 {
-                    return BadRequest(new { status = "fail", message = "Shipment not found." });
+                    return NotFound(new { status = "fail", message = "Transporter not found." });
                 }
 
                 return Ok(new { status = "success", message = requests });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { status = "fail", message = ex.Message });
+                return BadRequest(new { status = "fail", message = "An error occurred while fetching requests." });
             }
         }
 
-        [HttpDelete("{requestId}")]
+        [HttpGet("{requestId:int}")]
+        [ProducesResponseType(200, Type = typeof(GetRequestDto))]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(400)]
+        [Authorize]
+        public async Task<IActionResult> GetRequestById(int requestId)
+        {
+            try
+            {
+                var requestDto = await _requestRepository.GetRequestById(requestId);
+
+                if (requestDto == null)
+                {
+                    return NotFound(new { status = "fail", message = "Request not found." });
+                }
+
+                return Ok(new { status = "success", message = requestDto });
+            }
+            catch (Exception)
+            {
+                // Log the error (optional)
+                return BadRequest(new { status = "fail", message = "An error occurred while fetching the request." });
+            }
+        }
+
+        [HttpGet("requests")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<GetRequestDto>))]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(400)]
+        [Authorize]
+        public async Task<IActionResult> GetAllRequests()
+        {
+            try
+            {
+                var requests = await _requestRepository.GetAllRequests();
+
+                return Ok(new { status = "success", message = requests });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { status = "fail", message = "An error occurred while fetching requests." });
+            }
+        }
+
+        [HttpDelete("{requestId:int}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(500)]
+        [ProducesResponseType(400)]
         [Authorize(Roles = "Transporter")]
         public async Task<IActionResult> DeleteRequest(int requestId)
         {
             try
             {
-                bool result = await _requestRepository.DeleteRequest(requestId);
-                if (result)
+                bool deleted = await _requestRepository.DeleteRequest(requestId);
+
+                if (!deleted)
                 {
-                    return Ok(new { status = "success", message = "Request deleted successfully." });
+                    return NotFound(new { status = "fail", message = "Request not found." });
                 }
-                else
-                {
-                    return NotFound(new { status = "fail", message = "Request not found" });
-                }
+
+                return Ok(new { status = "fail", message = "Request deleted successfully." }); // Successfully deleted
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
-                // Log the exception
-                return StatusCode(500, ex.Message);
+                return BadRequest(new { status = "fail", message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { status = "fail", message = "An error occurred while deleting the request." });
             }
         }
 
-
-        [HttpPost("requests/{requestId}/accept")]
-        [ProducesResponseType(200)]
+        [HttpPost]
+        [ProducesResponseType(200, Type = typeof(GetRequestDto))]
+        [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(500)]
+        [Authorize(Roles = "Transporter")]
+        public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto createRequestDto)
+        {
+            try
+            {
+                // Call the repository method to create the request
+                bool created = await _requestRepository.CreateRequest(createRequestDto.TransporterId, createRequestDto.ShipmentId);
+
+                if (!created)
+                {
+                    return BadRequest(new { status = "fail", message = "Failed to create the request." });
+                }
+
+                return Ok(new { status = "success", message = "Request created successfully." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { status = "fail", message = ex.Message });
+            }
+            catch (Exception)
+            {
+                // Log the error (optional)
+                return BadRequest(new { status = "fail", message = "An error occurred while creating the request." });
+            }
+        }
+
+        [HttpPost("accept/{requestId:int}")]
+        [ProducesResponseType(200, Type = typeof(GetRequestDto))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> AcceptRequest(int requestId)
         {
             try
             {
-                var accepted = await _requestRepository.AcceptRequest(requestId);
+                // Call the repository method to accept the request
+                bool accepted = await _requestRepository.AcceptRequest(requestId);
+                if (!accepted)
+                {
+                    return BadRequest(new { status = "fail", message = "Failed to accept the request." });
+                }
 
-                if (accepted)
-                {
-                    return Ok(new { status = "success", message = "Request accepted successfully." });
-                }
-                else
-                {
-                    return NotFound(new { status = "fail", message = "Request not found." });
-                }
+                return Ok(new { status = "success", message = "Request accepted successfully." });
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
-                // Log the exception
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { status = "fail", message = "An error occurred while processing the request.", error = ex.Message });
+                return BadRequest(new { status = "fail", message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { status = "fail", message = "An error occurred while accepting the request." });
             }
         }
-
-
 
     }
 }

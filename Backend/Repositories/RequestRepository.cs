@@ -1,23 +1,23 @@
-
 using AutoMapper;
 using Backend.Data;
-using Backend.Dtos.RequestDto;
+using Backend.DTOs.Request;
+using Backend.DTOs.Shipment;
 using Backend.Interfaces;
-using Backend.Models.classes;
-using Backend.Models.enums;
+using Backend.Models.Classes;
+using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories
 {
     public class RequestRepository : IRequestRepository
     {
-        private readonly DataContext _context;
+        private readonly ApplicationDBContext _context;
         private readonly IMapper _mapper;
         private readonly IShipmentRepository _shipmentRepository;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IUserRepository _userRepository;
 
-        public RequestRepository(DataContext context, IMapper mapper,
+        public RequestRepository(ApplicationDBContext context, IMapper mapper,
                                  IShipmentRepository shipmentRepository,
                                  IVehicleRepository vehicleRepository,
                                  IUserRepository userRepository)
@@ -31,78 +31,93 @@ namespace Backend.Repositories
 
         public async Task<bool> AcceptRequest(int requestId)
         {
-            // Mark requests as refused and accepted
-            var requestToAccept = await GetRequestById(requestId);
+            var requestToAccept = await _context.Requests
+                .FirstOrDefaultAsync(r => r.RequestId == requestId);
             if (requestToAccept == null)
             {
-                return false;
+                throw new ArgumentException("Request not found.");
             }
-            //TODO fix this accepted thing and fix the pricing
-            requestToAccept.Status = RequestStatus.Accepted;
 
+            // Set the accepted request status
+            requestToAccept.Status = RequestStatus.Accepted;
+            // Update the associated shipment
+            var shipmentToUpdate = await _shipmentRepository.GetShipmentById(requestToAccept.ShipmentId);
+            if (shipmentToUpdate == null)
+            {
+                throw new ArgumentException("Shipment not found.");
+            }
+
+            var transporter = await _userRepository.GetUserById(requestToAccept.TransporterId);
+            if (transporter == null)
+            {
+                throw new ArgumentException("Transporter not found.");
+            }
+
+            var transporterVehicle = await _vehicleRepository.GetVehicleByTransporterId(requestToAccept.TransporterId);
+            if (transporterVehicle == null)
+            {
+                throw new ArgumentException("Vehicle not found.");
+            }
+            // Refuse other requests for the same shipment
             var otherRequests = await _context.Requests
-                                    .Where(r => r.ShipmentId == requestToAccept.ShipmentId && r.Id != requestId)
-                                    .ToListAsync();
+                .Where(r => r.ShipmentId == requestToAccept.ShipmentId && r.RequestId != requestId)
+                .ToListAsync();
+
             foreach (var request in otherRequests)
             {
                 request.Status = RequestStatus.Refused;
             }
-
-            // Update the created shipment
-            var shipmentToUpdate = await _shipmentRepository.GetShipmentById(requestToAccept.ShipmentId);
-            if (shipmentToUpdate is null)
-            {
-                return false;
-            }
-
-            var transporter = await _userRepository.GetUserById(requestToAccept.TransporterId);
-            if (transporter is null)
-            {
-                return false;
-            }
-
-            var transporterVehicle = await _vehicleRepository.GetVehicleByTransporterId(requestToAccept.TransporterId);
-            if (transporterVehicle is null)
-            {
-                return false;
-            }
-
+            // Calculate distance
             float distanceBetweenOriginUser = await _shipmentRepository.GetDistanceBetweenCities(
                 nameof(transporter.UserAddress.Country),
                 transporter.UserAddress.City,
                 nameof(shipmentToUpdate.OriginAddress.Country),
-                shipmentToUpdate?.OriginAddress?.City ?? "");
+                shipmentToUpdate.OriginAddress?.City ?? "");
 
-            shipmentToUpdate!.ShipmentStatus = ShipmentStatus.Accepted;
+            // Update shipment details
+            shipmentToUpdate.ShipmentStatus = ShipmentStatus.Accepted;
             shipmentToUpdate.TransporterId = requestToAccept.TransporterId;
-            shipmentToUpdate.VehicleId = transporterVehicle.Id;
+            shipmentToUpdate.DistanceBetweenAddresses += distanceBetweenOriginUser;
+            shipmentToUpdate.Price += 6 * (int)distanceBetweenOriginUser;
 
-            TransporterShipment transporterShipment = new TransporterShipment
-            {
-                TransporterId = requestToAccept.TransporterId,
-                ShipmentId = shipmentToUpdate.Id,
-            };
-
-            _context.TransporterShipments.Add(transporterShipment);
+            // Save changes to the database
+            _context.Requests.Update(requestToAccept); // Update the accepted request
+            _context.Requests.UpdateRange(otherRequests); // Update refused requests
+            _context.Shipments.Update(shipmentToUpdate); // Update the shipment
             return await Save();
         }
-
         public async Task<bool> CreateRequest(int transporterId, int shipmentId)
         {
-            bool pendingShipment = await _context.Shipments
-                .AnyAsync(s => s.Id == shipmentId && s.ShipmentStatus == ShipmentStatus.Pending);
-            bool availableTransporter = await _vehicleRepository.TransporterHasAvailableVehicle(transporterId);
+            // Fetch the shipment details
+            GetShipmentDto? shipmentToBeRequested = await _shipmentRepository.GetShipmentDtoById(shipmentId);
 
-            if (!pendingShipment)
+            // Check if the shipment exists
+            if (shipmentToBeRequested == null)
+            {
+                throw new ArgumentException("Shipment not found.");
+            }
+
+            // Check if the shipment is pending
+            if (shipmentToBeRequested.ShipmentStatus != ShipmentStatus.Pending)
             {
                 throw new ArgumentException("No pending shipments found.");
             }
 
-            if (!availableTransporter)
+            // Check if the transporter has an available vehicle
+            bool availableVehicle = await _vehicleRepository.TransporterHasAvailableVehicle(transporterId);
+            if (!availableVehicle)
             {
                 throw new ArgumentException("No available vehicles for the transporter.");
             }
 
+            // Check if the transporter already has a shipment on the requested date
+            bool availableTransporter = await _vehicleRepository.TransporterHasShipmentOnDate(transporterId, shipmentToBeRequested.ShipmentDate);
+            if (availableTransporter)
+            {
+                throw new ArgumentException("The transporter already has a shipment scheduled for that day.");
+            }
+
+            // Create the request
             Request request = new Request
             {
                 ShipmentId = shipmentId,
@@ -113,95 +128,81 @@ namespace Backend.Repositories
             await _context.Requests.AddAsync(request);
             return await Save();
         }
-
-
         public async Task<bool> DeleteRequest(int requestId)
         {
-            if (await RequestExists(requestId))
+            // Fetch the request
+            var request = await _context.Requests.FindAsync(requestId);
+            if (request is not null)
             {
-                var request = await _context.Requests.FindAsync(requestId);
-                if (request != null)
+                // Check if the request is pending
+                if (request.Status == RequestStatus.Pending)
                 {
+                    // Remove the request if it is pending
                     _context.Requests.Remove(request);
                     return await Save();
                 }
-                return false;
+                throw new InvalidOperationException("Request is no longer removable! Only pending requests can be deleted.");
             }
             return false;
         }
-
         public async Task<ICollection<GetRequestDto>?> GetAllRequests()
         {
-            var requests = await _context.Requests.OrderBy(r => r.Id).ToListAsync();
-            var requestsDto = _mapper.Map<ICollection<GetRequestDto>>(requests);
-            return requestsDto;
-        }
+            var requests = await _context.Requests
+                .OrderBy(r => r.RequestId)
+                .ToListAsync();
 
+            return _mapper.Map<ICollection<GetRequestDto>>(requests);
+        }
         public async Task<GetRequestDto?> GetRequestById(int requestId)
         {
-            if (await RequestExists(requestId))
+            if (!await RequestExists(requestId))
             {
-                var request = await _context.Requests.FirstOrDefaultAsync(r => r.Id == requestId);
-                return _mapper.Map<GetRequestDto>(request);
+                return null; // Return null if the request doesn't exist
             }
-            return null;
-        }
 
+            var request = await _context.Requests
+                .FirstOrDefaultAsync(r => r.RequestId == requestId);
+
+            return _mapper.Map<GetRequestDto>(request);
+        }
         public async Task<ICollection<GetRequestDto>?> GetRequestsByShipmentId(int shipmentId)
         {
-            var shipmentExists = await _context.Shipments.AnyAsync(t => t.Id == shipmentId);
+            var shipmentExists = await _context.Shipments.AnyAsync(s => s.Id == shipmentId);
 
-            if (shipmentExists)
+            if (!shipmentExists)
             {
-                var shipmentRequests = await _context.Requests
-                    .Where(r => r.ShipmentId == shipmentId)
-                    .ToListAsync();
+                return null; // Return null if the shipment doesn't exist
+            }
 
-                if (shipmentRequests.Any())
-                {
-                    return _mapper.Map<ICollection<GetRequestDto>>(shipmentRequests);
-                }
-                else
-                {
-                    return Enumerable.Empty<GetRequestDto>().ToList();
-                }
-            }
-            else
-            {
-                return null;
-            }
+            var shipmentRequests = await _context.Requests
+                .Where(r => r.ShipmentId == shipmentId)
+                .ToListAsync();
+
+            return shipmentRequests.Any()
+                ? _mapper.Map<ICollection<GetRequestDto>>(shipmentRequests)
+                : Enumerable.Empty<GetRequestDto>().ToList();
         }
-
         public async Task<ICollection<GetRequestDto>?> GetRequestsByTransporterId(int transporterId)
         {
             var transporterExists = await _context.Transporters.AnyAsync(t => t.Id == transporterId);
 
-            if (transporterExists)
+            if (!transporterExists)
             {
-                var transporterRequests = await _context.Requests
-                    .Where(r => r.TransporterId == transporterId)
-                    .ToListAsync();
+                return null; // Return null if the transporter doesn't exist
+            }
 
-                if (transporterRequests.Any())
-                {
-                    return _mapper.Map<ICollection<GetRequestDto>>(transporterRequests);
-                }
-                else
-                {
-                    return Enumerable.Empty<GetRequestDto>().ToList();
-                }
-            }
-            else
-            {
-                return null;
-            }
+            var transporterRequests = await _context.Requests
+                .Where(r => r.TransporterId == transporterId)
+                .ToListAsync();
+
+            return transporterRequests.Any()
+                ? _mapper.Map<ICollection<GetRequestDto>>(transporterRequests)
+                : Enumerable.Empty<GetRequestDto>().ToList();
         }
-
         public async Task<bool> RequestExists(int requestId)
         {
-            return await _context.Requests.AnyAsync(e => e.Id == requestId);
+            return await _context.Requests.AnyAsync(e => e.RequestId == requestId);
         }
-
         public async Task<bool> Save()
         {
             var saved = await _context.SaveChangesAsync();

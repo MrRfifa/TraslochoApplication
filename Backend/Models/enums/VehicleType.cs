@@ -1,13 +1,13 @@
 using System.Runtime.Serialization;
 
-namespace Backend.Models.enums
+namespace Backend.Models.Enums
 {
-    public enum VehicleType 
+    public enum VehicleType
     {
         [EnumMember(Value = "Van")]
-        Van,
+        Van = 0,
 
         [EnumMember(Value = "Truck")]
-        Truck
+        Truck = 1
     }
 }

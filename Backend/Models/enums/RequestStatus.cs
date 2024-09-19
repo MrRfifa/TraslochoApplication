@@ -1,14 +1,14 @@
 using System.Runtime.Serialization;
 
-namespace Backend.Models.enums
+namespace Backend.Models.Enums
 {
     public enum RequestStatus
     {
         [EnumMember(Value = "Pending")]
-        Pending,
+        Pending = 0,
         [EnumMember(Value = "Accepted")]
-        Accepted,
+        Accepted = 1,
         [EnumMember(Value = "Refused")]
-        Refused,
+        Refused = 2,
     }
 }

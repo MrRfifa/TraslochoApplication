@@ -1,10 +1,15 @@
-using Backend.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Backend.Dtos.Requests;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Backend.DTOs;
+using Backend.DTOs.User;
+using Backend.DTOs.UserRequests;
 using Backend.Helpers;
+using Backend.Interfaces;
+using Backend.Models.Classes.UsersEntities;
 using Microsoft.AspNetCore.Authorization;
-using Backend.Models.classes.UsersEntities;
-using Backend.Dtos.UsersDto;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
 {
@@ -12,7 +17,6 @@ namespace Backend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-
         private readonly IUserRepository _userRepository;
         private readonly IAuthRepository _authRepository;
         private readonly ITokenRepository _tokenRepository;
@@ -25,38 +29,34 @@ namespace Backend.Controllers
         }
 
         [HttpPost("register-transporter")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(422)]
-        [ProducesResponseType(500)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]  // Bad Request
+        [ProducesResponseType(422)]  // Unprocessable Entity
+        [ProducesResponseType(500)]  // Internal Server Error
         public async Task<IActionResult> RegisterTrasporter([FromForm] RegisterUserDto transporterToCreate)
         {
+            if (transporterToCreate == null || !ModelState.IsValid)
+            {
+                return BadRequest(new { status = "error", message = "Invalid data provided", errors = ModelState.Values.SelectMany(v => v.Errors) });
+            }
+
             try
             {
-                if (transporterToCreate == null || !ModelState.IsValid)
+                bool emailExists = await _userRepository.UserExistsByEmail(transporterToCreate.Email);
+                if (emailExists)
                 {
-                    return BadRequest(ModelState);
+                    return StatusCode(422, new { status = "error", message = "This email is already in use." });
                 }
 
-                // Check if the user with the given email already exists
-                bool existingUser = await _userRepository.UserExistsByEmail(transporterToCreate.Email);
-                if (existingUser)
+                bool phoneNumberExists = await _userRepository.UserExistsByPhoneNumber(transporterToCreate.PhoneNumber);
+                if (phoneNumberExists)
                 {
-                    ModelState.AddModelError("error", "This email already exists");
-                    return StatusCode(422, ModelState);
-                    // return BadRequest(new { status = "false", message = "This email already exists" });
+                    return StatusCode(422, new { status = "error", message = "This phone number is already in use." });
                 }
 
-                // Register the user
-                if (!await _authRepository.RegisterTransporter(transporterToCreate))
-                {
-                    ModelState.AddModelError("error", "Something went wrong while saving");
-                    return StatusCode(500, ModelState);
-                }
-
-                // Retrieve the registered user with tokens
+                bool isRegistered = await _authRepository.RegisterTransporter(transporterToCreate);
                 User registeredUser = await _userRepository.GetUserByEmail(transporterToCreate.Email);
-                if (registeredUser.UserTokens.VerificationToken is not null)
+                if (isRegistered)
                 {
                     // Send email verification
                     string recipientName = $"{transporterToCreate.LastName} {transporterToCreate.FirstName}";
@@ -68,52 +68,49 @@ namespace Backend.Controllers
                     };
 
                     _tokenRepository.SendEmail(sendEmailRequest);
-
-                    return Ok(new { status = "success", message = "Successfully Created." });
+                    return Ok(new { status = "success", message = "Successfully registered. Please verify your email." });
                 }
                 else
                 {
-                    throw new Exception("Token not generated yet, retry in a few minutes.");
+                    return StatusCode(500, new { status = "error", message = "Something went wrong while saving the user." });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Something went wrong: " + ex.Message);
+                return StatusCode(500, new { status = "error", message = "Internal server error: " + ex.Message });
             }
         }
 
+
         [HttpPost("register-owner")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(422)]
-        [ProducesResponseType(500)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]  // Bad Request
+        [ProducesResponseType(422)]  // Unprocessable Entity
+        [ProducesResponseType(500)]  // Internal Server Error
         public async Task<IActionResult> RegisterOwner([FromForm] RegisterUserDto ownerToCreate)
         {
+            if (ownerToCreate == null || !ModelState.IsValid)
+            {
+                return BadRequest(new { status = "error", message = "Invalid data provided", errors = ModelState.Values.SelectMany(v => v.Errors) });
+            }
+
             try
             {
-                if (ownerToCreate == null || !ModelState.IsValid)
+                bool emailExists = await _userRepository.UserExistsByEmail(ownerToCreate.Email);
+                if (emailExists)
                 {
-                    return BadRequest(ModelState);
+                    return StatusCode(422, new { status = "error", message = "This email is already in use." });
                 }
 
-                // Check if the user with the given email already exists
-                bool existingUser = await _userRepository.UserExistsByEmail(ownerToCreate.Email);
-                if (existingUser)
+                bool phoneNumberExists = await _userRepository.UserExistsByPhoneNumber(ownerToCreate.PhoneNumber);
+                if (phoneNumberExists)
                 {
-                    ModelState.AddModelError("error", "This email already exists");
-                    return StatusCode(422, ModelState);
+                    return StatusCode(422, new { status = "error", message = "This phone number is already in use." });
                 }
 
-                // Register the user
-                if (!await _authRepository.RegisterOwner(ownerToCreate))
-                {
-                    ModelState.AddModelError("error", "Something went wrong while saving");
-                    return StatusCode(500, ModelState);
-                }
-
-                // Retrieve the registered user with tokens
+                bool isRegistered = await _authRepository.RegisterOwner(ownerToCreate);
                 User registeredUser = await _userRepository.GetUserByEmail(ownerToCreate.Email);
-                if (registeredUser.UserTokens.VerificationToken is not null)
+                if (isRegistered)
                 {
                     // Send email verification
                     string recipientName = $"{ownerToCreate.LastName} {ownerToCreate.FirstName}";
@@ -125,19 +122,19 @@ namespace Backend.Controllers
                     };
 
                     _tokenRepository.SendEmail(sendEmailRequest);
-
-                    return Ok(new { status = "success", message = "Successfully Created." });
+                    return Ok(new { status = "success", message = "Successfully registered. Please verify your email." });
                 }
                 else
                 {
-                    throw new Exception("Token not generated yet, retry in a few minutes.");
+                    return StatusCode(500, new { status = "error", message = "Something went wrong while saving the user." });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Something went wrong: " + ex.Message);
+                return StatusCode(500, new { status = "error", message = "Internal server error: " + ex.Message });
             }
         }
+
 
 
         [HttpPost("login")]
@@ -192,7 +189,6 @@ namespace Backend.Controllers
             }
         }
 
-
         [HttpPost("forgot-password")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
@@ -232,7 +228,6 @@ namespace Backend.Controllers
             return BadRequest("Something went wrong");
         }
 
-
         [HttpPost("reset-password")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
@@ -270,7 +265,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPost("logout/{userId}")]
+        [HttpPost("logout/{userId:int}")]
         public async Task<IActionResult> Logout(int userId)
         {
             try

@@ -1,14 +1,13 @@
+using Backend.Models.Classes.UsersEntities;
 
-using Backend.Models.classes.UsersEntities;
-
-namespace Backend.Models.classes
+namespace Backend.Models.Classes
 {
     public class Review
     {
         public int Id { get; set; }
         public int Rating { get; set; } // Rating from 1 to 5
         public string Comment { get; set; } = string.Empty;
-        public DateTime ReviewTime { get; set; }
+        public DateTime ReviewTime { get; set; } = DateTime.Now;
         public int OwnerId { get; set; } // Foreign key for Owner
         public int TransporterId { get; set; } // Foreign key for Transporter
 
