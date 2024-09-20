@@ -1,4 +1,5 @@
 using System.Text;
+using Backend.Cached;
 using Backend.Data;
 using Backend.Interfaces;
 using Backend.Repositories;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
+// using Scrutor;
 //TODO if there is necessity add pagination to the targets
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +51,13 @@ else
     throw new Exception("JWT Key is not configured");
 }
 
+//Memory Cache Dependency Injection
+// builder.Services.AddMemoryCache();
+builder.Services.AddStackExchangeRedisCache(redisOptions =>
+{
+    string? connectionRedis = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
+    redisOptions.Configuration = connectionRedis;
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -65,6 +74,13 @@ builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+
+//TODO add these caches
+// builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+// builder.Services.Decorate<IVehicleRepository, CachedVehicleRepository>();
+builder.Services.Decorate<IAuthRepository, CachedAuthRepository>();
+builder.Services.Decorate<IShipmentRepository, CachedShipmentRepository>();
+builder.Services.Decorate<IRequestRepository, CachedRequestRepository>();
 
 // Adding AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

@@ -157,20 +157,96 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("all-shipments/{ownerId:int}")]
+        [HttpGet("accepted-shipments/{ownerId:int}")]
         [ProducesResponseType(200)] // OK: Shipments retrieved successfully
         [ProducesResponseType(404)] // Not Found: No shipments found for the owner
         [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
-        public async Task<IActionResult> GetShipmentsByOwnerId(int ownerId)
+        public async Task<IActionResult> GetAcceptedShipmentsByOwnerId(int ownerId)
         {
-            var shipments = await _shipmentRepository.GetShipmentsByOwnerId(ownerId);
+            var shipments = await _shipmentRepository.GetAcceptedShipmentsByOwnerId(ownerId);
 
             if (shipments == null || shipments.Count == 0)
             {
-                return NotFound(new { message = "No shipments found for the specified owner." });
+                return NotFound(new { status = "fail", message = "No accepted shipments found for the specified owner." });
             }
 
-            return Ok(shipments);
+            return Ok(new { status = "success", message = shipments });
+        }
+
+        [HttpGet("canceled-shipments/{ownerId:int}")]
+        [ProducesResponseType(200)] // OK: Shipments retrieved successfully
+        [ProducesResponseType(404)] // Not Found: No shipments found for the owner
+        [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
+        public async Task<IActionResult> GetCanceledShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _shipmentRepository.GetCanceledShipmentsByOwnerId(ownerId);
+
+            if (shipments == null || shipments.Count == 0)
+            {
+                return NotFound(new { status = "fail", message = "No canceled shipments found for the specified owner." });
+            }
+
+            return Ok(new { status = "success", message = shipments });
+        }
+
+        [HttpGet("completed-shipments/{ownerId:int}")]
+        [ProducesResponseType(200)] // OK: Shipments retrieved successfully
+        [ProducesResponseType(404)] // Not Found: No shipments found for the owner
+        [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
+        public async Task<IActionResult> GetCompletedShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _shipmentRepository.GetCompletedShipmentsByOwnerId(ownerId);
+
+            if (shipments == null || shipments.Count == 0)
+            {
+                return NotFound(new { status = "fail", message = "No completed shipments found for the specified owner." });
+            }
+
+            return Ok(new { status = "success", message = shipments });
+        }
+
+        [HttpGet("pending-shipments/{ownerId:int}")]
+        [ProducesResponseType(200)] // OK: Shipments retrieved successfully
+        [ProducesResponseType(404)] // Not Found: No shipments found for the owner
+        [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
+        public async Task<IActionResult> GetPendingShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _shipmentRepository.GetPendingShipmentsByOwnerId(ownerId);
+
+            if (shipments == null || shipments.Count == 0)
+            {
+                return NotFound(new { status = "fail", message = "No pending shipments found for the specified owner." });
+            }
+
+            return Ok(new { status = "success", message = shipments });
+        }
+
+        [HttpPut("mark-shipment-completed/{shipmentId:int}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> MarkShipmentAsCompleted(int shipmentId)
+        {
+            try
+            {
+                var result = await _shipmentRepository.MarkShipmentAsCompleted(shipmentId);
+
+                if (result == -1)
+                {
+                    return NotFound(new { status = "fail", message = "Shipment not found." });
+                }
+
+                if (result == 0)
+                {
+                    return BadRequest(new { status = "fail", message = "Shipment is already completed." });
+                }
+
+                return Ok(new { status = "success", message = "Shipment marked as completed successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = "fail", message = ex.Message });
+            }
         }
 
     }

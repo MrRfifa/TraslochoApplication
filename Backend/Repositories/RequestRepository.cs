@@ -199,6 +199,19 @@ namespace Backend.Repositories
                 ? _mapper.Map<ICollection<GetRequestDto>>(transporterRequests)
                 : Enumerable.Empty<GetRequestDto>().ToList();
         }
+
+        public async Task<Shipment?> GetShipmentByRequestId(int requestId)
+        {
+            var request = await _context.Requests
+                .Include(r => r.Shipment) // Include the associated Shipment entity
+                .FirstOrDefaultAsync(r => r.RequestId == requestId);
+            if (request != null)
+            {
+                return request.Shipment;
+            }
+            return null;
+        }
+
         public async Task<bool> RequestExists(int requestId)
         {
             return await _context.Requests.AnyAsync(e => e.RequestId == requestId);

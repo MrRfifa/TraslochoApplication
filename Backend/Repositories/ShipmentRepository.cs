@@ -174,6 +174,36 @@ namespace Backend.Repositories
             return await Save();
         }
 
+        public async Task<ICollection<Shipment>?> GetAcceptedShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _context.Shipments
+                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Accepted)
+                .ToListAsync();
+
+            // Return the result
+            return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
+        }
+
+        public async Task<ICollection<Shipment>?> GetCanceledShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _context.Shipments
+                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Canceled)
+                .ToListAsync();
+
+            // Return the result
+            return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
+        }
+
+        public async Task<ICollection<Shipment>?> GetCompletedShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _context.Shipments
+    .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Completed)
+    .ToListAsync();
+
+            // Return the result
+            return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
+        }
+
         public async Task<float> GetDistanceBetweenCities(string originCountry, string originCity, string destinationCountry, string destinationCity)
         {
             try
@@ -221,6 +251,16 @@ namespace Backend.Repositories
             }
         }
 
+        public async Task<ICollection<Shipment>?> GetPendingShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _context.Shipments
+                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Pending)
+                .ToListAsync();
+
+            // Return the result
+            return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
+        }
+
         public async Task<Shipment?> GetShipmentById(int shipmentId)
         {
             var shipment = await _context.Shipments
@@ -245,17 +285,28 @@ namespace Backend.Repositories
             return shipmentDto;
         }
 
-        public async Task<ICollection<Shipment>?> GetShipmentsByOwnerId(int ownerId)
+        public async Task<int> MarkShipmentAsCompleted(int shipmentId)
         {
-            // Fetch shipments from the database where OwnerId matches the given ownerId
-            var shipments = await _context.Shipments
-                .Where(s => s.OwnerId == ownerId)
-                .ToListAsync();
+            // Fetch the shipment from the database
+            var shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.Id == shipmentId);
+            // Check if the shipment exists
+            if (shipment == null)
+            {
+                return -1; // Shipment not found
+            }
+            // Check if the shipment is already completed
+            if (shipment.ShipmentStatus == ShipmentStatus.Completed)
+            {
+                return 0; // Shipment is already marked as completed
+            }
+            // Mark the shipment as completed
+            shipment.ShipmentStatus = ShipmentStatus.Completed;
 
-            // Return the result
-            return shipments.Count > 0 ? shipments : null;
+            // Save changes to the database
+            await Save();
+            return 1; // Successfully marked as completed
         }
-
+        
         public async Task<int> ModifyShipmentDate(int shipmentId, DateTime newDate)
         {
             var shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.Id == shipmentId);
