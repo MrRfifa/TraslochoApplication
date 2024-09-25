@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+*.egg-info/
+dist/
+build/
+*.egg
+
+/Data/Sentiments/*.csv
+*.csv
+
+# Flask specific
+instance/
+.webassets-cache
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*.bak
+
+# Environment variables
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# MacOS
+.DS_Store
+
+# Logs
+*.log
+
+# Python virtual environments
+venv/
+ENV/
+env.bak/

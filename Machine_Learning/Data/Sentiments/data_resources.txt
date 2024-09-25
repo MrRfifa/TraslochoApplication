@@ -1,0 +1,4 @@
+Sentiments:
+https://www.kaggle.com/datasets/mdismielhossenabir/sentiment-analysis
+https://www.kaggle.com/datasets/adedapoadeniran/cleaned-data-for-fine-grained-sentiment-analysis
+
