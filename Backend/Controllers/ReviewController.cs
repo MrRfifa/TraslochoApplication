@@ -35,9 +35,13 @@ namespace Backend.Controllers
             // Call the service method to create the review
             var result = await _reviewRepository.CreateReview(reviewToCreate, transporterId, ownerId);
 
-            if (result)
+            if (result == 1)
             {
                 return Ok(new { status = "success", message = "Review created successfully." });
+            }
+            if (result == -1)
+            {
+                return BadRequest(new { status = "fail", message = "Your review contains inappropriate language. Please respect others." });
             }
 
             return BadRequest(new { status = "fail", message = "Review creation failed. Ensure you have a completed shipment with this transporter." });

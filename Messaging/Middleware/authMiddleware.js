@@ -12,7 +12,7 @@ const verifyToken = async (socket, next) => {
   }
 
   try {
-    const cacheKey = `connected_${userId}`;
+    const cacheKey = `connected-${userId}`;
     const token = await readHashValue(cacheKey, "data");
     // console.log(token);
 

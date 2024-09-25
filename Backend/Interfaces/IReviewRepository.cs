@@ -10,7 +10,7 @@ namespace Backend.Interfaces
         Task<ICollection<GetReviewDto>?> GetReviewsByTransporterId(int transporterId);
         Task<ICollection<GetReviewDto>?> GetReviewsByOwnerId(int ownerId);
         Task<bool> ReviewExists(int reviewId);
-        Task<bool> CreateReview(CreateReviewDto review, int transporterId, int ownerId);
+        Task<int> CreateReview(CreateReviewDto review, int transporterId, int ownerId);
         Task<bool> UpdateReview(int reviewId, CreateReviewDto reviewDto);
         Task<bool> DeleteReview(int reviewId);
         Task<bool> Save();

@@ -1,4 +1,3 @@
-
 using System.Net.Http.Headers;
 using AutoMapper;
 using Backend.Data;
@@ -125,6 +124,12 @@ namespace Backend.Repositories
 
         public async Task<bool> CreateShipment(CreateShipmentDto shipmentToCreate, int ownerId)
         {
+            //TODO Ensure that the shipment date is at least 3 days from today
+            if (shipmentToCreate.ShipmentDate.Date < DateTime.Now.Date.AddDays(3))
+            {
+                throw new InvalidOperationException("Shipments must be scheduled at least 3 days in advance.");
+            }
+
             // Ensure that the owner doesn't have more than one shipment on the same day
             bool hasShipmentOnDate = await _context.Shipments.AnyAsync(s => s.OwnerId == ownerId
                 && s.ShipmentDate.Date == shipmentToCreate.ShipmentDate.Date);
@@ -133,9 +138,9 @@ namespace Backend.Repositories
             {
                 throw new InvalidOperationException("You can only create one shipment per day.");
             }
-            // Process the Shipment images
-            var shipmentImages = new List<ShipmentImage>();
 
+            // Process the shipment images
+            var shipmentImages = new List<ShipmentImage>();
             foreach (var formFile in shipmentToCreate.ShipmentImages)
             {
                 // Read the stream directly from the form file
@@ -159,6 +164,7 @@ namespace Backend.Repositories
                 }
             }
 
+            // Create the shipment entity
             var shipmentEntity = new Shipment
             {
                 ShipmentType = shipmentToCreate.ShipmentType,
@@ -170,6 +176,7 @@ namespace Backend.Repositories
                 OwnerId = ownerId,
                 Images = shipmentImages,
             };
+
             _context.Shipments.Add(shipmentEntity);
             return await Save();
         }
@@ -288,25 +295,35 @@ namespace Backend.Repositories
         public async Task<int> MarkShipmentAsCompleted(int shipmentId)
         {
             // Fetch the shipment from the database
-            var shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.Id == shipmentId);
+            var shipment = await GetShipmentById(shipmentId);
+
             // Check if the shipment exists
             if (shipment == null)
             {
                 return -1; // Shipment not found
             }
+
             // Check if the shipment is already completed
             if (shipment.ShipmentStatus == ShipmentStatus.Completed)
             {
                 return 0; // Shipment is already marked as completed
             }
+
+            // Ensure the shipment date is today or in the past
+            if (shipment.ShipmentDate >= DateTime.Now)
+            {
+                return -2; // Shipment date is in the future, cannot mark as completed
+            }
+
             // Mark the shipment as completed
             shipment.ShipmentStatus = ShipmentStatus.Completed;
 
             // Save changes to the database
             await Save();
+
             return 1; // Successfully marked as completed
         }
-        
+
         public async Task<int> ModifyShipmentDate(int shipmentId, DateTime newDate)
         {
             var shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.Id == shipmentId);

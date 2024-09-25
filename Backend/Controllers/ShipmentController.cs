@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using AutoMapper;
-using Backend.DTOs.Address;
 using Backend.DTOs.Shipment;
 using Backend.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -239,6 +237,11 @@ namespace Backend.Controllers
                 if (result == 0)
                 {
                     return BadRequest(new { status = "fail", message = "Shipment is already completed." });
+                }
+
+                if (result == -2)
+                {
+                    return BadRequest(new { status = "fail", message = "Shipment can't be marked as completed, dates problem." });
                 }
 
                 return Ok(new { status = "success", message = "Shipment marked as completed successfully!" });

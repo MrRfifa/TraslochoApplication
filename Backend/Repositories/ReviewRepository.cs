@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
+using System.Text.Json;
 using AutoMapper;
 using Backend.Data;
 using Backend.DTOs;
@@ -17,13 +15,15 @@ namespace Backend.Repositories
     {
         private readonly ApplicationDBContext _context;
         private readonly IMapper _mapper;
+        private readonly HttpClient _httpClient;
 
-        public ReviewRepository(ApplicationDBContext context, IMapper mapper)
+        public ReviewRepository(ApplicationDBContext context, IMapper mapper, HttpClient httpClient)
         {
             _context = context;
             _mapper = mapper;
+            _httpClient = httpClient;
         }
-        public async Task<bool> CreateReview(CreateReviewDto review, int transporterId, int ownerId)
+        public async Task<int> CreateReview(CreateReviewDto review, int transporterId, int ownerId)
         {
             bool completedShipment = _context.Shipments.Any(
                 s => s.TransporterId == transporterId && s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Completed
@@ -31,6 +31,15 @@ namespace Backend.Repositories
 
             if (completedShipment)
             {
+                string sentiment = await PredictSentimentAsync(review.Comment);
+                Console.WriteLine(sentiment);
+                // Check if the sentiment is an error message (indicating inappropriate language)
+                if (sentiment.StartsWith("Your review contains inappropriate language") ||
+                    sentiment.StartsWith("An error occurred"))
+                {
+                    return -1; // Return false and the error message
+                }
+
                 Review reviewEntity = new Review
                 {
                     Comment = review.Comment,
@@ -38,12 +47,15 @@ namespace Backend.Repositories
                     OwnerId = ownerId,
                     TransporterId = transporterId,
                     ReviewTime = DateTime.Now,
+                    Sentiment = sentiment
                 };
 
                 await _context.Reviews.AddAsync(reviewEntity);
-                return await Save();
+                await Save(); // Ensure you await the save operation
+                return 1; // Return success and a success message
             }
-            return false;
+
+            return 0;
         }
 
         public async Task<bool> DeleteReview(int reviewId)
@@ -115,6 +127,64 @@ namespace Backend.Repositories
             reviewEntity.Comment = reviewDto.Comment;
             reviewEntity.ReviewTime = DateTime.UtcNow;
             return await Save();
+        }
+
+
+        //Sentiment prediction function ---> Flask
+        public async Task<string> PredictSentimentAsync(string text)
+        {
+            var flaskUrl = "http://127.0.0.1:5000/predict-sentiment";
+            var requestData = new
+            {
+                text
+            };
+
+            try
+            {
+                // Convert request data to JSON
+                var content = new StringContent(JsonSerializer.Serialize(requestData), Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync(flaskUrl, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Read the response content
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                    // Parse JSON response
+                    var jsonDocument = JsonDocument.Parse(jsonResponse);
+                    var sentiment = jsonDocument.RootElement.GetProperty("sentiment").GetString();
+
+                    // Return the sentiment from Flask API
+                    return sentiment!;
+                }
+                else
+                {
+                    // Read the error response content
+                    var errorResponse = await response.Content.ReadAsStringAsync();
+
+                    // Parse the error message if it is JSON
+                    var jsonDocument = JsonDocument.Parse(errorResponse);
+                    var errorMessage = jsonDocument.RootElement.GetProperty("error").GetString();
+
+                    // Return a properly formatted error message
+                    return errorMessage!;
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                // Handle any HTTP-related errors
+                Console.WriteLine($"HTTP Request Error: {e.Message}");
+                return "An error occurred while connecting to the API.";
+            }
+            catch (JsonException e)
+            {
+                // Handle JSON parsing errors
+                Console.WriteLine($"JSON Parsing Error: {e.Message}");
+                return "An error occurred while processing the response.";
+            }
+
+            // return "neutral"; // Default response if no conditions are met
         }
 
     }

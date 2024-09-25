@@ -10,6 +10,7 @@ namespace Backend.Models.Classes
         public DateTime ReviewTime { get; set; } = DateTime.Now;
         public int OwnerId { get; set; } // Foreign key for Owner
         public int TransporterId { get; set; } // Foreign key for Transporter
+        public string Sentiment { get; set; } = string.Empty;
 
         // Navigation properties
         public Owner? Owner { get; set; }

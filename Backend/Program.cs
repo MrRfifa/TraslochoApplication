@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Load environment variables from .env file
 DotNetEnv.Env.Load();
 
+builder.Services.AddHttpClient();
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -84,6 +85,21 @@ builder.Services.Decorate<IRequestRepository, CachedRequestRepository>();
 
 // Adding AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Enable CORS
+var corsOrigin = Environment.GetEnvironmentVariable("CORS");
+
+if (corsOrigin != null)
+{
+    builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PhotographOrigin", policy =>
+    {
+        policy.WithOrigins(corsOrigin).AllowAnyMethod().AllowAnyHeader();
+    });
+});
+}
+
 //Adding Data Context
 var DefaultConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
@@ -119,6 +135,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("PhotographOrigin");
 
 app.UseAuthentication();
 
