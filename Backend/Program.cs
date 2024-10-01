@@ -102,6 +102,59 @@ else
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+<<<<<<< Updated upstream
+=======
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Add services to the container.
+//Dependency Injection
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
+builder.Services.AddScoped<IRequestRepository, RequestRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
+//TODO add these caches
+// builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+// builder.Services.Decorate<IVehicleRepository, CachedVehicleRepository>();
+builder.Services.Decorate<IAuthRepository, CachedAuthRepository>();
+builder.Services.Decorate<IShipmentRepository, CachedShipmentRepository>();
+builder.Services.Decorate<IRequestRepository, CachedRequestRepository>();
+
+// Adding AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Enable CORS
+var corsOrigin = Environment.GetEnvironmentVariable("CORS");
+
+if (corsOrigin != null)
+{
+    builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PhotographOrigin", policy =>
+    {
+        policy.WithOrigins(corsOrigin).AllowAnyMethod().AllowAnyHeader();
+    });
+});
+}
+
+//Adding Data Context
+var DefaultConnection = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+});
+
+builder.Services.AddDbContext<ApplicationDBContext>(options =>
+{
+    options.UseSqlServer(DefaultConnection);
+});
+>>>>>>> Stashed changes
 
 var app = builder.Build();
 

@@ -41,5 +41,7 @@ namespace Backend.Models.classes
         public byte[] FileContentBase64 { get; set; } = Array.Empty<byte>();
         public UserTokens UserTokens { get; set; } = new UserTokens();
         public UserRole Role { get; set; }
+        // Navigation property to Notifications
+        public ICollection<Notification>? Notifications { get; set; }
     }
 }
