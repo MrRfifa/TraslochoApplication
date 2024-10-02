@@ -70,7 +70,7 @@ const DateOfBirthForm = () => {
 
   return (
     <form
-      className="w-full space-x-5 flex flex-row justify-between"
+      className="w-full flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-5 justify-between"
       onSubmit={handleSubmit}
     >
       <input
@@ -85,7 +85,7 @@ const DateOfBirthForm = () => {
             newDob: e.target.value,
           })
         }
-        className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/2"
+        className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-1/2"
         style={{ cursor: !updateDateOfBirth ? "not-allowed" : "text" }}
       />
       <input
@@ -100,16 +100,16 @@ const DateOfBirthForm = () => {
             password: e.target.value,
           })
         }
-        className={`ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3 ${
+        className={`ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-1/3 ${
           updateDateOfBirth ? "block" : "hidden"
         } `}
         style={{ cursor: !updateDateOfBirth ? "not-allowed" : "text" }}
       />
 
-      <div className="space-x-5 w-1/3 flex flex-row justify-end items-center">
+      <div className="space-x-5 w-full md:w-1/3 flex flex-row justify-end items-center">
         <button
           type="button"
-          className={`p-2 border-2 rounded-lg`}
+          className="p-2 border-2 rounded-lg"
           onClick={!updateDateOfBirth ? handleUpdateDateOfBirth : handleCancel}
         >
           {!updateDateOfBirth ? (
@@ -121,7 +121,7 @@ const DateOfBirthForm = () => {
         <button
           type="submit"
           onClick={handleUpdateDateOfBirth}
-          className={`p-2 border-2 rounded-lg  ${
+          className={`p-2 border-2 rounded-lg ${
             updateDateOfBirth ? "block" : "hidden"
           }`}
         >

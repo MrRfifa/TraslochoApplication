@@ -1,121 +1,135 @@
 import { useState } from "react";
-import { useSpring, animated } from "react-spring";
-import AOS from "aos";
-import "aos/dist/aos.css";
+import logo from "../assets/logo/logo-no-background.png";
 import {
-  FaChevronRight,
-  FaChevronLeft,
-  FaGear,
+  FaUserLarge,
   FaMessage,
   FaPowerOff,
   FaHouse,
   FaCarSide,
   FaBoxesStacked,
 } from "react-icons/fa6";
-import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import UserInfo from "../Redux/SlicesCalls/UserInfo";
 import AuthService from "../Services/Auth/AuthServices";
 
 const Sidebar = () => {
   const state = useSelector((state) => state.userInfo.value);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
 
   //Call the redux slice
   UserInfo();
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsOpen(!isOpen);
   };
 
-  const sidebarAnimation = useSpring({
-    transform: isSidebarOpen ? "translateX(0)" : "translateX(-120%)",
-  });
-
   const sections = [
-    { icon: FaHouse, destination: "/dashboard" },
-    { icon: FaMessage, destination: "/messages" },
-    { icon: FaBoxesStacked, destination: "/shipments" },
-    { icon: FaCarSide, destination: "/cars" },
-    { icon: FaGear, destination: "/settings" },
+    { icon: FaHouse, destination: "/dashboard", name: "Dashboard" },
+    { icon: FaMessage, destination: "/messages", name: "Messages" },
+    { icon: FaBoxesStacked, destination: "/shipments", name: "Shipments" },
+    { icon: FaCarSide, destination: "/cars", name: "Car" },
+    { icon: FaUserLarge, destination: "/profile", name: "Profile" },
   ];
 
-  const showCarSideIcon = state.role === "Transporter";
-
-  // Initialize AOS library
-  AOS.init();
+  // const showCarSideIcon = state.role === "Transporter";
+  const showCarSideIcon = true;
 
   return (
-    <div className="fixed top-4 left-4 z-50">
+    <>
       <button
-        className="bg-[#FCA311] p-2 rounded-full"
         onClick={toggleSidebar}
-        data-aos="fade-right"
-        data-aos-offset="300"
-        data-aos-duration="500"
+        aria-controls="logo-sidebar"
+        type="button"
+        className="absolute inline-flex items-center p-2 mt-2 ml-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
       >
-        {isSidebarOpen ? (
-          <FaChevronLeft size={40} color="white" />
-        ) : (
-          <FaChevronRight size={40} color="white" />
-        )}
-      </button>
-      <animated.div
-        className="flex flex-col gap-2"
-        style={{
-          ...sidebarAnimation,
-          position: "fixed",
-          top: 80,
-          left: 0,
-          padding: "16px",
-          boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)",
-        }}
-        data-aos="fade-right"
-        data-aos-offset="50"
-        data-aos-duration="50"
-      >
-        {sections.map((section, index) => {
-          if (section.icon === FaCarSide && !showCarSideIcon) {
-            return null; // Skip rendering if condition is not met
-          }
-          if (section.icon === FaHouse && showCarSideIcon) {
-            return null; // Skip rendering if condition is not met
-          }
-          return (
-            <div
-              className="p-2 hover:cursor-pointer"
-              key={index}
-              data-aos="fade-right"
-              data-aos-offset="300"
-              data-aos-duration="500"
-            >
-              <Link to={section.destination}>
-                <section.icon
-                  size={40}
-                  className=" hover:scale-125"
-                  color="#FCA311"
-                />
-              </Link>
-            </div>
-          );
-        })}
-        <div
-          className="p-2 hover:cursor-pointer"
-          data-aos="fade-right"
-          data-aos-offset="300"
-          data-aos-duration="500"
+        <span className="sr-only">Open sidebar</span>
+        <svg
+          className="w-6 h-6 z-30"
+          aria-hidden="true"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <FaPowerOff
-            onClick={() => {
-              AuthService.logout(state.id);
-            }}
-            size={40}
-            className="hover:scale-125"
-            color="#FCA311"
-          />
+          <path
+            clipRule="evenodd"
+            fillRule="evenodd"
+            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
+          ></path>
+        </svg>
+      </button>
+
+      <aside
+        id="logo-sidebar"
+        className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } sm:translate-x-0`}
+        aria-label="Sidebar"
+      >
+        <div className="h-full pl-5 py-5 overflow-y-auto bg-[#14213D] dark:bg-gray-800">
+          <div className="flex justify-between items-center mb-5">
+            <img src={logo} className="h-10 ml-2 sm:h-12" alt="Logo" />
+            <button
+              onClick={toggleSidebar}
+              className="text-gray-500 hover:bg-gray-200 p-2 rounded sm:hidden"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              <span className="sr-only">Close sidebar</span>
+            </button>
+          </div>
+
+          {/* Render sections as a list */}
+          <ul className="space-y-2 font-medium pt-10">
+            {sections.map((section, index) => {
+              if (section.icon === FaCarSide && !showCarSideIcon) {
+                return null; // Skip rendering if condition is not met
+              }
+              return (
+                <li
+                  onClick={() => {
+                    navigate(section.destination);
+                    toggleSidebar(); // Assuming this closes the sidebar
+                  }}
+                  className={`flex items-center space-x-3 mr-5 rounded-md p-2 hover:scale-110 hover:cursor-pointer text-[#FFFFFF] ${
+                    location.pathname === section.destination
+                      ? "bg-[#FCA311]"
+                      : "hover:bg-[#FCA311]"
+                  }`}
+                  key={index}
+                >
+                  <section.icon size={25} className="" color="#E5E5E5" />
+                  <span className="text-lg">{section.name}</span>
+                </li>
+              );
+            })}
+            <li
+              onClick={() => {
+                AuthService.logout(state.id);
+              }}
+              className="flex space-x-3 items-center mr-5 rounded-md hover:scale-110 hover:bg-[#FCA311] p-2 hover:cursor-pointer text-[#FFFFFF]"
+            >
+              <FaPowerOff size={25} color="#E5E5E5" />
+              <span className="text-lg">Logout</span>
+            </li>
+          </ul>
         </div>
-      </animated.div>
-    </div>
+      </aside>
+    </>
   );
 };
 

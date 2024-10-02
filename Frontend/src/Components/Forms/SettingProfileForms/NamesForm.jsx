@@ -67,9 +67,10 @@ const NamesForm = () => {
 
   return (
     <form
-      className="w-full space-x-5 flex flex-row justify-between"
+      className="w-full space-y-4 sm:space-y-0 sm:space-x-5 flex flex-col sm:flex-row justify-between items-center"
       onSubmit={handleSubmit}
     >
+      {/* First Name */}
       <input
         required
         disabled={!updateName}
@@ -79,9 +80,11 @@ const NamesForm = () => {
         onChange={(e) =>
           setUserNames({ ...userNames, firstName: e.target.value })
         }
-        className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3"
+        className="ring-1 ring-gray-300 rounded-md text-md px-4 py-2 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all w-full sm:w-1/3"
         style={{ cursor: !updateName ? "not-allowed" : "text" }}
       />
+
+      {/* Last Name */}
       <input
         required
         disabled={!updateName}
@@ -91,36 +94,42 @@ const NamesForm = () => {
         onChange={(e) =>
           setUserNames({ ...userNames, lastName: e.target.value })
         }
-        className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3"
+        className="ring-1 ring-gray-300 rounded-md text-md px-4 py-2 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all w-full sm:w-1/3"
         style={{ cursor: !updateName ? "not-allowed" : "text" }}
       />
+
+      {/* Password */}
       <input
         disabled={!updateName}
         type="password"
         required
-        placeholder="password"
+        placeholder="Password"
         value={userNames.password}
         onChange={(e) =>
           setUserNames({ ...userNames, password: e.target.value })
         }
-        className={`ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3 ${
+        className={`ring-1 ring-gray-300 rounded-md text-md px-4 py-2 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all w-full sm:w-1/3 ${
           updateName ? "block" : "hidden"
-        } `}
+        }`}
         style={{ cursor: !updateName ? "not-allowed" : "text" }}
       />
-      <div className="space-x-5 w-1/3 flex flex-row justify-end">
+
+      {/* Action Buttons */}
+      <div className="flex space-x-4 w-full sm:w-1/3 justify-end">
         <button
           type="button"
-          className={`p-2 border-2 rounded-lg`}
+          className={`p-2 border-2 rounded-lg transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            updateName ? "text-red-500" : "text-blue-500"
+          }`}
           onClick={!updateName ? handleUpdateNames : handleCancel}
         >
           {!updateName ? <FcSupport size={22} /> : <FcCancel size={22} />}
         </button>
         <button
           type="submit"
-          className={`p-2 border-2 rounded-lg  ${
+          className={`p-2 border-2 rounded-lg transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             updateName ? "block" : "hidden"
-          } `}
+          }`}
         >
           {isLoading ? (
             <ImSpinner9

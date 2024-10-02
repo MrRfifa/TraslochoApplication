@@ -19,6 +19,7 @@ const AddressForm = () => {
   const [updateAddress, setUpdateAddress] = useState(false);
   const [countryStates, setCountryStates] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // Error message state
   const [userAddress, setUserAddress] = useState({
     street: "",
     city: "",
@@ -29,14 +30,14 @@ const AddressForm = () => {
   });
 
   useEffect(() => {
-    setUserAddress((prevUserAddress) => ({
-      ...prevUserAddress,
+    setUserAddress({
       city: userAddressState.value.city,
       state: userAddressState.value.state,
       country: userAddressState.value.country,
       street: userAddressState.value.street,
       zipCode: userAddressState.value.zipCode,
-    }));
+      password: "",
+    });
   }, [userAddressState]);
 
   const handleCountryChange = (event) => {
@@ -55,6 +56,7 @@ const AddressForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(""); // Reset error message
     try {
       const response = await onFinishAddressUpdate(
         userAddress.city,
@@ -74,52 +76,50 @@ const AddressForm = () => {
             country: response.country,
           })
         );
+      } else {
+        setErrorMessage("Address update failed. Please try again.");
       }
     } catch (error) {
-      console.error("Error updating address:", error);
+      setErrorMessage("Error updating address: " + error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
-    setUserAddress((prevUserAddress) => ({
-      ...prevUserAddress,
+    setUserAddress({
       city: userAddressState.value.city,
       state: userAddressState.value.state,
       street: userAddressState.value.street,
       zipCode: userAddressState.value.zipCode,
       country: userAddressState.value.country,
       password: "",
-    }));
+    });
     handleUpdateAddress();
   };
 
   return (
     <form
-      className="w-full space-y-5 flex flex-col justify-start"
+      className="w-full max-w-3xl space-y-5 flex flex-col justify-start"
       onSubmit={handleSubmit}
     >
-      <div className="w-full space-x-5 flex flex-row">
+      {errorMessage && (
+        <p className="text-red-500 text-center">{errorMessage}</p>
+      )}
+
+      <div className="w-full space-y-5 md:space-y-0 md:space-x-5 flex flex-col md:flex-row">
         {/* Select country dropdown */}
         <select
           required
           disabled={!updateAddress}
           name="country"
-          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3"
-          onChange={(e) => {
-            handleCountryChange(e.target.value);
-          }}
+          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-1/3"
+          onChange={(e) => handleCountryChange(e.target.value)}
+          value={userAddress.country}
           style={{ cursor: !updateAddress ? "not-allowed" : "default" }}
-          value={userAddress.country} // Set the value to user's country code
         >
-          {/* Options for other countries */}
           {countryData.map((country) => (
-            <option
-              key={country.code}
-              value={country.name}
-              defaultValue={country.name}
-            >
+            <option key={country.code} value={country.name}>
               {country.name}
             </option>
           ))}
@@ -131,18 +131,16 @@ const AddressForm = () => {
           disabled={!updateAddress}
           name="state"
           placeholder="Select State"
-          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3"
+          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-1/3"
           style={{ cursor: !updateAddress ? "not-allowed" : "default" }}
           value={userAddress.state}
           onChange={(e) =>
             setUserAddress({ ...userAddress, state: e.target.value })
           }
         >
-          {/* Option to display the user's state */}
           <option value="" className="opacity-10">
             {userAddress.state}
           </option>
-          {/* Options for other states */}
           {countryStates.map((state) => (
             <option key={state.isoCode} value={state.name}>
               {state.name} ({state.isoCode})
@@ -150,84 +148,86 @@ const AddressForm = () => {
           ))}
         </select>
 
+        {/* City input */}
         <input
           required
           disabled={!updateAddress}
           type="text"
-          placeholder="city"
+          placeholder="City"
           value={userAddress.city}
-          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3"
+          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-1/3"
           style={{ cursor: !updateAddress ? "not-allowed" : "text" }}
           onChange={(e) =>
             setUserAddress({ ...userAddress, city: e.target.value })
           }
         />
-
-        <div className="space-x-5 w-1/3 justify-end flex flex-row">
-          <button
-            type="button"
-            className={`p-2 border-2 rounded-lg`}
-            onClick={!updateAddress ? handleUpdateAddress : handleCancel}
-          >
-            {!updateAddress ? <FcSupport size={22} /> : <FcCancel size={22} />}
-          </button>
-          <button
-            type="submit"
-            onClick={handleUpdateAddress}
-            className={`p-2 border-2 rounded-lg  ${
-              updateAddress ? "block" : "hidden"
-            } `}
-          >
-            {isLoading ? (
-              <ImSpinner9
-                size={22}
-                className="text-green-500 animate-spin mx-auto"
-              />
-            ) : (
-              <FcCheckmark size={22} />
-            )}
-          </button>
-        </div>
       </div>
-      <div className="flex flex-row items-center space-x-5 w-3/4">
+      <div className="w-full space-y-5 md:space-y-0 md:space-x-5 flex flex-col md:flex-row">
+        {/* Street input */}
         <input
           required
           disabled={!updateAddress}
           type="text"
-          placeholder="street"
+          placeholder="Street"
           value={userAddress.street}
-          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3"
+          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-full"
           style={{ cursor: !updateAddress ? "not-allowed" : "text" }}
           onChange={(e) =>
             setUserAddress({ ...userAddress, street: e.target.value })
           }
         />
+
+        {/* Zip Code input */}
         <input
           required
           disabled={!updateAddress}
           type="text"
-          placeholder="zipCode"
+          placeholder="Zip Code"
           value={userAddress.zipCode}
-          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3"
+          className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-full"
           style={{ cursor: !updateAddress ? "not-allowed" : "text" }}
           onChange={(e) =>
             setUserAddress({ ...userAddress, zipCode: e.target.value })
           }
         />
-        <input
-          required
-          disabled={!updateAddress}
-          type="password"
-          placeholder="password"
-          value={userAddress.password}
-          className={`ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-1/3 ${
-            updateAddress ? "block" : "hidden"
-          } `}
-          style={{ cursor: !updateAddress ? "not-allowed" : "text" }}
-          onChange={(e) =>
-            setUserAddress({ ...userAddress, password: e.target.value })
-          }
-        />
+        {/* Password input */}
+        {updateAddress && (
+          <input
+            required
+            type="password"
+            placeholder="Password"
+            value={userAddress.password}
+            className="ring-1 ring-gray-400 rounded-md text-md px-2 py-2 outline-none bg-gray-100 focus:placeholder-gray-500 w-full md:w-full"
+            onChange={(e) =>
+              setUserAddress({ ...userAddress, password: e.target.value })
+            }
+          />
+        )}
+        <div className=" flex flex-row justify-end space-x-5">
+          <button
+            type="button"
+            className="p-2 border-2 rounded-lg"
+            onClick={!updateAddress ? handleUpdateAddress : handleCancel}
+          >
+            {!updateAddress ? <FcSupport size={22} /> : <FcCancel size={22} />}
+          </button>
+          {updateAddress && (
+            <button
+              type="submit"
+              className="p-2 border-2 rounded-lg"
+              onClick={handleUpdateAddress}
+            >
+              {isLoading ? (
+                <ImSpinner9
+                  size={22}
+                  className="text-green-500 animate-spin mx-auto"
+                />
+              ) : (
+                <FcCheckmark size={22} />
+              )}
+            </button>
+          )}
+        </div>
       </div>
     </form>
   );

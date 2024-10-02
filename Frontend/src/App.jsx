@@ -10,14 +10,14 @@ import Sidebar from "./Layout/Sidebar.jsx";
 function App() {
   const authStatus = AuthVerifyService.AuthVerify();
 
-  if (authStatus === 0) {
+  if (authStatus === 1) {
     return (
       <Router>
         <AuthRoute />
       </Router>
     );
   }
-  if (authStatus === 1 || authStatus === 2) {
+  if (authStatus === 0|| authStatus === 2) {
     return (
       <Provider store={store}>
         <Router>

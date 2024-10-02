@@ -49,7 +49,6 @@ const PasswordForm = () => {
           userPassword.confirmNewPassword
         );
         if (response.success) {
-          // Reset form fields and update UI if API call succeeds
           setUserPassword({
             oldPassword: "",
             newPassword: "",
@@ -59,7 +58,7 @@ const PasswordForm = () => {
           setErrorMatch("");
           handleUpdatePassword();
         } else {
-          setError(response.error); // Display error message from the API response
+          setError(response.error);
         }
       }
     } catch (error) {
@@ -70,9 +69,12 @@ const PasswordForm = () => {
   };
 
   return (
-    <form className="flex flex-row justify-between" onSubmit={handleSubmit}>
-      <div className="flex flex-col w-full">
-        <div className="flex flex-col w-1/2 mb-4">
+    <form
+      className="flex flex-col lg:flex-row lg:justify-between items-center w-full space-y-6 lg:space-y-0 lg:space-x-8"
+      onSubmit={handleSubmit}
+    >
+      <div className="flex flex-col w-full lg:w-1/2">
+        <div className="flex flex-col">
           <label htmlFor="oldPassword" className="text-gray-700">
             Old Password
           </label>
@@ -90,7 +92,7 @@ const PasswordForm = () => {
             style={{ cursor: !updatePassword ? "not-allowed" : "text" }}
           />
         </div>
-        <div className="flex flex-col w-1/2 mb-4">
+        <div className="flex flex-col mb-4">
           <label htmlFor="newPassword" className="text-gray-700">
             New Password
           </label>
@@ -107,7 +109,7 @@ const PasswordForm = () => {
             style={{ cursor: !updatePassword ? "not-allowed" : "text" }}
           />
         </div>
-        <div className="flex flex-col w-1/2 mb-4">
+        <div className="flex flex-col mb-4">
           <label htmlFor="confirmPassword" className="text-gray-700">
             Confirm New Password
           </label>
@@ -130,19 +132,20 @@ const PasswordForm = () => {
         {error && <p className="text-red-500">{error}</p>}
         {errorMatch && <p className="text-red-500">{errorMatch}</p>}
       </div>
-      <div className="flex flex-col justify-center items-center space-y-5">
+
+      <div className="flex flex-row space-x-10 justify-center items-center lg:w-auto space-y-0 lg:space-x-4 lg:flex-row">
         <button
           type="button"
-          className={`p-2 border-2 rounded-lg`}
+          className="p-2 border-2 rounded-lg bg-white shadow hover:bg-gray-50 transition"
           onClick={!updatePassword ? handleUpdatePassword : handleCancel}
         >
           {!updatePassword ? <FcSupport size={22} /> : <FcCancel size={22} />}
         </button>
         <button
           type="submit"
-          className={`p-2 border-2 rounded-lg  ${
+          className={`p-2 border-2 rounded-lg bg-white shadow hover:bg-gray-50 transition ${
             updatePassword ? "block" : "hidden"
-          } `}
+          }`}
         >
           {isLoading ? (
             <ImSpinner9

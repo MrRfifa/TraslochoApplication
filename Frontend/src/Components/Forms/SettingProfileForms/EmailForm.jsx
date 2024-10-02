@@ -18,6 +18,7 @@ const EmailForm = () => {
   const dispatch = useDispatch();
   const email = useSelector((state) => state.userSpecInfo.value.email);
   UserSpecInfo();
+
   useEffect(() => {
     setUserEmail((prevUserEmail) => ({
       ...prevUserEmail,
@@ -67,9 +68,12 @@ const EmailForm = () => {
   };
 
   return (
-    <form className="flex flex-row justify-between" onSubmit={handleSubmit}>
+    <form
+      className="flex flex-col sm:flex-row justify-between sm:space-x-5"
+      onSubmit={handleSubmit}
+    >
       <div className="flex flex-col w-full">
-        <div className="flex flex-col w-1/2 mb-4">
+        <div className="flex flex-col mb-4">
           <label htmlFor="oldEmail" className="text-gray-700">
             Email
           </label>
@@ -83,8 +87,8 @@ const EmailForm = () => {
         </div>
 
         {updateEmail && (
-          <div className="flex flex-row space-x-5">
-            <div className="flex flex-col w-1/3 mb-4">
+          <div className="flex flex-col sm:flex-row sm:space-x-5">
+            <div className="flex flex-col w-full mb-4 sm:w-1/2">
               <label htmlFor="newEmail" className="text-gray-700">
                 New Email
               </label>
@@ -100,7 +104,7 @@ const EmailForm = () => {
                 style={{ cursor: !updateEmail ? "not-allowed" : "text" }}
               />
             </div>
-            <div className="flex flex-col w-1/3 mb-4">
+            <div className="flex flex-col w-full mb-4 sm:w-1/2">
               <label htmlFor="password" className="text-gray-700">
                 Password
               </label>
@@ -129,9 +133,9 @@ const EmailForm = () => {
         </button>
         <button
           type="submit"
-          className={`p-2 border-2 rounded-lg  ${
+          className={`p-2 border-2 rounded-lg ${
             updateEmail ? "block" : "hidden"
-          } `}
+          }`}
         >
           {isLoading ? (
             <ImSpinner9
