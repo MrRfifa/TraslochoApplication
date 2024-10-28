@@ -1,14 +1,14 @@
 // NotificationsModal.js
 import { useSelector, useDispatch } from "react-redux";
-import { markAllAsRead } from "../../Redux/Features/notificationSlice";
+import { markAllAsReadBackend } from "../../Redux/Features/notificationSlice";
 import PropTypes from "prop-types";
 
-const NotificationsModal = ({ isOpen, onClose }) => {
+const NotificationsModal = ({ isOpen, onClose, userId }) => {
   const notifications = useSelector((state) => state.notifications.list);
   const dispatch = useDispatch();
 
   const handleMarkAllAsRead = () => {
-    dispatch(markAllAsRead());
+    dispatch(markAllAsReadBackend(userId));
   };
 
   if (!isOpen) return null;
@@ -66,4 +66,5 @@ export default NotificationsModal;
 NotificationsModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   isOpen: PropTypes.bool.isRequired,
+  userId: PropTypes.number.isRequired,
 };

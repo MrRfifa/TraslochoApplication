@@ -117,6 +117,21 @@ namespace Backend.Controllers
             }
         }
 
+        
+        [HttpPost("mark-all-as-read/{userId}")]
+        public async Task<IActionResult> MarkAllAsRead(int userId)
+        {
+            var result = await _notificationRepository.MarkAllAsRead(userId);
+
+            if (result)
+            {
+                return Ok(new { message = "All notifications marked as read successfully." });
+            }
+            else
+            {
+                return BadRequest(new { message = "Failed to mark notifications as read." });
+            }
+        }
 
         [HttpPost("create-notification")]
         [ProducesResponseType(200)]

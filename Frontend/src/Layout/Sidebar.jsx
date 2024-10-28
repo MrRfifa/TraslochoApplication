@@ -141,6 +141,7 @@ const Sidebar = () => {
           <NotificationsModal
             isOpen={showNotificationsModal}
             onClose={toggleNotificationsModal}
+            userId={state.id}
           />
         )}
       </header>

@@ -5,8 +5,6 @@ const SIGNALR_URL = import.meta.env.VITE_APP_SIGNALR_SERVER_URL;
 let connection = null;
 
 const startSignalRConnection = async (userId) => {
-  console.log("hello: ",SIGNALR_URL);
-  
   if (!userId) {
     console.error("Cannot start SignalR connection without a valid userId");
     return;
@@ -18,6 +16,16 @@ const startSignalRConnection = async (userId) => {
       .build();
 
     connection.on("ReceiveNotification", (message) => {
+      // Define a regex pattern to identify connection IDs (assuming alphanumeric, e.g., 20 characters long)
+      const connectionIdPattern = /^[a-zA-Z0-9]{20}$/;
+
+      // Check if the notification message is an undesired default or connection message
+      if (
+        message.message === "You are now connected." ||
+        connectionIdPattern.test(message.message)
+      ) {
+        return; // Skip adding these notifications
+      }
       console.log("Received notification:", message);
       store.dispatch(addNotification(message)); // Dispatch to Redux store
     });
