@@ -75,6 +75,7 @@ builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 //TODO add these caches
 // builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();

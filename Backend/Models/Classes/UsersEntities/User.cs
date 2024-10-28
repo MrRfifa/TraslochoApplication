@@ -46,5 +46,8 @@ namespace Backend.Models.Classes.UsersEntities
 
         public UserToken UserTokens { get; set; } = new UserToken();
         public UserRole Role { get; set; }
+
+        // Navigation property to Notifications
+        public ICollection<Notification>? Notifications { get; set; }
     }
 }

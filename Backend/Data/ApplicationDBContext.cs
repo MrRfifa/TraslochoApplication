@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Backend.Models.Classes;
 using Backend.Models.Classes.AddressesEntities;
 using Backend.Models.Classes.ImagesEntities;
@@ -28,6 +24,7 @@ namespace Backend.Data
         public DbSet<ImageFile> Images { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Request> Requests { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +34,14 @@ namespace Backend.Data
                 .WithOne(a => a.User)
                 .HasForeignKey<UserAddress>(ua => ua.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Define the relationship between User and Notification
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);  // Cascade delete notifications when the user is deleted
+
 
             // Configuring Owner-Shipments relationships (One-to-Many)
             modelBuilder.Entity<Owner>()

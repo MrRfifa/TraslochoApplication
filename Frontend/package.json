@@ -12,6 +12,7 @@
   "dependencies": {
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",
+    "@microsoft/signalr": "^8.0.7",
     "@reduxjs/toolkit": "^2.0.1",
     "aos": "^2.3.4",
     "autoprefixer": "^10.4.16",

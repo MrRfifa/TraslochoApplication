@@ -3,6 +3,7 @@ using System.Text.Json;
 using AutoMapper;
 using Backend.Data;
 using Backend.DTOs;
+using Backend.DTOs.Notification;
 using Backend.DTOs.Review;
 using Backend.Interfaces;
 using Backend.Models.Classes;
@@ -14,14 +15,16 @@ namespace Backend.Repositories
     public class ReviewRepository : IReviewRepository
     {
         private readonly ApplicationDBContext _context;
+        private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
 
-        public ReviewRepository(ApplicationDBContext context, IMapper mapper, HttpClient httpClient)
+        public ReviewRepository(ApplicationDBContext context, INotificationRepository notificationRepository, IMapper mapper, HttpClient httpClient)
         {
             _context = context;
             _mapper = mapper;
             _httpClient = httpClient;
+            _notificationRepository = notificationRepository;
         }
         public async Task<int> CreateReview(CreateReviewDto review, int transporterId, int ownerId)
         {
@@ -49,9 +52,16 @@ namespace Backend.Repositories
                     ReviewTime = DateTime.Now,
                     Sentiment = sentiment
                 };
+                //TODO See here
+                SendNotificationDto sendNotificationDto= new SendNotificationDto{
+                    UserId=transporterId,
+                    Message="A review has been created",
+                    ConnectionId= "123456789"
+                };
 
                 await _context.Reviews.AddAsync(reviewEntity);
                 await Save(); // Ensure you await the save operation
+                await _notificationRepository.SendNotification(sendNotificationDto);
                 return 1; // Return success and a success message
             }
 
