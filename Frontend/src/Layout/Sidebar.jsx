@@ -12,12 +12,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import UserInfo from "../Redux/SlicesCalls/UserInfo";
 import AuthService from "../Services/Auth/AuthServices";
+import NotificationsIcon from "../Components/Notification/NotificationsIcon";
+import NotificationsModal from "../Components/Notification/NotificationsModal";
 
 const Sidebar = () => {
   const state = useSelector((state) => state.userInfo.value);
+  const [isOpen, setIsOpen] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleNotificationsModal = () =>
+    setShowNotificationsModal(!showNotificationsModal);
 
   //Call the redux slice
   UserInfo();
@@ -129,6 +135,15 @@ const Sidebar = () => {
           </ul>
         </div>
       </aside>
+      <header>
+        <NotificationsIcon onClick={toggleNotificationsModal} />
+        {showNotificationsModal && (
+          <NotificationsModal
+            isOpen={showNotificationsModal}
+            onClose={toggleNotificationsModal}
+          />
+        )}
+      </header>
     </>
   );
 };

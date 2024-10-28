@@ -1,39 +1,46 @@
-import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-
-// const API_URL = import.meta.env.VITE_APP_API_URL;
+import { HubConnectionBuilder } from "@microsoft/signalr";
+import { addNotification } from "../../Redux/Features/notificationSlice";
+import store from "../../Redux/store";
+const SIGNALR_URL = import.meta.env.VITE_APP_SIGNALR_SERVER_URL;
 let connection = null;
 
-const NotificationService = {
-  connect: async (token, onReceiveNotification) => {
-    if (!connection) {
-      connection = new HubConnectionBuilder()
-        .withUrl("http://localhost:5126/notificationHub", {
-          accessTokenFactory: () => token,
-        })
-        .withAutomaticReconnect()
-        .configureLogging(LogLevel.Information)
-        .build();
+const startSignalRConnection = async (userId) => {
+  console.log("hello: ",SIGNALR_URL);
+  
+  if (!userId) {
+    console.error("Cannot start SignalR connection without a valid userId");
+    return;
+  }
+  if (connection == null) {
+    connection = new HubConnectionBuilder()
+      .withUrl(SIGNALR_URL)
+      .withAutomaticReconnect()
+      .build();
 
-      connection.on("ReceiveNotification", onReceiveNotification);
+    connection.on("ReceiveNotification", (message) => {
+      console.log("Received notification:", message);
+      store.dispatch(addNotification(message)); // Dispatch to Redux store
+    });
 
-      try {
-        await connection.start();
-        console.log("Connected to SignalR hub");
-      } catch (err) {
-        console.error("Error connecting to SignalR hub:", err);
-      }
+    try {
+      await connection.start();
+      await connection.invoke("RegisterUser", userId);
+      console.log("SignalR connected");
+      const connectionId = await connection.invoke("GetConnectionId");
+      console.log(`Connection Id: ${connectionId}`);
+    } catch (error) {
+      console.error("SignalR connection failed:", error);
     }
-  },
-
-  disconnect: async () => {
-    if (connection) {
-      await connection.stop();
-      connection = null;
-      console.log("Disconnected from SignalR hub");
-    }
-  },
-
-  isConnected: () => connection && connection.state === "Connected",
+  }
 };
 
-export default NotificationService;
+const stopSignalRConnection = async (userId) => {
+  if (connection != null) {
+    await connection.stop();
+    await connection.invoke("DeleteUser", userId);
+    connection = null;
+    console.log("SignalR connection stopped");
+  }
+};
+
+export { startSignalRConnection, stopSignalRConnection };

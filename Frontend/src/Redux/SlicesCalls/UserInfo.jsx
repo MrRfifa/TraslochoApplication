@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import AuthService from "../../Services/Auth/AuthServices";
 import { login } from "../Features/userInfo";
+import { startSignalRConnection } from "../../Services/Notifications/NotificationService";
 
 const UserInfo = () => {
   const dispatch = useDispatch();
@@ -9,8 +10,8 @@ const UserInfo = () => {
     const fetchUserInfo = async () => {
       try {
         const response = await AuthService.getUserInfo();
-        const userInfo = response.userInfo;
-
+        const userInfo = response.userInfo;        
+        startSignalRConnection(userInfo[0].value);
         dispatch(
           login({
             id: userInfo[0].value,
