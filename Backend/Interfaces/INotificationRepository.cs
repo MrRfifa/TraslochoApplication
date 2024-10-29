@@ -1,6 +1,5 @@
 
 using Backend.DTOs.Notification;
-
 namespace Backend.Interfaces
 {
     public interface INotificationRepository
