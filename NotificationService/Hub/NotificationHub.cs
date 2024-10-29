@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using StackExchange.Redis;
+using NotificationService.Models;
 
 namespace NotificationService.Hub
 {
@@ -17,7 +18,7 @@ namespace NotificationService.Hub
         public override async Task OnConnectedAsync()
         {
             var connectionId = Context.ConnectionId;
-            await Clients.Client(connectionId).ReceiveNotification(connectionId);
+            await Clients.Client(connectionId).ReceiveShortNotification(connectionId);
 
             // You could log the connectionId or do other connection setup here
             await base.OnConnectedAsync();
@@ -38,7 +39,7 @@ namespace NotificationService.Hub
             await db.StringSetAsync($"{userId}-connection", connectionId);
 
             // Optionally, notify the user
-            await Clients.Client(connectionId).ReceiveNotification("You are now connected.");
+            await Clients.Client(connectionId).ReceiveShortNotification("You are now connected.");
         }
 
         // Explicitly delete user connection from Redis
@@ -50,7 +51,7 @@ namespace NotificationService.Hub
             await db.KeyDeleteAsync($"{userId}-connection");
 
             // Optionally notify the user
-            await Clients.Caller.ReceiveNotification("You have been logged out.");
+            await Clients.Caller.ReceiveShortNotification("You have been logged out.");
         }
 
         public async override Task OnDisconnectedAsync(Exception? exception)
@@ -90,5 +91,9 @@ namespace NotificationService.Hub
 
 public interface INotificationClient
 {
-    Task ReceiveNotification(string message);
+    // Method for sending a short notification message
+    Task ReceiveShortNotification(string message);
+
+    // Method for sending a full NotificationRequest object
+    Task ReceiveNotification(NotificationRequest notification);
 }
