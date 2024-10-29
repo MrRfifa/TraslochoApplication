@@ -20,7 +20,7 @@ const NotificationsModal = ({ isOpen, onClose, userId }) => {
           <h2 className="text-xl font-semibold">Notifications</h2>
           <button
             onClick={handleMarkAllAsRead}
-            className="text-blue-500 hover:underline"
+            className="text-[#3c6e71] hover:underline font-bold"
           >
             Mark all as read
           </button>
@@ -43,14 +43,23 @@ const NotificationsModal = ({ isOpen, onClose, userId }) => {
                   notification.isRead ? "bg-gray-100" : "bg-white"
                 }`}
               >
-                <h4 className="font-semibold">
-                  {notification.title || "Notification"}
+                <h4
+                  className={`font-semibold text-lg ${
+                    notification.isRead ? "text-black" : "text-[#FCA311]"
+                  }`}
+                >
+                  {notification.content || notification}
+                  {/* {notification.title || "Notification"} */}
                 </h4>
-                <p className="text-sm text-gray-700">
-                  {notification.message || notification}
-                </p>
                 <small className="text-gray-500">
-                  {notification.timestamp}
+                  {new Date(notification.dateSent).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })}
                 </small>
               </li>
             ))
@@ -66,5 +75,5 @@ export default NotificationsModal;
 NotificationsModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   isOpen: PropTypes.bool.isRequired,
-  userId: PropTypes.number.isRequired,
+  userId: PropTypes.string.isRequired,
 };

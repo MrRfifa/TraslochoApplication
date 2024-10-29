@@ -86,7 +86,14 @@ const PieChartComponent = ({ data, title }) => {
       {data && data.length > 0 ? (
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" outerRadius={80} label>
+            <Pie
+              data={data}
+              dataKey="value" // replace `valueKey` with `dataKey`
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              label
+            >
               {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}

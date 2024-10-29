@@ -15,17 +15,18 @@ const startSignalRConnection = async (userId) => {
       .withAutomaticReconnect()
       .build();
 
+      //TODO Update the mothods here
     connection.on("ReceiveNotification", (message) => {
-      // Define a regex pattern to identify connection IDs (assuming alphanumeric, e.g., 20 characters long)
-      const connectionIdPattern = /^[a-zA-Z0-9]{20}$/;
+      // // Define a regex pattern to identify connection IDs (assuming alphanumeric, e.g., 20 characters long)
+      // const connectionIdPattern = /^[a-zA-Z0-9]{20}$/;
 
-      // Check if the notification message is an undesired default or connection message
-      if (
-        message.message === "You are now connected." ||
-        connectionIdPattern.test(message.message)
-      ) {
-        return; // Skip adding these notifications
-      }
+      // // Check if the notification message is an undesired default or connection message
+      // if (
+      //   message.message === "You are now connected." ||
+      //   connectionIdPattern.test(message.message)
+      // ) {
+      //   return; // Skip adding these notifications
+      // }
       console.log("Received notification:", message);
       store.dispatch(addNotification(message)); // Dispatch to Redux store
     });
