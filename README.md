@@ -1,1 +1,1 @@
-![traslocho_arch](https://github.com/MrRfifa/TraslochoApplication/assets/101003527/5a0a98e5-c911-439a-ba27-9e9a015dd41f)
+![traslocho_arch](https://github.com/user-attachments/assets/55a442ef-aec2-49d7-902d-2952cbe84004)
