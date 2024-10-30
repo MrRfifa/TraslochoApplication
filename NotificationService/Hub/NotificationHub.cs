@@ -30,14 +30,19 @@ namespace NotificationService.Hub
         }
 
         // Method to explicitly associate a user with a connection ID and store it in Redis
-        public async Task RegisterUser(string userId)
+        public async Task RegisterUser(string userId, bool isTransporter)
         {
             var connectionId = Context.ConnectionId;
 
             // Store connection ID in Redis with the custom user ID
             var db = _redis.GetDatabase();
             await db.StringSetAsync($"{userId}-connection", connectionId);
-
+            // Add transporter to Redis group if applicable
+            if (isTransporter)
+            {
+                await db.SetAddAsync("transporters_group", userId);
+                await Groups.AddToGroupAsync(connectionId, "Transporters");
+            }
             // Optionally, notify the user
             await Clients.Client(connectionId).ReceiveShortNotification("You are now connected.");
         }
@@ -47,11 +52,19 @@ namespace NotificationService.Hub
         {
             var db = _redis.GetDatabase();
 
-            // Remove userId from Redis
-            await db.KeyDeleteAsync($"{userId}-connection");
-
+            // Retrieve the current connection ID from Redis before deleting
+            var connectionId = await db.StringGetAsync($"{userId}-connection");
+            if (!connectionId.IsNullOrEmpty)
+            {
+                // Remove userId from Redis
+                await db.KeyDeleteAsync($"{userId}-connection");
+                // Remove the user from the SignalR group
+                await Groups.RemoveFromGroupAsync(connectionId!, "Transporters");
+                // Optionally notify the user
+                // await Clients.Client(connectionId!).ReceiveShortNotification("You have been logged out.");
+            }
             // Optionally notify the user
-            await Clients.Caller.ReceiveShortNotification("You have been logged out.");
+            // await Clients.Caller.ReceiveShortNotification("You have been logged out.");
         }
 
         public async override Task OnDisconnectedAsync(Exception? exception)
@@ -73,7 +86,8 @@ namespace NotificationService.Hub
             var db = _redis.GetDatabase();
             // Search Redis by pattern, assuming pattern-based search is possible in your environment
             //TODO Update the url with the env variable
-            var keys = _redis.GetServer("localhost:6379").Keys(pattern: $"*-connection");
+            string? connectionRedis = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
+            var keys = _redis.GetServer(connectionRedis!).Keys(pattern: $"*-connection");
 
             foreach (var key in keys)
             {
@@ -93,7 +107,8 @@ public interface INotificationClient
 {
     // Method for sending a short notification message
     Task ReceiveShortNotification(string message);
-
     // Method for sending a full NotificationRequest object
     Task ReceiveNotification(NotificationRequest notification);
+    // Method for sending a group notification
+    Task ReceiveGroupNotification(GroupNotificationRequest notification);
 }

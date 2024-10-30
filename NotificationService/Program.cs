@@ -9,11 +9,12 @@ DotNetEnv.Env.Load();
 builder.Services.AddControllers();  // Add controllers
 builder.Services.AddSignalR();      // Add SignalR
 
+string? reactCors = Environment.GetEnvironmentVariable("REACT_CORS");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", builder =>
     {
-        builder.WithOrigins("http://localhost:5173")  // Your React app URL
+        builder.WithOrigins(reactCors!)  // Your React app URL
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials(); // Allow credentials for SignalR

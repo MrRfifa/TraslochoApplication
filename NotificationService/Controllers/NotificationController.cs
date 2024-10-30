@@ -40,5 +40,19 @@ namespace NotificationService.Controllers
 
             return Ok(new { success = true, message = "Notification sent successfully." });
         }
+
+        [HttpPost("sendToTransporters")]
+        public async Task<IActionResult> SendNotificationToGroup([FromBody] GroupNotificationRequest request)
+        {
+            // Validate the request (e.g., ensure Content is provided)
+            if (string.IsNullOrEmpty(request.Content))
+            {
+                return BadRequest(new { success = false, message = "Message is required." });
+            }
+            // Send notification to the Transporters group
+            await _hubContext.Clients.Group("Transporters").ReceiveGroupNotification(request);
+            // Optionally save to the database here if needed
+            return Ok(new { success = true, message = "Notification sent to group successfully." });
+        }
     }
 }
