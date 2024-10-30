@@ -4,7 +4,7 @@ import store from "../../Redux/store";
 const SIGNALR_URL = import.meta.env.VITE_APP_SIGNALR_SERVER_URL;
 let connection = null;
 
-const startSignalRConnection = async (userId) => {
+const startSignalRConnection = async (userId, isTransporter) => {
   if (!userId) {
     console.error("Cannot start SignalR connection without a valid userId");
     return;
@@ -15,7 +15,7 @@ const startSignalRConnection = async (userId) => {
       .withAutomaticReconnect()
       .build();
 
-      //TODO Update the mothods here
+    //TODO Update the mothods here
     connection.on("ReceiveNotification", (message) => {
       // // Define a regex pattern to identify connection IDs (assuming alphanumeric, e.g., 20 characters long)
       // const connectionIdPattern = /^[a-zA-Z0-9]{20}$/;
@@ -30,10 +30,15 @@ const startSignalRConnection = async (userId) => {
       console.log("Received notification:", message);
       store.dispatch(addNotification(message)); // Dispatch to Redux store
     });
+    connection.on("ReceiveGroupNotification", (message) => {
+      console.log("Received notification:", message);
+      store.dispatch(addNotification(message)); // Dispatch to Redux store
+    });
 
     try {
       await connection.start();
-      await connection.invoke("RegisterUser", userId);
+      //TODO Update the invoke function: isTransporter
+      await connection.invoke("RegisterUser", userId, isTransporter);
       console.log("SignalR connected");
       const connectionId = await connection.invoke("GetConnectionId");
       console.log(`Connection Id: ${connectionId}`);

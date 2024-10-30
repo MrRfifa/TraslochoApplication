@@ -12,7 +12,10 @@ const UserInfo = () => {
       try {
         const response = await AuthService.getUserInfo();
         const userInfo = response.userInfo;
-        startSignalRConnection(userInfo[0].value);
+        startSignalRConnection(
+          userInfo[0].value,
+          userInfo[1].value === "Transporter"
+        );
         dispatch(
           login({
             id: userInfo[0].value,
