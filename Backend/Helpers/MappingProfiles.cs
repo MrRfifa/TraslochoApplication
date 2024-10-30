@@ -1,6 +1,7 @@
 
 using AutoMapper;
 using Backend.DTOs.Address;
+using Backend.DTOs.Notification;
 using Backend.DTOs.Request;
 using Backend.DTOs.Review;
 using Backend.DTOs.Shipment;
@@ -31,6 +32,9 @@ namespace Backend.Helpers
 
             CreateMap<Request, GetRequestDto>();
             CreateMap<CreateRequestDto, Request>();
+
+            CreateMap<Notification, GetNotificationDto>();
+            CreateMap<CreateNotificationDto, Notification>();
         }
     }
 }

@@ -63,48 +63,42 @@ namespace Backend.Cached
 
             return isAccepted;
         }
-
-
         public async Task<bool> CreateRequest(int transporterId, int shipmentId)
         {
             return await _decorated.CreateRequest(transporterId, shipmentId);
         }
-
         public async Task<bool> DeleteRequest(int requestId)
         {
             return await _decorated.DeleteRequest(requestId);
         }
-
         public async Task<ICollection<GetRequestDto>?> GetAllRequests()
         {
             return await _decorated.GetAllRequests();
         }
-
         public async Task<GetRequestDto?> GetRequestById(int requestId)
         {
             return await _decorated.GetRequestById(requestId);
         }
-
         public async Task<ICollection<GetRequestDto>?> GetRequestsByShipmentId(int shipmentId)
         {
             return await _decorated.GetRequestsByShipmentId(shipmentId);
         }
-
         public async Task<ICollection<GetRequestDto>?> GetRequestsByTransporterId(int transporterId)
         {
             return await _decorated.GetRequestsByTransporterId(transporterId);
         }
-
         public async Task<Shipment?> GetShipmentByRequestId(int requestId)
         {
             return await _decorated.GetShipmentByRequestId(requestId);
         }
-
+        public async Task<int> GetTransporterIdByRequest(int requestId)
+        {
+            return await _decorated.GetTransporterIdByRequest(requestId);
+        }
         public async Task<bool> RequestExists(int requestId)
         {
             return await _decorated.RequestExists(requestId);
         }
-
         public async Task<bool> Save()
         {
             return await _decorated.Save();

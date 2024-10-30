@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using AutoMapper;
 using Backend.Data;
 using Backend.DTOs.Address;
+using Backend.DTOs.Notification;
 using Backend.DTOs.Shipment;
 using Backend.Interfaces;
 using Backend.Models.Classes;
@@ -9,6 +10,7 @@ using Backend.Models.Classes.AddressesEntities;
 using Backend.Models.Classes.ImagesEntities;
 using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json.Linq;
 
 namespace Backend.Repositories
@@ -16,10 +18,15 @@ namespace Backend.Repositories
     public class ShipmentRepository : IShipmentRepository
     {
         private readonly ApplicationDBContext _context;
+        private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
+        private readonly IDistributedCache _distributedCache;
 
-        public ShipmentRepository(IMapper mapper, ApplicationDBContext context)
+        public ShipmentRepository(IMapper mapper,
+                                ApplicationDBContext context,
+                                INotificationRepository notificationRepository,
+                                IDistributedCache distributedCache)
         {
             DotNetEnv.Env.Load();
 
@@ -31,8 +38,12 @@ namespace Backend.Repositories
             _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Host", rapidAPIService);
             _mapper = mapper;
             _context = context;
+            _notificationRepository = notificationRepository;
+            _distributedCache = distributedCache;
         }
 
+        //TODO:Newtonsoft.Json.JsonSerializationException: Self referencing loop detected for property 'Shipment' with type 'Backend.Models.Classes.Shipment'. Path 'OriginAddress'.
+        //TODO: Fix it
         public async Task<int> AddShipmentAddresses(int shipmentId, CreateAddressDto originAddress, CreateAddressDto destinationAddress)
         {
             try
@@ -84,6 +95,11 @@ namespace Backend.Repositories
                 // Save the updated shipment
                 if (await Save())
                 {
+                    SendNotificationGroupDto sendNotificationDto = new SendNotificationGroupDto
+                    {
+                        Content = "An owner has updated addresses."
+                    };
+                    await _notificationRepository.SendNotificationToGroup(sendNotificationDto);
                     return 1;  // Success
                 }
                 else
@@ -101,14 +117,11 @@ namespace Backend.Repositories
         {
             // Get the shipment
             Shipment? shipment = await GetShipmentById(shipmentId);
-
             if (shipment == null)
             {
                 return -1; // Or throw an exception if needed for missing shipment
             }
-
             int daysDifference = (shipment.ShipmentDate - DateTime.Now).Days;
-
             if (daysDifference <= 3)
             {
                 return 0; // Return false for invalid cancellation attempt
@@ -116,15 +129,20 @@ namespace Backend.Repositories
 
             // Update the shipment status
             shipment.ShipmentStatus = ShipmentStatus.Canceled;
-
+            // Notify the transporter if TransporterId is not null
+            var transporterConnectionId = await _distributedCache.GetStringAsync($"{shipment.TransporterId}-connection");
+            if (shipment.TransporterId.HasValue)
+            {
+                await NotifyUser(shipment.TransporterId.Value, transporterConnectionId, "A shipment has been canceled.");
+            }
             // Save changes to the database
             await Save();
             return 1;
         }
 
+        //TODO: when creating a shipment in the controller it returns false
         public async Task<bool> CreateShipment(CreateShipmentDto shipmentToCreate, int ownerId)
         {
-            //TODO Ensure that the shipment date is at least 3 days from today
             if (shipmentToCreate.ShipmentDate.Date < DateTime.Now.Date.AddDays(3))
             {
                 throw new InvalidOperationException("Shipments must be scheduled at least 3 days in advance.");
@@ -177,7 +195,12 @@ namespace Backend.Repositories
                 Images = shipmentImages,
             };
 
+            SendNotificationGroupDto sendNotificationDto = new SendNotificationGroupDto
+            {
+                Content = "A shipment has been created, wait for the owner to add addresses."
+            };
             _context.Shipments.Add(shipmentEntity);
+            await _notificationRepository.SendNotificationToGroup(sendNotificationDto);
             return await Save();
         }
 
@@ -317,7 +340,12 @@ namespace Backend.Repositories
 
             // Mark the shipment as completed
             shipment.ShipmentStatus = ShipmentStatus.Completed;
-
+            // Notify the transporter if TransporterId is not null
+            var transporterConnectionId = await _distributedCache.GetStringAsync($"{shipment.TransporterId}-connection");
+            if (shipment.TransporterId.HasValue)
+            {
+                await NotifyUser(shipment.TransporterId.Value, transporterConnectionId, "The shipment has been completed.");
+            }
             // Save changes to the database
             await Save();
 
@@ -341,6 +369,12 @@ namespace Backend.Repositories
                 shipment.ShipmentStatus = ShipmentStatus.Pending;
 
                 await Save(); // Assuming Save returns a boolean
+                // Notify the transporter if TransporterId is not null
+                if (shipment.TransporterId.HasValue)
+                {
+                    var transporterConnectionId = await _distributedCache.GetStringAsync($"{shipment.TransporterId}-connection");
+                    await NotifyUser(shipment.TransporterId.Value, transporterConnectionId, "The shipment date has been updated.");
+                }
                 return 1;
             }
             else
@@ -360,5 +394,29 @@ namespace Backend.Repositories
             return await _context.Shipments.AnyAsync(s => s.Id == shipmentId);
         }
 
+        // Helper method for notification
+        private async Task NotifyUser(int userId, string? connectionId, string content)
+        {
+            if (!string.IsNullOrEmpty(connectionId))
+            {
+                var sendNotificationDto = new SendNotificationDto
+                {
+                    UserId = userId,
+                    Content = content,
+                    ConnectionId = connectionId
+                };
+                await _notificationRepository.SendNotification(sendNotificationDto);
+            }
+            else
+            {
+                // ConnectionId is not present, save the notification to the database
+                var notificationToStore = new CreateNotificationDto
+                {
+                    UserId = userId,
+                    Content = content,
+                };
+                await _notificationRepository.AddNotification(notificationToStore);
+            }
+        }
     }
 }

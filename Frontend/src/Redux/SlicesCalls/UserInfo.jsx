@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import AuthService from "../../Services/Auth/AuthServices";
 import { login } from "../Features/userInfo";
+import { startSignalRConnection } from "../../Services/Notifications/NotificationService";
+import { fetchMissedNotifications } from "../Features/notificationSlice";
 
 const UserInfo = () => {
   const dispatch = useDispatch();
@@ -10,7 +12,10 @@ const UserInfo = () => {
       try {
         const response = await AuthService.getUserInfo();
         const userInfo = response.userInfo;
-
+        startSignalRConnection(
+          userInfo[0].value,
+          userInfo[1].value === "Transporter"
+        );
         dispatch(
           login({
             id: userInfo[0].value,
@@ -18,6 +23,8 @@ const UserInfo = () => {
             role: userInfo[1].value,
           })
         );
+        // Dispatch fetchMissedNotifications to load missed notifications
+        dispatch(fetchMissedNotifications(userInfo[0].value));
       } catch (error) {
         console.error("Error fetching user information:", error);
         // Handle errors as needed

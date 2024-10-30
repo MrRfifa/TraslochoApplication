@@ -1,11 +1,13 @@
 using AutoMapper;
 using Backend.Data;
+using Backend.DTOs.Notification;
 using Backend.DTOs.Request;
 using Backend.DTOs.Shipment;
 using Backend.Interfaces;
 using Backend.Models.Classes;
 using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Backend.Repositories
 {
@@ -16,17 +18,23 @@ namespace Backend.Repositories
         private readonly IShipmentRepository _shipmentRepository;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IUserRepository _userRepository;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IDistributedCache _distributedCache;
 
         public RequestRepository(ApplicationDBContext context, IMapper mapper,
                                  IShipmentRepository shipmentRepository,
                                  IVehicleRepository vehicleRepository,
-                                 IUserRepository userRepository)
+                                 IUserRepository userRepository,
+                                 INotificationRepository notificationRepository,
+                                 IDistributedCache distributedCache)
         {
             _shipmentRepository = shipmentRepository;
             _vehicleRepository = vehicleRepository;
             _userRepository = userRepository;
             _context = context;
             _mapper = mapper;
+            _notificationRepository = notificationRepository;
+            _distributedCache = distributedCache;
         }
 
         public async Task<bool> AcceptRequest(int requestId)
@@ -40,6 +48,10 @@ namespace Backend.Repositories
 
             // Set the accepted request status
             requestToAccept.Status = RequestStatus.Accepted;
+            //Notify the chosen transporter 
+            int transporterId = await GetTransporterIdByRequest(requestToAccept.RequestId);
+            var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
+            await NotifyUser(transporterId, transporterConnectionId, "Your request for a shipment has been approved.");
             // Update the associated shipment
             var shipmentToUpdate = await _shipmentRepository.GetShipmentById(requestToAccept.ShipmentId);
             if (shipmentToUpdate == null)
@@ -66,6 +78,10 @@ namespace Backend.Repositories
             foreach (var request in otherRequests)
             {
                 request.Status = RequestStatus.Refused;
+                //Notify the refused transporter 
+                int refusedTransporterId = await GetTransporterIdByRequest(request.RequestId);
+                var refusedTransporterConnectionId = await _distributedCache.GetStringAsync($"{refusedTransporterId}-connection");
+                await NotifyUser(refusedTransporterId, refusedTransporterConnectionId, "Your request for a shipment has been refused.");
             }
             // Calculate distance
             float distanceBetweenOriginUser = await _shipmentRepository.GetDistanceBetweenCities(
@@ -124,7 +140,10 @@ namespace Backend.Repositories
                 TransporterId = transporterId,
                 Status = RequestStatus.Pending
             };
-
+            var shipment = await _context.Shipments.FirstOrDefaultAsync(r => r.Id == shipmentId);
+            int ownerId = shipment!.OwnerId;
+            var ownerConnectionId = await _distributedCache.GetStringAsync($"{ownerId}-connection");
+            await NotifyUser(ownerId, ownerConnectionId, "New request has been created.");
             await _context.Requests.AddAsync(request);
             return await Save();
         }
@@ -199,7 +218,6 @@ namespace Backend.Repositories
                 ? _mapper.Map<ICollection<GetRequestDto>>(transporterRequests)
                 : Enumerable.Empty<GetRequestDto>().ToList();
         }
-
         public async Task<Shipment?> GetShipmentByRequestId(int requestId)
         {
             var request = await _context.Requests
@@ -211,7 +229,11 @@ namespace Backend.Repositories
             }
             return null;
         }
-
+        public async Task<int> GetTransporterIdByRequest(int requestId)
+        {
+            var request = await _context.Requests.FirstOrDefaultAsync(r => r.RequestId == requestId);
+            return request!.TransporterId;
+        }
         public async Task<bool> RequestExists(int requestId)
         {
             return await _context.Requests.AnyAsync(e => e.RequestId == requestId);
@@ -220,6 +242,31 @@ namespace Backend.Repositories
         {
             var saved = await _context.SaveChangesAsync();
             return saved > 0;
+        }
+
+        // Helper method for notification
+        private async Task NotifyUser(int userId, string? connectionId, string content)
+        {
+            if (!string.IsNullOrEmpty(connectionId))
+            {
+                var sendNotificationDto = new SendNotificationDto
+                {
+                    UserId = userId,
+                    Content = content,
+                    ConnectionId = connectionId
+                };
+                await _notificationRepository.SendNotification(sendNotificationDto);
+            }
+            else
+            {
+                // ConnectionId is not present, save the notification to the database
+                var notificationToStore = new CreateNotificationDto
+                {
+                    UserId = userId,
+                    Content = content,
+                };
+                await _notificationRepository.AddNotification(notificationToStore);
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Filters;
 // using Scrutor;
 //TODO if there is necessity add pagination to the targets
@@ -54,10 +55,19 @@ else
 
 //Memory Cache Dependency Injection
 // builder.Services.AddMemoryCache();
+string? connectionRedis = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
 builder.Services.AddStackExchangeRedisCache(redisOptions =>
 {
-    string? connectionRedis = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
     redisOptions.Configuration = connectionRedis;
+});
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(connectionRedis!)); // Adjust the connection string if necessary
+
+// Register IDatabase
+builder.Services.AddScoped<IDatabase>(provider =>
+{
+    var multiplexer = provider.GetRequiredService<IConnectionMultiplexer>();
+    return multiplexer.GetDatabase();
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -75,6 +85,7 @@ builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 //TODO add these caches
 // builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
