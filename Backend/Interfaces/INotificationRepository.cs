@@ -9,6 +9,7 @@ namespace Backend.Interfaces
         Task<GetNotificationDto?> GetNotificationById(int id);
         Task<bool> AddNotification(CreateNotificationDto notification);
         Task<bool> SendNotification(SendNotificationDto notificationToSend);
+        Task<bool> SendNotificationToGroup(SendNotificationGroupDto notificationToSend);
         Task<bool> MarkAsRead(int id);
         Task<bool> MarkAllAsRead(int id);
     }

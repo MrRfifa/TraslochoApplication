@@ -1,11 +1,12 @@
-
 using AutoMapper;
 using Backend.Data;
 using Backend.DTOs.Notification;
 using Backend.Interfaces;
 using Backend.Models.Classes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
+using StackExchange.Redis; // Make sure to include this namespace
 
 namespace Backend.Repositories
 {
@@ -14,12 +15,14 @@ namespace Backend.Repositories
         private readonly ApplicationDBContext _context;
         private readonly HttpClient _httpClient;
         private readonly IMapper _mapper;
+        private readonly IDatabase _redisDb;
 
-        public NotificationRepository(ApplicationDBContext context, HttpClient httpClient, IMapper mapper)
+        public NotificationRepository(ApplicationDBContext context, HttpClient httpClient, IMapper mapper, IDatabase redisDb)
         {
             _context = context;
             _httpClient = httpClient;
             _mapper = mapper;
+            _redisDb = redisDb;
         }
 
         public async Task<bool> AddNotification(CreateNotificationDto notification)
@@ -76,12 +79,17 @@ namespace Backend.Repositories
         public async Task<bool> SendNotification(SendNotificationDto notificationToSend)
         {
             // Send notification to the notification server
+            string? connectionSignalR = Environment.GetEnvironmentVariable("SIGNALR_CONNECTION_STRING");
+            if (connectionSignalR == null)
+            {
+                throw new InvalidOperationException("The SIGNALR_CONNECTION_STRING environment variable is not set.");
+            }
             var jsonContent = new StringContent(JsonConvert.SerializeObject(notificationToSend), System.Text.Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("http://localhost:5126/api/notification/send", jsonContent);
+            var response = await _httpClient.PostAsync($"{connectionSignalR}send", jsonContent);
             var notificationToCreate = new CreateNotificationDto
             {
                 UserId = notificationToSend.UserId,
-                Content = notificationToSend.Message
+                Content = notificationToSend.Content
             };
             // Optionally handle the response
             if (!response.IsSuccessStatusCode)
@@ -110,5 +118,48 @@ namespace Backend.Repositories
             var result = await _context.SaveChangesAsync();
             return result > 0;
         }
+
+        public async Task<bool> SendNotificationToGroup(SendNotificationGroupDto notificationToSend)
+        {
+            // Fetch the serialized transporter list from IDistributedCache
+            var transporterIds = await _redisDb.SetMembersAsync("transporters_group");
+            if (transporterIds == null || !transporterIds.Any())
+            {
+                throw new Exception("No transporters found in the group.");
+            }
+            string? connectionSignalR = Environment.GetEnvironmentVariable("SIGNALR_CONNECTION_STRING");
+            if (connectionSignalR == null)
+            {
+                throw new InvalidOperationException("The SIGNALR_CONNECTION_STRING environment variable is not set.");
+            }
+            // Prepare the DTO with the transporter IDs
+            var notificationToSendGroup = new SendNotificationGroupDto
+            {
+                // UserIds = transporterIds,
+                Content = notificationToSend.Content
+            };
+            // Send notification to the notification server
+            var jsonContent = new StringContent(JsonConvert.SerializeObject(notificationToSendGroup), System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync($"{connectionSignalR}sendToTransporters", jsonContent);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception("Failed to send notification to the notification server.");
+            }
+            // Save notification for each transporter
+            foreach (var userId in transporterIds)
+            {
+                // Convert RedisValue to int
+                int transporterId = (int)userId; // Explicitly cast RedisValue to int
+                var notificationToCreate = new CreateNotificationDto
+                {
+                    UserId = transporterId,
+                    Content = notificationToSend.Content
+                };
+                // Store the notification in the database
+                await AddNotification(notificationToCreate);
+            }
+            return true;
+        }
+
     }
 }

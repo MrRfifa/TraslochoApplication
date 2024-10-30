@@ -9,6 +9,7 @@ using Backend.Interfaces;
 using Backend.Models.Classes;
 using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Backend.Repositories
 {
@@ -18,13 +19,19 @@ namespace Backend.Repositories
         private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
+        private readonly IDistributedCache _distributedCache;
 
-        public ReviewRepository(ApplicationDBContext context, INotificationRepository notificationRepository, IMapper mapper, HttpClient httpClient)
+        public ReviewRepository(ApplicationDBContext context,
+                                INotificationRepository notificationRepository,
+                                IMapper mapper,
+                                HttpClient httpClient,
+                                IDistributedCache distributedCache)
         {
             _context = context;
             _mapper = mapper;
             _httpClient = httpClient;
             _notificationRepository = notificationRepository;
+            _distributedCache = distributedCache;
         }
         public async Task<int> CreateReview(CreateReviewDto review, int transporterId, int ownerId)
         {
@@ -35,7 +42,6 @@ namespace Backend.Repositories
             if (completedShipment)
             {
                 string sentiment = await PredictSentimentAsync(review.Comment);
-                Console.WriteLine(sentiment);
                 // Check if the sentiment is an error message (indicating inappropriate language)
                 if (sentiment.StartsWith("Your review contains inappropriate language") ||
                     sentiment.StartsWith("An error occurred"))
@@ -52,19 +58,31 @@ namespace Backend.Repositories
                     ReviewTime = DateTime.Now,
                     Sentiment = sentiment
                 };
-                //TODO See here
-                SendNotificationDto sendNotificationDto= new SendNotificationDto{
-                    UserId=transporterId,
-                    Message="A review has been created",
-                    ConnectionId= "123456789"
-                };
-
+                var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
+                if (!string.IsNullOrEmpty(transporterConnectionId))
+                {
+                    SendNotificationDto sendNotificationDto = new SendNotificationDto
+                    {
+                        UserId = transporterId,
+                        Content = $"New feedback received! You've got A {review.Rating}-star review.",
+                        ConnectionId = transporterConnectionId
+                    };
+                    await _notificationRepository.SendNotification(sendNotificationDto);
+                }
+                else
+                {
+                    // ConnectionId is not present, save the notification to the database
+                    CreateNotificationDto notificationToStore = new CreateNotificationDto
+                    {
+                        UserId = transporterId,
+                        Content = $"New feedback received! You've got A {review.Rating}-star review.",
+                    };
+                    await _notificationRepository.AddNotification(notificationToStore);
+                }
                 await _context.Reviews.AddAsync(reviewEntity);
                 await Save(); // Ensure you await the save operation
-                await _notificationRepository.SendNotification(sendNotificationDto);
                 return 1; // Return success and a success message
             }
-
             return 0;
         }
 
@@ -73,6 +91,28 @@ namespace Backend.Repositories
             var review = await _context.Reviews.FindAsync(reviewId);
             if (review != null)
             {
+                int transporterId = await GetTransporterIdByReview(reviewId);
+                var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
+                if (!string.IsNullOrEmpty(transporterConnectionId))
+                {
+                    SendNotificationDto sendNotificationDto = new SendNotificationDto
+                    {
+                        UserId = transporterId,
+                        Content = "A review has been deleted!",
+                        ConnectionId = transporterConnectionId
+                    };
+                    await _notificationRepository.SendNotification(sendNotificationDto);
+                }
+                else
+                {
+                    // ConnectionId is not present, save the notification to the database
+                    CreateNotificationDto notificationToStore = new CreateNotificationDto
+                    {
+                        UserId = transporterId,
+                        Content = "A review has been deleted!",
+                    };
+                    await _notificationRepository.AddNotification(notificationToStore);
+                }
                 _context.Reviews.Remove(review);
                 return await Save();
             }
@@ -114,6 +154,11 @@ namespace Backend.Repositories
             return _mapper.Map<ICollection<GetReviewDto>>(transporterReviews);
         }
 
+        public async Task<int> GetTransporterIdByReview(int reviewId)
+        {
+            var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == reviewId);
+            return review!.TransporterId;
+        }
         public async Task<bool> ReviewExists(int reviewId)
         {
             return await _context.Reviews.AnyAsync(e => e.Id == reviewId);
@@ -132,18 +177,44 @@ namespace Backend.Repositories
             {
                 return false; // Review not found
             }
-
             reviewEntity.Rating = reviewDto.Rating;
             reviewEntity.Comment = reviewDto.Comment;
             reviewEntity.ReviewTime = DateTime.UtcNow;
+            //Notification
+            int transporterId = await GetTransporterIdByReview(reviewId);
+            var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
+            if (!string.IsNullOrEmpty(transporterConnectionId))
+            {
+                SendNotificationDto sendNotificationDto = new SendNotificationDto
+                {
+                    UserId = transporterId,
+                    Content = "A review has been deleted!",
+                    ConnectionId = transporterConnectionId
+                };
+                await _notificationRepository.SendNotification(sendNotificationDto);
+            }
+            else
+            {
+                // ConnectionId is not present, save the notification to the database
+                CreateNotificationDto notificationToStore = new CreateNotificationDto
+                {
+                    UserId = transporterId,
+                    Content = "A review has been deleted!",
+                };
+                await _notificationRepository.AddNotification(notificationToStore);
+            }
             return await Save();
         }
-
 
         //Sentiment prediction function ---> Flask
         public async Task<string> PredictSentimentAsync(string text)
         {
-            var flaskUrl = "http://127.0.0.1:5000/predict-sentiment";
+            string? connectionFlask = Environment.GetEnvironmentVariable("FLASK_CONNECTION_STRING");
+            if (connectionFlask == null)
+            {
+                throw new InvalidOperationException("The Flask_CONNECTION_STRING environment variable is not set.");
+            }
+            var flaskUrl = $"{connectionFlask}predict-sentiment";
             var requestData = new
             {
                 text
