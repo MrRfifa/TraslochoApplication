@@ -117,7 +117,7 @@ namespace Backend.Controllers
             }
         }
 
-        
+
         [HttpPost("mark-all-as-read/{userId}")]
         public async Task<IActionResult> MarkAllAsRead(int userId)
         {
@@ -141,22 +141,22 @@ namespace Backend.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState); // Handles invalid model state
+                return BadRequest(new { status = "fail", message = "Invalid data provided." });
             }
 
-            // Call the service method to create the review
-            var result = await _notificationRepository.AddNotification(notificationDto);
-
-            if (result)
+            try
             {
-                return Ok(new { status = "success", message = "Review created successfully." });
-            }
-            if (!result)
-            {
-                return BadRequest(new { status = "fail", message = "Your review contains inappropriate language. Please respect others." });
-            }
+                // Call the method to create the notification
+                await _notificationRepository.AddNotification(notificationDto);
 
-            return BadRequest(new { status = "fail", message = "Review creation failed. Ensure you have a completed shipment with this transporter." });
+                return Ok(new { status = "success", message = "Notification created successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here if necessary
+                return BadRequest(new { status = "fail", message = "Notification creation failed: " + ex.Message });
+            }
         }
+
     }
 }

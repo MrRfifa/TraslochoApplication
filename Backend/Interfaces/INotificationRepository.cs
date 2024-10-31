@@ -7,7 +7,7 @@ namespace Backend.Interfaces
         Task<List<GetNotificationDto>?> GetUserNotifications(int userId);
         Task<List<GetNotificationDto>?> GetUserNonReadNotifications(int userId);
         Task<GetNotificationDto?> GetNotificationById(int id);
-        Task<bool> AddNotification(CreateNotificationDto notification);
+        Task AddNotification(CreateNotificationDto notification);
         Task<bool> SendNotification(SendNotificationDto notificationToSend);
         Task<bool> SendNotificationToGroup(SendNotificationGroupDto notificationToSend);
         Task<bool> MarkAsRead(int id);

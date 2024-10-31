@@ -4,7 +4,6 @@ using Backend.DTOs.Notification;
 using Backend.Interfaces;
 using Backend.Models.Classes;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 using StackExchange.Redis; // Make sure to include this namespace
 
@@ -25,7 +24,7 @@ namespace Backend.Repositories
             _redisDb = redisDb;
         }
 
-        public async Task<bool> AddNotification(CreateNotificationDto notification)
+        public async Task AddNotification(CreateNotificationDto notification)
         {
             var notificationEntity = new Notification
             {
@@ -34,12 +33,8 @@ namespace Backend.Repositories
                 IsRead = false,
                 DateSent = DateTime.Now,
             };
-
             await _context.Notifications.AddAsync(notificationEntity);
-
-            // Save changes and return true if the save was successful, otherwise false
-            var result = await _context.SaveChangesAsync();
-            return result > 0; // Returns true if one or more entities were written to the database
+            await _context.SaveChangesAsync();
         }
 
         public async Task<GetNotificationDto?> GetNotificationById(int id)
@@ -143,13 +138,19 @@ namespace Backend.Repositories
             var response = await _httpClient.PostAsync($"{connectionSignalR}sendToTransporters", jsonContent);
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception("Failed to send notification to the notification server.");
+                // Log failure but continue to return true for shipment creation
+                Console.WriteLine("Failed to send notification to the notification server.");
+                return true; // Still continue, as the shipment is created successfully
             }
             // Save notification for each transporter
             foreach (var userId in transporterIds)
             {
                 // Convert RedisValue to int
-                int transporterId = (int)userId; // Explicitly cast RedisValue to int
+                if (!int.TryParse(userId.ToString(), out int transporterId))
+                {
+                    Console.WriteLine("Unable to parse transporter ID to integer.");
+                    // throw new InvalidOperationException("Unable to parse transporter ID to integer.");
+                }
                 var notificationToCreate = new CreateNotificationDto
                 {
                     UserId = transporterId,

@@ -85,7 +85,6 @@ namespace NotificationService.Hub
         {
             var db = _redis.GetDatabase();
             // Search Redis by pattern, assuming pattern-based search is possible in your environment
-            //TODO Update the url with the env variable
             string? connectionRedis = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
             var keys = _redis.GetServer(connectionRedis!).Keys(pattern: $"*-connection");
 

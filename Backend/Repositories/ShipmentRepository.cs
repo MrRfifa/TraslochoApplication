@@ -42,14 +42,13 @@ namespace Backend.Repositories
             _distributedCache = distributedCache;
         }
 
-        //TODO:Newtonsoft.Json.JsonSerializationException: Self referencing loop detected for property 'Shipment' with type 'Backend.Models.Classes.Shipment'. Path 'OriginAddress'.
-        //TODO: Fix it
         public async Task<int> AddShipmentAddresses(int shipmentId, CreateAddressDto originAddress, CreateAddressDto destinationAddress)
         {
             try
             {
-                // Fetch the shipment to update
-                Shipment? shipmentToUpdate = await GetShipmentById(shipmentId);
+                // Fetch the shipment with tracking enabled
+                Shipment? shipmentToUpdate = await _context.Shipments
+                    .SingleOrDefaultAsync(s => s.Id == shipmentId);
 
                 if (shipmentToUpdate is null)
                 {
@@ -85,13 +84,18 @@ namespace Backend.Repositories
                     destinationAddress.Country,
                     destinationAddress.City
                 );
-
+                // Ensure IDs are available
+                if (originAddressEntity.Id == 0 || destinationAddressEntity.Id == 0)
+                {
+                    throw new Exception("Address IDs not set.");
+                }
                 // Update shipment with the new addresses and calculated data
                 shipmentToUpdate.OriginAddressId = originAddressEntity.Id;
                 shipmentToUpdate.DestinationAddressId = destinationAddressEntity.Id;
                 shipmentToUpdate.DistanceBetweenAddresses = distanceBetweenOriginDestination;
                 shipmentToUpdate.Price = 5 * (int)distanceBetweenOriginDestination;
-
+                // Save the updated shipment
+                _context.Shipments.Update(shipmentToUpdate); // Track shipment update
                 // Save the updated shipment
                 if (await Save())
                 {
@@ -140,7 +144,6 @@ namespace Backend.Repositories
             return 1;
         }
 
-        //TODO: when creating a shipment in the controller it returns false
         public async Task<bool> CreateShipment(CreateShipmentDto shipmentToCreate, int ownerId)
         {
             if (shipmentToCreate.ShipmentDate.Date < DateTime.Now.Date.AddDays(3))
@@ -194,14 +197,25 @@ namespace Backend.Repositories
                 OwnerId = ownerId,
                 Images = shipmentImages,
             };
-
-            SendNotificationGroupDto sendNotificationDto = new SendNotificationGroupDto
-            {
-                Content = "A shipment has been created, wait for the owner to add addresses."
-            };
             _context.Shipments.Add(shipmentEntity);
-            await _notificationRepository.SendNotificationToGroup(sendNotificationDto);
-            return await Save();
+            var shipmentCreated = await Save();
+            if (shipmentCreated)
+            {
+                SendNotificationGroupDto sendNotificationDto = new SendNotificationGroupDto
+                {
+                    Content = "A shipment has been created, wait for the owner to add addresses."
+                };
+                try
+                {
+                    await _notificationRepository.SendNotificationToGroup(sendNotificationDto);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Notification error: {ex.Message}");
+                    // Log or handle notification failure separately if desired
+                }
+            }
+            return shipmentCreated;
         }
 
         public async Task<ICollection<Shipment>?> GetAcceptedShipmentsByOwnerId(int ownerId)
@@ -293,10 +307,11 @@ namespace Backend.Repositories
 
         public async Task<Shipment?> GetShipmentById(int shipmentId)
         {
-            var shipment = await _context.Shipments
-                .FirstOrDefaultAsync(u => u.Id == shipmentId);
-
-            return shipment; // Return null if not found
+            return await _context.Shipments
+                            .Include(s => s.OriginAddress)
+                            .Include(s => s.DestinationAddress)
+                            .AsNoTracking() // Optional, if you only need to read
+                            .SingleOrDefaultAsync(s => s.Id == shipmentId);
         }
 
         public async Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId)

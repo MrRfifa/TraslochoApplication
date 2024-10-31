@@ -2,6 +2,7 @@ using Backend.Models.Classes.AddressesEntities;
 using Backend.Models.Classes.ImagesEntities;
 using Backend.Models.Classes.UsersEntities;
 using Backend.Models.Enums;
+using Newtonsoft.Json;
 
 namespace Backend.Models.Classes
 {
@@ -23,9 +24,12 @@ namespace Backend.Models.Classes
 
         // Required Addresses
         public int? OriginAddressId { get; set; }
+
+        [JsonIgnore]
         public ShipmentAddress? OriginAddress { get; set; }
 
         public int? DestinationAddressId { get; set; }
+        [JsonIgnore]
         public ShipmentAddress? DestinationAddress { get; set; }
     }
 }
