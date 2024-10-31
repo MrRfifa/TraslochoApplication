@@ -433,5 +433,6 @@ namespace Backend.Repositories
                 await _notificationRepository.AddNotification(notificationToStore);
             }
         }
+        
     }
 }

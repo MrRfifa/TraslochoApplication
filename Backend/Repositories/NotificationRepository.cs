@@ -73,30 +73,39 @@ namespace Backend.Repositories
 
         public async Task<bool> SendNotification(SendNotificationDto notificationToSend)
         {
-            // Send notification to the notification server
-            string? connectionSignalR = Environment.GetEnvironmentVariable("SIGNALR_CONNECTION_STRING");
-            if (connectionSignalR == null)
+            try
             {
-                throw new InvalidOperationException("The SIGNALR_CONNECTION_STRING environment variable is not set.");
+                // Send notification to the notification server
+                string? connectionSignalR = Environment.GetEnvironmentVariable("SIGNALR_CONNECTION_STRING");
+                if (connectionSignalR == null)
+                {
+                    throw new InvalidOperationException("The SIGNALR_CONNECTION_STRING environment variable is not set.");
+                }
+                var jsonContent = new StringContent(JsonConvert.SerializeObject(notificationToSend), System.Text.Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync($"{connectionSignalR}send", jsonContent);
+                var notificationToCreate = new CreateNotificationDto
+                {
+                    UserId = notificationToSend.UserId,
+                    Content = notificationToSend.Content
+                };
+                // Optionally handle the response
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to send notification to the notification server.");
+                }
+                if (response.IsSuccessStatusCode)
+                {
+                    await AddNotification(notificationToCreate);
+                    return true;
+                }
+                return false;
             }
-            var jsonContent = new StringContent(JsonConvert.SerializeObject(notificationToSend), System.Text.Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{connectionSignalR}send", jsonContent);
-            var notificationToCreate = new CreateNotificationDto
+            catch (Exception ex)
             {
-                UserId = notificationToSend.UserId,
-                Content = notificationToSend.Content
-            };
-            // Optionally handle the response
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception("Failed to send notification to the notification server.");
+                // Log the exception for troubleshooting
+                Console.WriteLine($"Error sending notification: {ex.Message}");
+                throw; // or handle appropriately
             }
-            if (response.IsSuccessStatusCode)
-            {
-                await AddNotification(notificationToCreate);
-                return true;
-            }
-            return false;
         }
 
         public async Task<bool> MarkAllAsRead(int userId)

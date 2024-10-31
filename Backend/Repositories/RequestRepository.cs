@@ -8,6 +8,7 @@ using Backend.Models.Classes;
 using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace Backend.Repositories
 {
@@ -19,14 +20,14 @@ namespace Backend.Repositories
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IUserRepository _userRepository;
         private readonly INotificationRepository _notificationRepository;
-        private readonly IDistributedCache _distributedCache;
+        private readonly IConnectionMultiplexer _redis;
 
         public RequestRepository(ApplicationDBContext context, IMapper mapper,
                                  IShipmentRepository shipmentRepository,
                                  IVehicleRepository vehicleRepository,
                                  IUserRepository userRepository,
                                  INotificationRepository notificationRepository,
-                                 IDistributedCache distributedCache)
+                                 IConnectionMultiplexer connectionMultiplexer)
         {
             _shipmentRepository = shipmentRepository;
             _vehicleRepository = vehicleRepository;
@@ -34,7 +35,7 @@ namespace Backend.Repositories
             _context = context;
             _mapper = mapper;
             _notificationRepository = notificationRepository;
-            _distributedCache = distributedCache;
+            _redis = connectionMultiplexer;
         }
 
         public async Task<bool> AcceptRequest(int requestId)
@@ -45,12 +46,12 @@ namespace Backend.Repositories
             {
                 throw new ArgumentException("Request not found.");
             }
-
             // Set the accepted request status
             requestToAccept.Status = RequestStatus.Accepted;
             //Notify the chosen transporter 
             int transporterId = await GetTransporterIdByRequest(requestToAccept.RequestId);
-            var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
+            var db = _redis.GetDatabase();
+            var transporterConnectionId = await db.StringGetAsync($"{transporterId}-connection");
             await NotifyUser(transporterId, transporterConnectionId, "Your request for a shipment has been approved.");
             // Update the associated shipment
             var shipmentToUpdate = await _shipmentRepository.GetShipmentById(requestToAccept.ShipmentId);
@@ -75,14 +76,6 @@ namespace Backend.Repositories
                 .Where(r => r.ShipmentId == requestToAccept.ShipmentId && r.RequestId != requestId)
                 .ToListAsync();
 
-            foreach (var request in otherRequests)
-            {
-                request.Status = RequestStatus.Refused;
-                //Notify the refused transporter 
-                int refusedTransporterId = await GetTransporterIdByRequest(request.RequestId);
-                var refusedTransporterConnectionId = await _distributedCache.GetStringAsync($"{refusedTransporterId}-connection");
-                await NotifyUser(refusedTransporterId, refusedTransporterConnectionId, "Your request for a shipment has been refused.");
-            }
             // Calculate distance
             float distanceBetweenOriginUser = await _shipmentRepository.GetDistanceBetweenCities(
                 nameof(transporter.UserAddress.Country),
@@ -100,7 +93,30 @@ namespace Backend.Repositories
             _context.Requests.Update(requestToAccept); // Update the accepted request
             _context.Requests.UpdateRange(otherRequests); // Update refused requests
             _context.Shipments.Update(shipmentToUpdate); // Update the shipment
-            return await Save();
+            var requestUpdates = await Save();
+            // return await Save();
+            if (requestUpdates)
+            {
+                try
+                {
+                    foreach (var request in otherRequests)
+                    {
+                        request.Status = RequestStatus.Refused;
+                        //Notify the refused transporter 
+                        int refusedTransporterId = await GetTransporterIdByRequest(request.RequestId);
+                        // var db = _redis.GetDatabase();
+                        var refusedTransporterConnectionId = await db.StringGetAsync($"{refusedTransporterId}-connection");
+                        await NotifyUser(refusedTransporterId, refusedTransporterConnectionId, "Your request for a shipment has been refused.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Notification error: {ex.Message}");
+                    // Log or handle notification failure separately if desired
+                }
+
+            }
+            return requestUpdates;
         }
         public async Task<bool> CreateRequest(int transporterId, int shipmentId)
         {
@@ -142,7 +158,8 @@ namespace Backend.Repositories
             };
             var shipment = await _context.Shipments.FirstOrDefaultAsync(r => r.Id == shipmentId);
             int ownerId = shipment!.OwnerId;
-            var ownerConnectionId = await _distributedCache.GetStringAsync($"{ownerId}-connection");
+            var db = _redis.GetDatabase();
+            var ownerConnectionId = await db.StringGetAsync($"{ownerId}-connection");
             await NotifyUser(ownerId, ownerConnectionId, "New request has been created.");
             await _context.Requests.AddAsync(request);
             return await Save();
@@ -268,5 +285,6 @@ namespace Backend.Repositories
                 await _notificationRepository.AddNotification(notificationToStore);
             }
         }
+    
     }
 }

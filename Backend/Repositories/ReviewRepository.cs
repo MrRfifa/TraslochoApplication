@@ -10,6 +10,7 @@ using Backend.Models.Classes;
 using Backend.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace Backend.Repositories
 {
@@ -19,19 +20,19 @@ namespace Backend.Repositories
         private readonly INotificationRepository _notificationRepository;
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
-        private readonly IDistributedCache _distributedCache;
+        private readonly IConnectionMultiplexer _redis;
 
         public ReviewRepository(ApplicationDBContext context,
                                 INotificationRepository notificationRepository,
                                 IMapper mapper,
                                 HttpClient httpClient,
-                                IDistributedCache distributedCache)
+                                IConnectionMultiplexer redis)
         {
             _context = context;
             _mapper = mapper;
             _httpClient = httpClient;
             _notificationRepository = notificationRepository;
-            _distributedCache = distributedCache;
+            _redis = redis;
         }
         public async Task<int> CreateReview(CreateReviewDto review, int transporterId, int ownerId)
         {
@@ -58,29 +59,24 @@ namespace Backend.Repositories
                     ReviewTime = DateTime.Now,
                     Sentiment = sentiment
                 };
-                var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
-                if (!string.IsNullOrEmpty(transporterConnectionId))
-                {
-                    SendNotificationDto sendNotificationDto = new SendNotificationDto
-                    {
-                        UserId = transporterId,
-                        Content = $"New feedback received! You've got A {review.Rating}-star review.",
-                        ConnectionId = transporterConnectionId
-                    };
-                    await _notificationRepository.SendNotification(sendNotificationDto);
-                }
-                else
-                {
-                    // ConnectionId is not present, save the notification to the database
-                    CreateNotificationDto notificationToStore = new CreateNotificationDto
-                    {
-                        UserId = transporterId,
-                        Content = $"New feedback received! You've got A {review.Rating}-star review.",
-                    };
-                    await _notificationRepository.AddNotification(notificationToStore);
-                }
+                var db = _redis.GetDatabase();
+                var transporterConnectionId = await db.StringGetAsync($"{transporterId}-connection");
                 await _context.Reviews.AddAsync(reviewEntity);
-                await Save(); // Ensure you await the save operation
+                var reviewCreation = await Save();
+                // await Save(); // Ensure you await the save operation
+                if (reviewCreation)
+                {
+                    try
+                    {
+                        await NotifyUser(transporterId, transporterConnectionId, $"New feedback received! You've got A {review.Rating}-star review.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Notification error: {ex.Message}");
+                        // Log or handle notification failure separately if desired
+                    }
+
+                }
                 return 1; // Return success and a success message
             }
             return 0;
@@ -92,29 +88,24 @@ namespace Backend.Repositories
             if (review != null)
             {
                 int transporterId = await GetTransporterIdByReview(reviewId);
-                var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
-                if (!string.IsNullOrEmpty(transporterConnectionId))
-                {
-                    SendNotificationDto sendNotificationDto = new SendNotificationDto
-                    {
-                        UserId = transporterId,
-                        Content = "A review has been deleted!",
-                        ConnectionId = transporterConnectionId
-                    };
-                    await _notificationRepository.SendNotification(sendNotificationDto);
-                }
-                else
-                {
-                    // ConnectionId is not present, save the notification to the database
-                    CreateNotificationDto notificationToStore = new CreateNotificationDto
-                    {
-                        UserId = transporterId,
-                        Content = "A review has been deleted!",
-                    };
-                    await _notificationRepository.AddNotification(notificationToStore);
-                }
+                var db = _redis.GetDatabase();
+                var transporterConnectionId = await db.StringGetAsync($"{transporterId}-connection");
                 _context.Reviews.Remove(review);
-                return await Save();
+                var reviewDeleted = await Save();
+                if (reviewDeleted)
+                {
+                    try
+                    {
+                        await NotifyUser(transporterId, transporterConnectionId, "A review has been deleted!");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Notification error: {ex.Message}");
+                        // Log or handle notification failure separately if desired
+                    }
+
+                }
+                return reviewDeleted;
             }
             return false;
         }
@@ -182,28 +173,22 @@ namespace Backend.Repositories
             reviewEntity.ReviewTime = DateTime.UtcNow;
             //Notification
             int transporterId = await GetTransporterIdByReview(reviewId);
-            var transporterConnectionId = await _distributedCache.GetStringAsync($"{transporterId}-connection");
-            if (!string.IsNullOrEmpty(transporterConnectionId))
+            var db = _redis.GetDatabase();
+            var transporterConnectionId = await db.StringGetAsync($"{transporterId}-connection");
+            var reviewUpdates = await Save();
+            if (reviewUpdates)
             {
-                SendNotificationDto sendNotificationDto = new SendNotificationDto
+                try
                 {
-                    UserId = transporterId,
-                    Content = "A review has been deleted!",
-                    ConnectionId = transporterConnectionId
-                };
-                await _notificationRepository.SendNotification(sendNotificationDto);
-            }
-            else
-            {
-                // ConnectionId is not present, save the notification to the database
-                CreateNotificationDto notificationToStore = new CreateNotificationDto
+                    await NotifyUser(transporterId, transporterConnectionId, "A review has been updated!");
+                }
+                catch (Exception ex)
                 {
-                    UserId = transporterId,
-                    Content = "A review has been deleted!",
-                };
-                await _notificationRepository.AddNotification(notificationToStore);
+                    Console.WriteLine($"Notification error: {ex.Message}");
+                    // Log or handle notification failure separately if desired
+                }
             }
-            return await Save();
+            return reviewUpdates;
         }
 
         //Sentiment prediction function ---> Flask
@@ -266,6 +251,31 @@ namespace Backend.Repositories
             }
 
             // return "neutral"; // Default response if no conditions are met
+        }
+
+        // Helper method for notification
+        private async Task NotifyUser(int userId, string? connectionId, string content)
+        {
+            if (!string.IsNullOrEmpty(connectionId))
+            {
+                var sendNotificationDto = new SendNotificationDto
+                {
+                    UserId = userId,
+                    Content = content,
+                    ConnectionId = connectionId
+                };
+                await _notificationRepository.SendNotification(sendNotificationDto);
+            }
+            else
+            {
+                // ConnectionId is not present, save the notification to the database
+                var notificationToStore = new CreateNotificationDto
+                {
+                    UserId = userId,
+                    Content = content,
+                };
+                await _notificationRepository.AddNotification(notificationToStore);
+            }
         }
 
     }
