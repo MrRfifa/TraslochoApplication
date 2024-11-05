@@ -56,15 +56,23 @@ export const getContactsCall = async (userId) => {
   }
 };
 
-export const addContactCall = async (part1, part2, navigate) => {
-  const participant1 = parseInt(part1);
-  const response = await ContactService.addContact(participant1, part2);
-  if (response.success) {
-    successToast(response.message);
+// export const addContactCall = async (part1, part2, navigate) => {
+export const addContactCall = async (part1, part2) => {
+  try {
+    const participant1 = parseInt(part1);
+    const response = await ContactService.addContact(participant1, part2);
+
+    // Call toast here after receiving the response
+    if (response.success) {
+      successToast(response.message);
+    } else {
+      warningToast(response.error);
+    }
+
+    return response;
+  } catch (error) {
+    warningToast("Failed to add contact.");
+    console.error("Failed to add contact:", error);
+    return { success: false };
   }
-  if (!response.success) {
-    warningToast(response.error);
-  }
-  navigate("/messages");
-  // console.log(response);
 };

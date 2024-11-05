@@ -1,5 +1,5 @@
 import toast from "react-hot-toast";
-
+//Add <Toaster/> whenever needed
 export const successToast = (text) => {
   return toast.success(text, {
     duration: 2500,

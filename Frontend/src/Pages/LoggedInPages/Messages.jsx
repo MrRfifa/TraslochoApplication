@@ -1,61 +1,64 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 import ChatList from "../../Components/Chats/ChatList";
 import ChatBox from "../../Components/Chats/ChatBox";
-import av2 from "../../assets/extra/img_chapter_2.png";
 import UserAvatar from "../../Components/Chats/UserAvatar";
-
-// Mock data for connected users
-const connectedUsersMock = [
-  { id: 1, name: "Alice", lastMessage: "Hey there!", avatar: av2 },
-  { id: 2, name: "Bob", lastMessage: "Let's catch up later.", avatar: av2 },
-  { id: 3, name: "Carol", lastMessage: "How's your project?", avatar: av2 },
-];
-
-// Mock data for suggested users
-const suggestedUsersMock = [
-  { id: 4, name: "David", avatar: av2 },
-  { id: 5, name: "Emma", avatar: av2 },
-];
+import { fetchMessages } from "../../Redux/Features/messageSlice";
+import {
+  // sendMessage,
+  joinRoom,
+} from "../../Services/Messages/MessageSocketService";
+import { getContactsCall } from "../../Helpers/Services/ContactServicesCall";
+import UserInfo from "../../Redux/SlicesCalls/UserInfo";
+import { Toaster } from "react-hot-toast";
 
 const Messages = () => {
+  const [contactId, setContactId] = useState("");
+  const [contacts, setContacts] = useState([]);
+  const [selectedUser, setSelectedUser] = useState([]);
   const { userId } = useParams();
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [connectedUsers, setConnectedUsers] = useState(connectedUsersMock);
-  const [suggestedUsers, setSuggestedUsers] = useState(suggestedUsersMock);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const connectedUsers = useSelector((state) => state.messages.connectedUsers);
+  const state = useSelector((state) => state.userInfo.value);
+  UserInfo();
 
-  const selectedUser = connectedUsers.find(
-    (user) => user.id === parseInt(userId)
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const contactsData = await getContactsCall(state.id);
+        setContacts(contactsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      setMessages([
-        ...messages,
-        { text: newMessage, sender: "You", time: new Date() },
-      ]);
-      setNewMessage("");
-    }
-  };
+    fetchData();
+  }, [state.id]);
+
+  const { conversation } = useSelector((state) => state.messages);
+
 
   const handleUserClick = (user) => {
-    // Move the user from suggested to connected users
-    setConnectedUsers((prev) => [...prev, user]);
-    // Remove the user from suggested users
-    setSuggestedUsers((prev) => prev.filter((u) => u.id !== user.id));
+    setContactId(user.contactId);
+    setSelectedUser(user);
+    navigate(`/messages/${user.participant}`);
+    joinRoom(user.contactId); // Join the room after selecting the user
   };
+
+  useEffect(() => {
+    if (contactId) {
+      dispatch(fetchMessages({ contactId }));
+    }
+  }, [contactId, dispatch]);
 
   return (
     <div className="h-screen overflow-hidden flex flex-col sm:flex-row ml-0 md:ml-64">
+      <Toaster />
       {!userId ? (
         <div className="flex flex-col w-full">
-          {/* Chat List with suggested users */}
-          <ChatList
-            connectedUsers={connectedUsers}
-            suggestedUsers={suggestedUsers}
-            onUserClick={handleUserClick}
-          />
+          <ChatList contacts={contacts} onUserClick={handleUserClick} />
         </div>
       ) : (
         <div className="flex-1 flex flex-col z-50">
@@ -64,17 +67,21 @@ const Messages = () => {
               Back
             </button>
             <UserAvatar
-              connected={true}
-              names={selectedUser.name}
-              profileImage={av2}
+              connected={connectedUsers.some(
+                (connectedUser) =>
+                  parseInt(connectedUser) === selectedUser.participant
+              )}
+              isPreview={false}
+              firstName={selectedUser.message.firstName}
+              lastName={selectedUser.message.lastName}
+              user={selectedUser}
+              profileImage={selectedUser.message.fileContentBase64}
             />
           </div>
           <ChatBox
             selectedUser={selectedUser}
-            messages={messages}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={handleSendMessage}
+            messages={conversation}
+            userId={parseInt(state.id)}
           />
         </div>
       )}

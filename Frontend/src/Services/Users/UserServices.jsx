@@ -309,6 +309,58 @@ const changeProfileImage = async (fd) => {
   }
 };
 
+const fetchOwners = async () => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token"),
+    };
+    const response = await axios.get(`${API_URL}User/owners`, {
+      headers,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching owners:", error);
+    return [];
+  }
+};
+
+const fetchTransporters = async () => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token"),
+    };
+    const response = await axios.get(`${API_URL}User/transporters`, {
+      headers,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching owners:", error);
+    return [];
+  }
+};
+
+const getAllUsers = async () => {
+  try {
+    const userId = AuthVerifyService.getUserId();
+    const [owners, transporters] = await Promise.all([
+      fetchOwners(),
+      fetchTransporters(),
+    ]);
+    // Combine owners and transporters into one array
+    const allUsers = [...owners, ...transporters];
+    // Filter out the connected user from the combined list
+    const filteredUsers = allUsers.filter(
+      (user) => user.id !== parseInt(userId)
+    );
+    return filteredUsers; // Return the filtered list of users
+  } catch (error) {
+    console.error("Error fetching all users:", error);
+    return [];
+  }
+};
+
 const UserServices = {
   getUserById,
   changeEmailAddress,
@@ -319,6 +371,9 @@ const UserServices = {
   changeDateOfBirth,
   verifyNewEmail,
   changeProfileImage,
+  fetchOwners,
+  fetchTransporters,
+  getAllUsers,
 };
 
 export default UserServices;

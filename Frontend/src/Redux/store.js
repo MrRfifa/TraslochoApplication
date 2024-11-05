@@ -3,7 +3,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import userInfoReducer from "./Features/userInfo";
 import userSpecInfoReducer from "./Features/userSpecInfo";
 import userAddressReducer from "./Features/userAddress";
-import notificationsReducer from './Features/notificationSlice';
+import notificationsReducer from "./Features/notificationSlice";
+import messageReducer from "./Features/messageSlice";
 
 const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ const store = configureStore({
     userSpecInfo: userSpecInfoReducer,
     userAddress: userAddressReducer,
     notifications: notificationsReducer,
+    messages: messageReducer,
   },
 });
 
