@@ -33,7 +33,6 @@ const initializeSocket = (server) => {
         contact: data.contact,
         sender: data.sender,
         content: data.content,
-        time: data.time,
       });
       // Save the message to MongoDB
       await newMessage.save();
