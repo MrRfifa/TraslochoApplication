@@ -5,7 +5,7 @@ const SOCKET_URL = import.meta.env.VITE_APP_SOCKET_SERVER_URL;
 const getMessages = async (contactId) => {
   try {
     const response = await axios.get(`${SOCKET_URL}/messages/${contactId}`);
-    
+
     if (response.status === 200 && response.data) {
       return { success: true, message: response.data }; // Adjusted to return an array of messages
     } else {
@@ -41,9 +41,29 @@ const markMessageAsRead = async (messageId) => {
   }
 };
 
+const getLastMessage = async (contactId) => {
+  try {
+    const response = await axios.get(
+      `${SOCKET_URL}/messages/${contactId}/last-message`
+    );
+    if (response.status === 200 && response.data) {
+      return { success: true, message: response.data.content }; // Adjusted to return an array of messages
+    } else {
+      return { success: false, error: "Messages not available" };
+    }
+  } catch (error) {
+    console.error("Error getting messages:", error);
+    return {
+      success: false,
+      error: "An error occurred while retrieving messages",
+    };
+  }
+};
+
 const MessageService = {
   getMessages,
   markMessageAsRead,
+  getLastMessage,
 };
 
 export default MessageService;

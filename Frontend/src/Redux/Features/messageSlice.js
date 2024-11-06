@@ -9,7 +9,7 @@ export const fetchMessages = createAsyncThunk(
     try {
       const response = await MessageService.getMessages(contactId);
       // console.log(response);
-      
+
       if (response.success) {
         return response.message; // Array of messages
       } else {
@@ -23,31 +23,13 @@ export const fetchMessages = createAsyncThunk(
   }
 );
 
-// Thunk to mark a message as read on the server
-export const markMessageAsReadOnServer = createAsyncThunk(
-  "messages/markMessageAsRead",
-  async (messageId, { rejectWithValue }) => {
-    try {
-      const response = await MessageService.markMessageAsRead(messageId);
-      if (response.success) {
-        return messageId; // Return the message ID to update in state
-      } else {
-        return rejectWithValue(response.error || "Failed to mark message as read");
-      }
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "An error occurred while marking message as read"
-      );
-    }
-  }
-);
-
 // Messages slice
 const messageSlice = createSlice({
   name: "messages",
   initialState: {
     conversation: [], // Messages in the conversation
-    unreadCount: 0, // Count of unread messages
+    // unreadCount: 0, // Count of unread messages
+    lastSeenTimestamps: {},
     loading: false,
     error: null,
     connectedUsers: [], // Connected users list
@@ -66,6 +48,10 @@ const messageSlice = createSlice({
     setConnectedUsers: (state, action) => {
       state.connectedUsers = action.payload;
     },
+    updateLastSeenTimestamp(state, action) {
+      const { participantId, time } = action.payload;
+      state.lastSeenTimestamps[participantId] = time;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -74,25 +60,12 @@ const messageSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
-        state.conversation = action.payload;        
+        state.conversation = action.payload;
         state.unreadCount = action.payload.filter((msg) => !msg.read).length; // Set unread count based on unread messages
         state.loading = false;
       })
       .addCase(fetchMessages.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(markMessageAsReadOnServer.fulfilled, (state, action) => {
-        // Update the specific message in the conversation to mark it as read
-        const message = state.conversation.find(
-          (msg) => msg.id === action.payload
-        );
-        if (message && !message.read) {
-          message.read = true;
-          state.unreadCount = Math.max(state.unreadCount - 1, 0); // Ensure unread count doesn't go below 0
-        }
-      })
-      .addCase(markMessageAsReadOnServer.rejected, (state, action) => {
         state.error = action.payload;
       });
   },
@@ -103,6 +76,7 @@ export const {
   addMessage,
   clearConversation,
   setConnectedUsers,
+  updateLastSeenTimestamp,
 } = messageSlice.actions;
 
 export default messageSlice.reducer;

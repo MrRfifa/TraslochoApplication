@@ -24,6 +24,30 @@ const ChatBox = ({ selectedUser, messages, userId }) => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  // Utility function to ensure consistent date format
+  const parseTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return isNaN(date.getTime()) ? null : date;
+  };
+
+  const formatMessageTime = (timestamp) => {
+    const date = parseTimestamp(timestamp);
+    return date
+      ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "Invalid Time";
+  };
+
+  const formatDateSeparator = (timestamp) => {
+    const date = parseTimestamp(timestamp);
+    return date
+      ? date.toLocaleDateString([], {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "Invalid Date";
+  };
+
   const handleEmojiButtonClick = (event) => {
     event.stopPropagation();
     setShowEmojiPicker(!showEmojiPicker);
@@ -39,7 +63,11 @@ const ChatBox = ({ selectedUser, messages, userId }) => {
         contact: selectedUser.contactId,
         sender: userId,
         content: currentMessage,
+        time: new Date().toISOString(), // Ensure ISO format for consistency
       };
+      console.log("Sending message with timestamp:", messageData.time); // Debugging log
+
+      // Attempt to send the message and clear the input
       await sendMessage(
         messageData.contact,
         messageData.sender,
@@ -50,15 +78,34 @@ const ChatBox = ({ selectedUser, messages, userId }) => {
     }
   };
 
+  let lastMessageDate = null;
+
   return (
-    <div className="flex flex-col h-full bg-gray-100 rounded-lg shadow">
+    <div className="flex flex-col h-screen bg-gray-100 rounded-lg shadow">
       {/* Chat Messages Container */}
-      <ScrollToBottom className="flex-1 p-4 overflow-y-auto overflow-x-hidden">
+      <ScrollToBottom className="flex-1 p-4 overflow-y-auto overflow-x-hidden pb-24">
         {messages.map((message, index) => {
-          if (message.contact === selectedUser.contactId) {
-            return (
+          // Check and log message time for debugging
+          const messageTime = parseTimestamp(message.time);
+
+          const showDateSeparator =
+            !lastMessageDate ||
+            (messageTime &&
+              lastMessageDate.toDateString() !== messageTime.toDateString());
+          lastMessageDate = messageTime || lastMessageDate;
+
+          return (
+            <div key={index}>
+              {showDateSeparator && messageTime && (
+                <div className="flex items-center my-4">
+                  <hr className="flex-grow border-gray-300" />
+                  <span className="mx-4 text-gray-500">
+                    {formatDateSeparator(message.time)}
+                  </span>
+                  <hr className="flex-grow border-gray-300" />
+                </div>
+              )}
               <div
-                key={index}
                 className={`flex ${
                   message.sender === selectedUser.participant
                     ? "justify-start"
@@ -72,12 +119,16 @@ const ChatBox = ({ selectedUser, messages, userId }) => {
                       : "bg-[#f0e68c] text-gray-900"
                   }`}
                 >
+                  <span className="text-xs text-gray-500 mr-2">
+                    {messageTime
+                      ? formatMessageTime(message.time)
+                      : formatMessageTime(new Date())}
+                  </span>
                   {message.content}
                 </div>
               </div>
-            );
-          }
-          return null;
+            </div>
+          );
         })}
       </ScrollToBottom>
 
