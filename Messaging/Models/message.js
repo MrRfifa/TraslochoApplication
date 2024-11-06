@@ -21,7 +21,6 @@ const messageSchema = new mongoose.Schema({
   sender: { type: Number, required: true },
   content: { type: String, required: true },
   time: { type: Date, default: Date.now },
-  read: { type: Boolean, default: false }, // New field to track read status
 });
 
 const Message = mongoose.model("Message", messageSchema);

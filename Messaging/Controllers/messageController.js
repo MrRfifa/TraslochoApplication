@@ -38,38 +38,26 @@ const retrieveMessagesByContactId = async (req, res) => {
   }
 };
 
-// Function to mark a message as read
-const markMessageAsRead = async (req, res) => {
+//retrieve last message for contact
+const retrieveLastMessageByContactId = async (req, res) => {
   try {
-    const messageId = req.params.id;
-
-    const message = await Message.findByIdAndUpdate(
-      messageId,
-      { read: true },
-      { new: true }
-    );
-
-    if (!message) {
-      return res.status(404).json({
-        success: false,
-        message: "Message not found",
-      });
+    const contactId = req.params.contactId;
+    // Retrieve the most recent message for the contact
+    const lastMessage = await Message.find({ contact: contactId })
+      .sort({ time: -1 }) // Sort by timestamp in descending order
+      .limit(1); // Limit to only the most recent message
+    // If a message exists, send it; otherwise, return a 'no message' response
+    if (lastMessage.length > 0) {
+      res.json(lastMessage[0]); // Return the most recent message
+    } else {
+      res.json("No messages yet."); // No messages for the contact
     }
-
-    res.status(200).json({
-      success: true,
-      message: "Message marked as read",
-      data: message,
-    });
   } catch (error) {
-    console.error("Error marking message as read:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error marking message as read",
-    });
+    console.error(error);
+    res.status(500).json({ status: "failed", error: "Internal Server Error" });
   }
 };
 
 exports.createMessage = createMessage;
 exports.retrieveMessagesByContactId = retrieveMessagesByContactId;
-exports.markMessageAsRead = markMessageAsRead;
+exports.retrieveLastMessageByContactId = retrieveLastMessageByContactId;
