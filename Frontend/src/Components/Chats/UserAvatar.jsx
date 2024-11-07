@@ -13,8 +13,10 @@ const UserAvatar = ({
 }) => {
   return (
     <div
-      className="flex flex-row justify-between items-center hover:cursor-pointer p-2 rounded-lg hover:bg-gray-200"
-      onClick={() => onUserClick(user)}
+      className={`flex flex-row justify-between items-center hover:cursor-pointer p-2 rounded-lg ${
+        isPreview ? "hover:bg-gray-200" : ""
+      } `}
+      onClick={() => (!isPreview ? null : onUserClick(user))}
     >
       <div className="flex flex-row items-center space-x-5">
         <div className="relative">

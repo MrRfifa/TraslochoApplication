@@ -16,7 +16,7 @@ import { Toaster } from "react-hot-toast";
 const Messages = () => {
   const [contactId, setContactId] = useState("");
   const [contacts, setContacts] = useState([]);
-  const [selectedUser, setSelectedUser] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null); // Change to null for easier checks
   const { userId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -39,7 +39,6 @@ const Messages = () => {
 
   const { conversation } = useSelector((state) => state.messages);
 
-
   const handleUserClick = (user) => {
     setContactId(user.contactId);
     setSelectedUser(user);
@@ -48,8 +47,23 @@ const Messages = () => {
   };
 
   useEffect(() => {
+    if (userId && contacts.length > 0) {
+      const foundUser = contacts.find(
+        (contact) => contact.participant === parseInt(userId)
+      );
+
+      if (!foundUser) {
+        navigate("/messages"); // Navigate back if user isn't found
+      } else {
+        setSelectedUser(foundUser);
+        setContactId(foundUser.contactId); // Update contactId based on found user
+      }
+    }
+  }, [userId, contacts, navigate]);
+
+  useEffect(() => {
     if (contactId) {
-      dispatch(fetchMessages({ contactId }));
+      dispatch(fetchMessages({ contactId })); // Fetch messages whenever contactId is set
     }
   }, [contactId, dispatch]);
 
@@ -66,23 +80,27 @@ const Messages = () => {
             <button onClick={() => window.history.back()} className="mr-4">
               Back
             </button>
-            <UserAvatar
-              connected={connectedUsers.some(
-                (connectedUser) =>
-                  parseInt(connectedUser) === selectedUser.participant
-              )}
-              isPreview={false}
-              firstName={selectedUser.message.firstName}
-              lastName={selectedUser.message.lastName}
-              user={selectedUser}
-              profileImage={selectedUser.message.fileContentBase64}
-            />
+            {selectedUser && (
+              <UserAvatar
+                connected={connectedUsers.some(
+                  (connectedUser) =>
+                    parseInt(connectedUser) === selectedUser.participant
+                )}
+                isPreview={false}
+                firstName={selectedUser.message?.firstName}
+                lastName={selectedUser.message?.lastName}
+                user={selectedUser}
+                profileImage={selectedUser.message?.fileContentBase64}
+              />
+            )}
           </div>
-          <ChatBox
-            selectedUser={selectedUser}
-            messages={conversation}
-            userId={parseInt(state.id)}
-          />
+          {selectedUser && (
+            <ChatBox
+              selectedUser={selectedUser}
+              messages={conversation}
+              userId={parseInt(state.id)}
+            />
+          )}
         </div>
       )}
     </div>

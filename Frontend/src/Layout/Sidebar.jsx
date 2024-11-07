@@ -40,8 +40,8 @@ const Sidebar = () => {
     { icon: FaUserLarge, destination: "/profile", name: "Profile" },
   ];
 
-  // const showCarSideIcon = state.role === "Transporter";
-  const showCarSideIcon = true;
+  const showCarSideIcon = state.role === "Transporter";
+  // const showCarSideIcon = true;
 
   return (
     <>
