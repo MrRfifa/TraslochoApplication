@@ -1,6 +1,7 @@
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import { addNotification } from "../../Redux/Features/notificationSlice";
 import store from "../../Redux/store";
+import { successToast } from "../../Components/Toasts";
 const SIGNALR_URL = import.meta.env.VITE_APP_SIGNALR_SERVER_URL;
 let connection = null;
 
@@ -15,20 +16,10 @@ const startSignalRConnection = async (userId, isTransporter) => {
       .withAutomaticReconnect()
       .build();
 
-    //TODO Update the mothods here
     connection.on("ReceiveNotification", (message) => {
-      // // Define a regex pattern to identify connection IDs (assuming alphanumeric, e.g., 20 characters long)
-      // const connectionIdPattern = /^[a-zA-Z0-9]{20}$/;
-
-      // // Check if the notification message is an undesired default or connection message
-      // if (
-      //   message.message === "You are now connected." ||
-      //   connectionIdPattern.test(message.message)
-      // ) {
-      //   return; // Skip adding these notifications
-      // }
       console.log("Received notification:", message);
       store.dispatch(addNotification(message)); // Dispatch to Redux store
+      successToast("You received a notification");
     });
     connection.on("ReceiveGroupNotification", (message) => {
       console.log("Received notification:", message);
@@ -37,7 +28,6 @@ const startSignalRConnection = async (userId, isTransporter) => {
 
     try {
       await connection.start();
-      //TODO Update the invoke function: isTransporter
       await connection.invoke("RegisterUser", userId, isTransporter);
       console.log("SignalR connected");
       const connectionId = await connection.invoke("GetConnectionId");

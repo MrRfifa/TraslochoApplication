@@ -1,4 +1,4 @@
-import ResponsiveTable from "../../Components/ResponsiveTable";
+import ShipmentsTable from "../../Components/Tables/ShipmentsTable";
 import Tabs from "../../Components/Tabs";
 
 const sampleData = [
@@ -31,7 +31,7 @@ const sampleData = [
 const tabsData = [
   {
     label: "Pending",
-    content: <ResponsiveTable areShipments={true} data={sampleData} />,
+    content: <ShipmentsTable areShipments={true} data={sampleData} />,
   },
   {
     label: "Completed",

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import StarRating from "./StarRating";
+import StarRating from "../StarRating";
 import { FaCheck } from "react-icons/fa6";
 
-const ResponsiveTable = ({ data, areShipments }) => {
+const ShipmentsTable = ({ data, areShipments }) => {
   //   const navigate = useNavigate();
   const [sortConfig, setSortConfig] = useState({
     key: "date",
@@ -37,9 +37,9 @@ const ResponsiveTable = ({ data, areShipments }) => {
   };
 
   const tableAttributes = areShipments
-    ? ["Shipment id", "type", "status", "date", "price", "distance", "actions"]
+    ? ["Index", "type", "status", "date", "price", "distance", "actions"]
     : [
-        "Request id",
+        "Index",
         "status",
         "Reviews",
         "Firstname",
@@ -91,7 +91,7 @@ const ResponsiveTable = ({ data, areShipments }) => {
               >
                 {!areShipments ? (
                   <>
-                    <td className="p-4 text-gray-600">{item.id}</td>
+                    <td className="p-4 text-gray-600">{index}</td>
                     <td className="p-4 text-gray-600">{item.status}</td>
                     <td className="p-4 text-gray-600">
                       <StarRating rating={item.reviews} />
@@ -101,7 +101,7 @@ const ResponsiveTable = ({ data, areShipments }) => {
                     <td className="p-4 text-gray-600">{item.vehicle}</td>
                     <td className="p-4">
                       <button
-                        //   onClick={() => handleViewDetails(item.id)}
+                        //   onClick={() => handleViewDetails(index)}
                         className="text-white bg-green-400 hover:scale-105 hover:bg-green-600 px-4 py-2 rounded-full transition duration-200"
                       >
                         <FaCheck />
@@ -110,7 +110,7 @@ const ResponsiveTable = ({ data, areShipments }) => {
                   </>
                 ) : (
                   <>
-                    <td className="p-4 text-gray-600">{item.id}</td>
+                    <td className="p-4 text-gray-600">{index}</td>
                     <td className="p-4 text-gray-600">{item.type}</td>
                     <td className="p-4 text-gray-600">{item.status}</td>
                     <td className="p-4 text-gray-600">{item.date}</td>
@@ -170,19 +170,8 @@ const ResponsiveTable = ({ data, areShipments }) => {
     </div>
   );
 };
-
-ResponsiveTable.propTypes = {
-  data: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      type: PropTypes.string.isRequired,
-      status: PropTypes.string.isRequired,
-      date: PropTypes.string.isRequired,
-      price: PropTypes.number.isRequired,
-      distance: PropTypes.number.isRequired,
-    })
-  ).isRequired,
+ShipmentsTable.propTypes = {
+  data: PropTypes.array.isRequired,
   areShipments: PropTypes.bool.isRequired,
 };
-
-export default ResponsiveTable;
+export default ShipmentsTable;

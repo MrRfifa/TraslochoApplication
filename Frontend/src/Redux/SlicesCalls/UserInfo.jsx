@@ -17,7 +17,6 @@ const UserInfo = () => {
           userInfo[0].value,
           userInfo[1].value === "Transporter"
         );
-        //TODO See if useless
         startSocketConnection(userInfo[0].value);
         dispatch(
           login({
