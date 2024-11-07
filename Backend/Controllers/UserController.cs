@@ -5,6 +5,7 @@ using Backend.DTOs.User;
 using Backend.DTOs.UserRequests;
 using Backend.Helpers;
 using Backend.Interfaces;
+using Backend.Models.Classes.UsersEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -377,6 +378,22 @@ namespace Backend.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpGet("owners")]
+        [ProducesResponseType(200)]
+        public async Task<ActionResult<ICollection<Owner>>> GetOwners()
+        {
+            var owners = await _userRepository.GetOwners();
+            return Ok(owners); // Return 200 OK with the owners data
+        }
+
+        [HttpGet("transporters")]
+        [ProducesResponseType(200)]
+        public async Task<ActionResult<ICollection<Transporter>>> GetTransporters()
+        {
+            var transporters = await _userRepository.GetTransporters();
+            return Ok(transporters); // Return 200 OK with the transporters data
         }
 
 
