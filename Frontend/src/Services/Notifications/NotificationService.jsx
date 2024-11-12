@@ -1,50 +1,31 @@
-import { HubConnectionBuilder } from "@microsoft/signalr";
-import { addNotification } from "../../Redux/Features/notificationSlice";
-import store from "../../Redux/store";
-import { successToast } from "../../Components/Toasts";
-const SIGNALR_URL = import.meta.env.VITE_APP_SIGNALR_SERVER_URL;
-let connection = null;
+import axios from "axios";
 
-const startSignalRConnection = async (userId, isTransporter) => {
-  if (!userId) {
-    console.error("Cannot start SignalR connection without a valid userId");
-    return;
-  }
-  if (connection == null) {
-    connection = new HubConnectionBuilder()
-      .withUrl(SIGNALR_URL)
-      .withAutomaticReconnect()
-      .build();
+const API_URL = import.meta.env.VITE_APP_API_URL;
 
-    connection.on("ReceiveNotification", (message) => {
-      console.log("Received notification:", message);
-      store.dispatch(addNotification(message)); // Dispatch to Redux store
-      successToast("You received a notification");
-    });
-    connection.on("ReceiveGroupNotification", (message) => {
-      console.log("Received notification:", message);
-      store.dispatch(addNotification(message)); // Dispatch to Redux store
-    });
+const markNotificationAsRead = async (notificationId) => {
+  try {
+    // Use PATCH method to mark the notification as read
+    const response = await axios.put(
+      `${API_URL}notification/${notificationId}`
+    );
+    console.log(response);
 
-    try {
-      await connection.start();
-      await connection.invoke("RegisterUser", userId, isTransporter);
-      console.log("SignalR connected");
-      const connectionId = await connection.invoke("GetConnectionId");
-      console.log(`Connection Id: ${connectionId}`);
-    } catch (error) {
-      console.error("SignalR connection failed:", error);
+    if (response.status === 200 && response.data) {
+      return { success: true, message: response.data.message }; // Adjusted to return the success notification
+    } else {
+      return { success: false, error: "Failed to mark notification as read" };
     }
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    return {
+      success: false,
+      error: "An error occurred while marking the notification as read",
+    };
   }
 };
 
-const stopSignalRConnection = async (userId) => {
-  if (connection != null) {
-    await connection.stop();
-    await connection.invoke("DeleteUser", userId);
-    connection = null;
-    console.log("SignalR connection stopped");
-  }
+const NotificationService = {
+  markNotificationAsRead,
 };
 
-export { startSignalRConnection, stopSignalRConnection };
+export default NotificationService;
