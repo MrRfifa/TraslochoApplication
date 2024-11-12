@@ -5,6 +5,7 @@ import UsersRoute from "./Routes/UsersRoute";
 import store from "./Redux/store.js";
 import { Provider } from "react-redux";
 import Sidebar from "./Layout/Sidebar.jsx";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const authStatus = AuthVerifyService.AuthVerify();
@@ -20,6 +21,7 @@ function App() {
     return (
       <Provider store={store}>
         <Router>
+          <Toaster />
           <Sidebar />
           <UsersRoute />
         </Router>

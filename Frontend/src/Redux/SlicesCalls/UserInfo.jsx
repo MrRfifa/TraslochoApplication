@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import AuthService from "../../Services/Auth/AuthServices";
 import { login } from "../Features/userInfo";
-import { startSignalRConnection } from "../../Services/Notifications/NotificationService";
 import { fetchMissedNotifications } from "../Features/notificationSlice";
 import { startSocketConnection } from "../../Services/Messages/MessageSocketService";
+import { startSignalRConnection } from "../../Services/Notifications/NotificationSocketServices";
 
 const UserInfo = () => {
   const dispatch = useDispatch();
@@ -17,7 +17,6 @@ const UserInfo = () => {
           userInfo[0].value,
           userInfo[1].value === "Transporter"
         );
-        //TODO See if useless
         startSocketConnection(userInfo[0].value);
         dispatch(
           login({

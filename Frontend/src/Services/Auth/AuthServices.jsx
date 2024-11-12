@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// const API_URL = import.meta.env.VITE_APP_API_URL;
-const API_URL = "http://localhost:5242/api/";
+const API_URL = import.meta.env.VITE_APP_API_URL;
+// const API_URL = "http://localhost:5242/api/";
 
 const login = (email, password) => {
   return axios

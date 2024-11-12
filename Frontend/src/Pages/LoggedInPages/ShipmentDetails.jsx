@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import ResponsiveTable from "../../Components/ResponsiveTable";
+import ShipmentsTable from "../../Components/Tables/ShipmentsTable";
 
 // Placeholder images for the gallery
 const placeholderImages = [
-  "https://via.placeholder.com/400x300?text=Image+1",
-  "https://via.placeholder.com/400x300?text=image+11",
-  "https://via.placeholder.com/400x300?text=Image+3",
+  "https://fakeimg.pl/600x400?text=image+1",
+  "https://fakeimg.pl/600x400?text=image+2",
+  "https://fakeimg.pl/600x400?text=image+3",
 ];
 
 const ShipmentDetails = () => {
@@ -161,7 +161,7 @@ const ShipmentDetails = () => {
       </div>
       {/* Second Row */}
       <div className="h-96">
-        <ResponsiveTable areShipments={false} data={sampleData} />
+        <ShipmentsTable areShipments={false} data={sampleData} />
       </div>
     </div>
   );

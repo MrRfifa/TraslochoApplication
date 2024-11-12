@@ -7,26 +7,31 @@ import {
   FaHouse,
   FaCarSide,
   FaBoxesStacked,
+  FaBell,
 } from "react-icons/fa6";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import UserInfo from "../Redux/SlicesCalls/UserInfo";
 import AuthService from "../Services/Auth/AuthServices";
-import NotificationsIcon from "../Components/Notification/NotificationsIcon";
-import NotificationsModal from "../Components/Notification/NotificationsModal";
+// import NotificationsIcon from "../Components/Notification/NotificationsIcon";
+// import NotificationsModal from "../Components/Notification/NotificationsModal";
 
 const Sidebar = () => {
   const state = useSelector((state) => state.userInfo.value);
   const [isOpen, setIsOpen] = useState(false);
-  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  // const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const toggleNotificationsModal = () =>
-    setShowNotificationsModal(!showNotificationsModal);
+  // const toggleNotificationsModal = () =>
+  //   setShowNotificationsModal(!showNotificationsModal);
 
   //Call the redux slice
   UserInfo();
+  const notifications = useSelector((state) => state.notifications.list);
+  const unreadCount = notifications.filter(
+    (notification) => !notification.isRead
+  ).length;
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -37,6 +42,7 @@ const Sidebar = () => {
     { icon: FaMessage, destination: "/messages", name: "Messages" },
     { icon: FaBoxesStacked, destination: "/shipments", name: "Shipments" },
     { icon: FaCarSide, destination: "/cars", name: "Car" },
+    { icon: FaBell, destination: "/notifications", name: "Notifications" },
     { icon: FaUserLarge, destination: "/profile", name: "Profile" },
   ];
 
@@ -102,9 +108,42 @@ const Sidebar = () => {
           {/* Render sections as a list */}
           <ul className="space-y-2 font-medium pt-10">
             {sections.map((section, index) => {
-              if (section.icon === FaCarSide && !showCarSideIcon) {
-                return null; // Skip rendering if condition is not met
+              // Special condition for "Notifications" section
+              if (section.name === "Notifications") {
+                return (
+                  <li
+                    onClick={() => {
+                      navigate(section.destination);
+                      toggleSidebar(); // Assuming this closes the sidebar
+                    }}
+                    className={`flex items-center space-x-3 mr-5 rounded-md p-2 hover:scale-110 hover:cursor-pointer text-[#FFFFFF] ${
+                      location.pathname === section.destination
+                        ? "bg-[#FCA311]" // Active style for Notifications
+                        : "hover:bg-[#FCA311]"
+                    }`}
+                    key={index}
+                  >
+                    <section.icon size={25} color="#E5E5E5" />
+                    <div className="text-lg flex flex-row space-x-36">
+                      <span>{section.name}</span>
+                      {unreadCount > 0 && (
+                        <div className="absolute">
+                          <span className="absolute top-1 bg-red-500 text-white text-sm rounded-full w-5 h-5 flex items-center justify-center">
+                            {unreadCount}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Red dot with unread notification count */}
+                  </li>
+                );
               }
+
+              // For other sections, apply normal logic
+              if (section.icon === FaCarSide && !showCarSideIcon) {
+                return null; // Skip rendering if condition is not met for "Car" icon
+              }
+
               return (
                 <li
                   onClick={() => {
@@ -118,7 +157,7 @@ const Sidebar = () => {
                   }`}
                   key={index}
                 >
-                  <section.icon size={25} className="" color="#E5E5E5" />
+                  <section.icon size={25} color="#E5E5E5" />
                   <span className="text-lg">{section.name}</span>
                 </li>
               );
@@ -135,16 +174,6 @@ const Sidebar = () => {
           </ul>
         </div>
       </aside>
-      <header>
-        <NotificationsIcon onClick={toggleNotificationsModal} />
-        {showNotificationsModal && (
-          <NotificationsModal
-            isOpen={showNotificationsModal}
-            onClose={toggleNotificationsModal}
-            userId={state.id}
-          />
-        )}
-      </header>
     </>
   );
 };
