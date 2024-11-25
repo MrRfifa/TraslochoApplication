@@ -7,6 +7,7 @@ import ConfirmUpdateEMail from "../Pages/LoggedInPages/ConfirmUpdateEMail";
 import Messages from "../Pages/LoggedInPages/Messages.jsx";
 import ShipmentDetails from "../Pages/LoggedInPages/ShipmentDetails.jsx";
 import Notifications from "../Pages/LoggedInPages/Notifications.jsx";
+import CompleteShipmentDetails from "../Pages/LoggedInPages/CompleteShipmentDetails.jsx";
 
 const UsersRoute = () => {
   return (
@@ -18,6 +19,10 @@ const UsersRoute = () => {
       <Route path="/cars" exact element={<Cars />} />
       <Route path="/shipments" exact element={<Shipments />} />
       <Route path="/details/:shipmentId" element={<ShipmentDetails />} />
+      <Route
+        path="/complete-details/:shipmentId"
+        element={<CompleteShipmentDetails />}
+      />
       <Route path="/notifications" exact element={<Notifications />} />
       <Route
         path="/confirm-update-email"

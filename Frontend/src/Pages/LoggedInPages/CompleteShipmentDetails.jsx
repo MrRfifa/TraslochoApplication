@@ -1,45 +1,29 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import ShipmentsTable from "../../Components/Tables/ShipmentsTable";
 import ShipmentService from "../../Services/Shipments/ShipmentService";
-// import RequestService from "../../Services/Requests/RequestService";
 import helperFunctions from "../../Helpers/helperFunctions";
-import MapModal from "../../Components/MapModal";
-import Empty from "../../Components/Empty";
+import AddAddressesForm from "../../Components/Forms/Shipments/AddAddressesForm";
 
-const ShipmentDetails = () => {
+const CompleteShipmentDetails = () => {
   const { shipmentId } = useParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentShipment, setCurrentShipment] = useState();
-  const [currentShipmentAddress, setCurrentShipmentAddress] = useState([]);
   const [currentShipmentImages, setCurrentShipmentImages] = useState([]);
-  const [currentShipmentRequests, setCurrentShipmentRequests] = useState([]);
   const [loading, setLoading] = useState(true); // New loading state
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  const [originCord, setOriginCord] = useState(null);
-  const [destinationCord, setDestinationCord] = useState(null);
 
   const thumbnailContainerRef = useRef(null);
   const thumbnailRefs = useRef([]);
+
   useEffect(() => {
     const fetchShipmentDetails = async () => {
       setLoading(true); // Start loading
       try {
-        const [
-          responseShipment,
-          responseAddresses,
-          responseImages,
-          // shipmentRequests,
-        ] = await Promise.all([
+        const [responseShipment, responseImages] = await Promise.all([
           ShipmentService.getShipmentById(shipmentId),
-          ShipmentService.getShipmentAddressesById(shipmentId),
           ShipmentService.getShipmentImagesById(shipmentId),
-          // RequestService.getShipmentRequests(shipmentId),
         ]);
         setCurrentShipment(responseShipment.message);
-        setCurrentShipmentAddress(responseAddresses.message.data);
         setCurrentShipmentImages(responseImages.message.data);
-        // setCurrentShipmentRequests(shipmentRequests);
         setLoading(false);
       } catch (error) {
         console.error("Failed to fetch shipment details:", error);
@@ -49,45 +33,19 @@ const ShipmentDetails = () => {
 
     fetchShipmentDetails();
   }, [shipmentId]);
-
   const shipmentData = currentShipment
     ? {
         id: shipmentId,
         type: helperFunctions.convertType(currentShipment.shipmentType),
         status: helperFunctions.convertStatus(currentShipment.shipmentStatus),
         date: helperFunctions.formatDate(currentShipment.shipmentDate),
-        price: `${currentShipment.price} $`,
-        distance: `${currentShipment.distanceBetweenAddresses} Km`,
-        origin: helperFunctions.formatAddress(currentShipmentAddress[0]),
-        destination: helperFunctions.formatAddress(currentShipmentAddress[1]),
+        price: "0 €",
+        distance: "0 Km",
+        origin: "",
+        destination: "",
         description: currentShipment.description,
       }
     : {};
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(false);
-      const originCoords = await ShipmentService.fetchCoordinates(
-        shipmentData.origin
-      );
-      const destinationCoords = await ShipmentService.fetchCoordinates(
-        shipmentData.destination
-      );
-
-      setOriginCord({
-        ...originCoords,
-        address: shipmentData.origin,
-      });
-
-      setDestinationCord({
-        ...destinationCoords,
-        address: shipmentData.destination,
-      });
-    };
-
-    fetchData();
-    setLoading(true);
-  }, [shipmentData.destination, shipmentData.origin]);
 
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) =>
@@ -120,12 +78,11 @@ const ShipmentDetails = () => {
       </div>
     );
   }
-  // console.log(currentShipmentRequests);
 
   return (
-    <div className="p-5 md:ml-64 ml-0 grid grid-rows-2 gap-2">
+    <div className="md:ml-64 ml-0 grid grid-rows-2 gap-2 -space-y-10">
       {/* First Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 ml-2 md:grid-cols-2 gap-2 mt-10">
         {/* Left Column: Image Gallery */}
         <div className="flex flex-col space-y-5 mt-5 md:mt-10">
           <div className="relative mb-4">
@@ -169,13 +126,9 @@ const ShipmentDetails = () => {
               ))}
             </div>
           </div>
-          <div className="flex flex-col space-y-3">
-            <h2 className="text-2xl font-semibold">Description</h2>
-            <p className="text-gray-700">{shipmentData.description}</p>
-          </div>
         </div>
         {/* Right Column */}
-        <div className="bg-white rounded-lg p-5 flex flex-col justify-between">
+        <div className="bg-white rounded-lg p-5 flex flex-col justify-start">
           <h1 className="text-3xl font-bold mb-4">Shipment Details</h1>
           <div className="grid grid-cols-1 gap-0 mb-6">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
@@ -190,65 +143,19 @@ const ShipmentDetails = () => {
               <span className="font-semibold">Date:</span>
               <span className="text-gray-700">{shipmentData.date}</span>
             </div>
-            <div className="flex justify-between items-center p-4 border-b border-gray-300">
-              <span className="font-semibold">Price:</span>
-              <span className="text-gray-700">{shipmentData.price}</span>
+            <div className="flex flex-col items-start p-4 space-y-2 border-b border-gray-300">
+              <span className="font-semibold">Description:</span>
+              <span className="text-gray-700">{shipmentData.description}</span>
             </div>
-            <div className="flex justify-between items-center p-4 border-b border-gray-300">
-              <span className="font-semibold">Distance:</span>
-              <span className="text-gray-700">{shipmentData.distance}</span>
-            </div>
-            <div className="flex flex-col justify-start p-4 border-b border-gray-300">
-              <span className="font-semibold">From:</span>
-              <span className="text-gray-700">{shipmentData.origin}</span>
-            </div>
-            <div className="flex flex-col justify-start p-4 border-b border-gray-300">
-              <span className="font-semibold">To:</span>
-              <span className="text-gray-700">{shipmentData.destination}</span>
-            </div>
-          </div>
-          <div className="flex flex-row mt-0 space-x-5">
-            <button className="bg-[#FCA311] hover:bg-[#ff6700] text-white py-2 px-4 rounded transition duration-200">
-              Update Shipment Date
-            </button>
-            <button
-              onClick={() => setIsMapOpen(true)}
-              className="bg-[#FCA311] hover:bg-[#ff6700] text-white py-2 px-4 rounded transition duration-200"
-            >
-              View on Map
-            </button>
-            {isMapOpen && (
-              <MapModal
-                isOpen={isMapOpen}
-                onClose={() => setIsMapOpen(false)}
-                origin={originCord}
-                destination={destinationCord}
-              />
-            )}
           </div>
         </div>
       </div>
-      {/* Second Row */}
-      <div className="h-96">
-        {currentShipmentRequests.length > 0 ? (
-          <>
-            <h1 className="text-2xl font-semibold">Requests</h1>
-            <ShipmentsTable
-              areShipments={false}
-              data={currentShipmentRequests}
-              labelActionButton=""
-              missingData={false}
-            />
-          </>
-        ) : (
-          <Empty
-            message="No requests available"
-            description="There are no shipment requests at this time."
-          />
-        )}
+      {/* Second row */}
+      <div>
+        <AddAddressesForm shipmentId={shipmentId} />
       </div>
     </div>
   );
 };
 
-export default ShipmentDetails;
+export default CompleteShipmentDetails;
