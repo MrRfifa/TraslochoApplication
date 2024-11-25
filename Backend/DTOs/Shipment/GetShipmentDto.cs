@@ -1,4 +1,5 @@
 
+using Backend.Models.Classes.AddressesEntities;
 using Backend.Models.Enums;
 
 namespace Backend.DTOs.Shipment
@@ -9,7 +10,9 @@ namespace Backend.DTOs.Shipment
         public ShipmentStatus ShipmentStatus { get; set; }
         public DateTime ShipmentDate { get; set; }
         public int Price { get; set; }
-        public int AddressId { get; set; }
+        public float DistanceBetweenAddresses { get; set; }
+        public int DestinationAddressId { get; set; }
+        public int OriginAddressId { get; set; }
         public string Description { get; set; } = string.Empty;
         public int OwnerId { get; set; }
         public int TransporterId { get; set; }

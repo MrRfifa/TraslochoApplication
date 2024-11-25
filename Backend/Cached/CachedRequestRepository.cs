@@ -38,7 +38,7 @@ namespace Backend.Cached
                     await _distributedCache.RemoveAsync(acceptedShipmentsKey);
 
                     // Fetch the updated pending and accepted shipments from the decorated repository
-                    var pendingShipments = await _shipmentRepository.GetPendingShipmentsByOwnerId(acceptedShipment.OwnerId);
+                    var pendingShipments = await _shipmentRepository.GetPendingCompletedDataShipmentsByOwnerId(acceptedShipment.OwnerId);
                     var acceptedShipments = await _shipmentRepository.GetAcceptedShipmentsByOwnerId(acceptedShipment.OwnerId);
 
                     // Re-cache the updated pending shipments if there are any

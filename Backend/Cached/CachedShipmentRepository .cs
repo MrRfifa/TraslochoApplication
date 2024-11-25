@@ -4,6 +4,7 @@ using Backend.DTOs.Address;
 using Backend.DTOs.Shipment;
 using Backend.Interfaces;
 using Backend.Models.Classes;
+using Backend.Models.Classes.ImagesEntities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
@@ -41,7 +42,7 @@ namespace Backend.Cached
                 });
                 // Remove the existing cached owner's shipments
                 await _distributedCache.RemoveAsync(pendingShipmentsKey);
-                var pendingShipments = await _decorated.GetPendingShipmentsByOwnerId(updatedShipment.OwnerId);
+                var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(updatedShipment.OwnerId);
                 if (pendingShipments != null && pendingShipments.Any())
                 {
                     await _distributedCache.SetStringAsync(pendingShipmentsKey, JsonConvert.SerializeObject(pendingShipments), new DistributedCacheEntryOptions
@@ -71,7 +72,7 @@ namespace Backend.Cached
                     await _distributedCache.RemoveAsync(shipmentExistenceKey);
                     await _distributedCache.RemoveAsync(pendingShipmentsKey);
                     await _distributedCache.RemoveAsync(canceledShipmentsKey);
-                    var pendingShipments = await _decorated.GetPendingShipmentsByOwnerId(canceledShipment.OwnerId);
+                    var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(canceledShipment.OwnerId);
                     if (pendingShipments != null && pendingShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(pendingShipmentsKey, JsonConvert.SerializeObject(pendingShipments), new DistributedCacheEntryOptions
@@ -179,9 +180,9 @@ namespace Backend.Cached
         public async Task<float> GetDistanceBetweenCities(string originCountry, string originCity, string destinationCountry, string destinationCity)
         {
             return await _decorated.GetDistanceBetweenCities(originCountry, originCity, destinationCountry, destinationCity);
-        } 
+        }
 
-        public async Task<ICollection<Shipment>?> GetPendingShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByOwnerId(int ownerId)
         {
             string key = $"owner-pending-shipments-{ownerId}";
             string? cachedPendingShipments = await _distributedCache.GetStringAsync(key);
@@ -191,7 +192,7 @@ namespace Backend.Cached
                 return JsonConvert.DeserializeObject<List<Shipment>>(cachedPendingShipments) ?? new List<Shipment>();
             }
             // Otherwise, fetch from the database
-            var shipments = await _decorated.GetPendingShipmentsByOwnerId(ownerId);
+            var shipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(ownerId);
             // Return the shipments or an empty list if none found
             if (shipments != null && shipments.Any())
             {
@@ -205,6 +206,11 @@ namespace Backend.Cached
                 return shipments;
             }
             return Enumerable.Empty<Shipment>().ToList();
+        }
+
+        public Task<ICollection<GetAddressDto>?> GetShipmentAddresses(int shipmentId)
+        {
+            return _decorated.GetShipmentAddresses(shipmentId);
         }
 
         public async Task<Shipment?> GetShipmentById(int shipmentId)
@@ -236,6 +242,18 @@ namespace Backend.Cached
         public async Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId)
         {
             return await _decorated.GetShipmentDtoById(shipmentId);
+        }
+
+        public Task<ICollection<byte[]>?> GetShipmentAndImages(int shipmentId)
+        {
+            return _decorated.GetShipmentAndImages(shipmentId);
+        }
+
+        public async Task<ICollection<Shipment>?> GetUncompletedDataShipmentsByOwnerId(int ownerId)
+        {
+
+            var shipments = await _decorated.GetUncompletedDataShipmentsByOwnerId(ownerId);
+            return shipments;
         }
 
         public async Task<int> MarkShipmentAsCompleted(int shipmentId)
@@ -299,7 +317,7 @@ namespace Backend.Cached
                         {
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
                         });
-                    var ownerShipments = await _decorated.GetPendingShipmentsByOwnerId(updatedShipment.OwnerId);
+                    var ownerShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(updatedShipment.OwnerId);
                     if (ownerShipments != null && ownerShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(

@@ -96,7 +96,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpPost("create-shipment/{ownerId:int}")]
+        [HttpPost("create/{ownerId:int}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(401)]
@@ -155,7 +155,7 @@ namespace Backend.Controllers
             }
         }
 
-        [HttpGet("accepted-shipments/{ownerId:int}")]
+        [HttpGet("accepted/{ownerId:int}")]
         [ProducesResponseType(200)] // OK: Shipments retrieved successfully
         [ProducesResponseType(404)] // Not Found: No shipments found for the owner
         [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
@@ -171,7 +171,7 @@ namespace Backend.Controllers
             return Ok(new { status = "success", message = shipments });
         }
 
-        [HttpGet("canceled-shipments/{ownerId:int}")]
+        [HttpGet("canceled/{ownerId:int}")]
         [ProducesResponseType(200)] // OK: Shipments retrieved successfully
         [ProducesResponseType(404)] // Not Found: No shipments found for the owner
         [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
@@ -187,7 +187,7 @@ namespace Backend.Controllers
             return Ok(new { status = "success", message = shipments });
         }
 
-        [HttpGet("completed-shipments/{ownerId:int}")]
+        [HttpGet("completed/{ownerId:int}")]
         [ProducesResponseType(200)] // OK: Shipments retrieved successfully
         [ProducesResponseType(404)] // Not Found: No shipments found for the owner
         [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
@@ -203,13 +203,13 @@ namespace Backend.Controllers
             return Ok(new { status = "success", message = shipments });
         }
 
-        [HttpGet("pending-shipments/{ownerId:int}")]
+        [HttpGet("pending/{ownerId:int}")]
         [ProducesResponseType(200)] // OK: Shipments retrieved successfully
         [ProducesResponseType(404)] // Not Found: No shipments found for the owner
         [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
-        public async Task<IActionResult> GetPendingShipmentsByOwnerId(int ownerId)
+        public async Task<IActionResult> GetPendingCompletedDataShipmentsByOwnerId(int ownerId)
         {
-            var shipments = await _shipmentRepository.GetPendingShipmentsByOwnerId(ownerId);
+            var shipments = await _shipmentRepository.GetPendingCompletedDataShipmentsByOwnerId(ownerId);
 
             if (shipments == null || shipments.Count == 0)
             {
@@ -218,6 +218,23 @@ namespace Backend.Controllers
 
             return Ok(new { status = "success", message = shipments });
         }
+
+        [HttpGet("uncompleted-data/{ownerId:int}")]
+        [ProducesResponseType(200)] // OK: Shipments retrieved successfully
+        [ProducesResponseType(404)] // Not Found: No shipments found for the owner
+        [ProducesResponseType(500)] // Internal Server Error: Unexpected errors
+        public async Task<IActionResult> GetUnCompletedDataShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _shipmentRepository.GetUncompletedDataShipmentsByOwnerId(ownerId);
+
+            if (shipments == null || shipments.Count == 0)
+            {
+                return NotFound(new { status = "fail", message = "No pending shipments found for the specified owner." });
+            }
+
+            return Ok(new { status = "success", message = shipments });
+        }
+
 
         [HttpPut("mark-shipment-completed/{shipmentId:int}")]
         [ProducesResponseType(200)]
@@ -250,6 +267,37 @@ namespace Backend.Controllers
             {
                 return BadRequest(new { status = "fail", message = ex.Message });
             }
+        }
+
+        [HttpGet("get-shipment-addresses/{shipmentId:int}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(400)]
+
+        public async Task<IActionResult> GetShipmentAddresses(int shipmentId)
+        {
+            var addresses = await _shipmentRepository.GetShipmentAddresses(shipmentId);
+            if (addresses == null)
+            {
+                return NotFound(new { status = "fail", message = "Shipment not found or no addresses available." });
+            }
+
+            return Ok(new { status = "success", data = addresses });
+        }
+
+        [HttpGet("get-shipment-images/{shipmentId:int}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> GetShipmentAndImages(int shipmentId)
+        {
+            var images = await _shipmentRepository.GetShipmentAndImages(shipmentId);
+            if (images == null || !images.Any())
+            {
+                return NotFound(new { status = "fail", message = "Shipment not found or no images available." });
+            }
+
+            return Ok(new { status = "success", data = images });
         }
 
     }

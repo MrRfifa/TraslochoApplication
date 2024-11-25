@@ -25,6 +25,7 @@ namespace Backend.Helpers
             CreateMap<Shipment, GetShipmentDto>();
 
             CreateMap<CreateAddressDto, ShipmentAddress>();
+            CreateMap<ShipmentAddress, GetAddressDto>();
             CreateMap<CreateAddressDto, UserAddress>();
 
             CreateMap<Review, GetReviewDto>();

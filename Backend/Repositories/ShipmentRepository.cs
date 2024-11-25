@@ -295,14 +295,51 @@ namespace Backend.Repositories
             }
         }
 
-        public async Task<ICollection<Shipment>?> GetPendingShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByOwnerId(int ownerId)
         {
             var shipments = await _context.Shipments
-                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Pending)
+                .Where(s => s.OwnerId == ownerId
+                    && s.ShipmentStatus == ShipmentStatus.Pending
+                    && s.Price > 0 // Ensure Price is greater than 0
+                    && s.DistanceBetweenAddresses > 0 // Ensure Distance is greater than 0
+                    && s.OriginAddressId > 0 // Check for non-nullable OriginAddressId
+                    && s.DestinationAddressId > 0 // Check for non-nullable DestinationAddressId
+         )
                 .ToListAsync();
 
             // Return the result
             return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
+        }
+
+        public async Task<ICollection<GetAddressDto>?> GetShipmentAddresses(int shipmentId)
+        {
+            // Step 1: Retrieve the shipment by ID
+            var shipment = await _context.Shipments
+                .Include(s => s.OriginAddress) // Include the related OriginAddress
+                .Include(s => s.DestinationAddress) // Include the related DestinationAddress
+                .FirstOrDefaultAsync(s => s.Id == shipmentId);
+
+            if (shipment == null)
+            {
+                // If no shipment is found, return null or handle as per your business logic.
+                return null;
+            }
+
+            // Step 2: Map the addresses to GetAddressDto
+            var addresses = new List<GetAddressDto>();
+
+            if (shipment.OriginAddress != null)
+            {
+                addresses.Add(_mapper.Map<GetAddressDto>(shipment.OriginAddress));
+            }
+
+            if (shipment.DestinationAddress != null)
+            {
+                addresses.Add(_mapper.Map<GetAddressDto>(shipment.DestinationAddress));
+            }
+
+            // Step 3: Return the collection of addresses
+            return addresses;
         }
 
         public async Task<Shipment?> GetShipmentById(int shipmentId)
@@ -328,6 +365,37 @@ namespace Backend.Repositories
             GetShipmentDto shipmentDto = _mapper.Map<GetShipmentDto>(shipment);
 
             return shipmentDto;
+        }
+
+        public async Task<ICollection<byte[]>?> GetShipmentAndImages(int shipmentId)
+        {
+            // Step 1: Retrieve the shipment by ID, including its images
+            var shipment = await _context.Shipments
+                .Include(s => s.Images) // Include the related Images collection
+                .FirstOrDefaultAsync(s => s.Id == shipmentId);
+
+            if (shipment == null)
+            {
+                // If no shipment is found, return null or handle as per your business logic.
+                return null;
+            }
+
+            // Step 2: Return only the base64 content of the images
+            return shipment.Images?.Select(image => image.FileContentBase64).ToList();
+        }
+
+        public async Task<ICollection<Shipment>?> GetUncompletedDataShipmentsByOwnerId(int ownerId)
+        {
+            var shipments = await _context.Shipments
+                            .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Pending
+                                    && s.Price == 0 && s.DistanceBetweenAddresses == 0
+                                    && s.OriginAddressId == null && s.DestinationAddressId == null
+                            )
+                            .ToListAsync();
+
+            // Return the result
+            return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
+            throw new NotImplementedException();
         }
 
         public async Task<int> MarkShipmentAsCompleted(int shipmentId)
@@ -433,6 +501,6 @@ namespace Backend.Repositories
                 await _notificationRepository.AddNotification(notificationToStore);
             }
         }
-        
+
     }
 }
