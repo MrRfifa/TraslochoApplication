@@ -211,6 +211,7 @@ namespace Backend.Repositories
             }
 
             var shipmentRequests = await _context.Requests
+                .Include(r => r.Transporter)
                 .Where(r => r.ShipmentId == shipmentId)
                 .ToListAsync();
 
@@ -285,6 +286,6 @@ namespace Backend.Repositories
                 await _notificationRepository.AddNotification(notificationToStore);
             }
         }
-    
+
     }
 }

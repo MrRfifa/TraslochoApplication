@@ -139,11 +139,11 @@ namespace Backend.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<GetReviewDto>))]
         [ProducesResponseType(404)]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> GetReviewsByTransporterId(int ownerId)
+        public async Task<IActionResult> GetReviewsByTransporterId(int transporterId)
         {
             try
             {
-                var reviews = await _reviewRepository.GetReviewsByTransporterId(ownerId);
+                var reviews = await _reviewRepository.GetReviewsByTransporterId(transporterId);
 
                 if (reviews == null || !reviews.Any())
                 {

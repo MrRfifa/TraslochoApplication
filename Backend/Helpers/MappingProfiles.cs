@@ -31,7 +31,9 @@ namespace Backend.Helpers
             CreateMap<Review, GetReviewDto>();
             CreateMap<CreateReviewDto, Review>();
 
-            CreateMap<Request, GetRequestDto>();
+            CreateMap<Request, GetRequestDto>()
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.Transporter!.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.Transporter!.LastName));
             CreateMap<CreateRequestDto, Request>();
 
             CreateMap<Notification, GetNotificationDto>();

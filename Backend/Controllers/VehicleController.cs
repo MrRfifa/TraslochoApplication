@@ -8,7 +8,7 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Transporter")]
+    [Authorize]
     public class VehicleController : ControllerBase
     {
         private readonly IMapper _mapper;
