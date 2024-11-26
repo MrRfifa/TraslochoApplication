@@ -1,15 +1,26 @@
 import PropTypes from "prop-types";
 
-const DetailRow = ({ label, value }) => (
-  <div className="mb-2 flex flex-row justify-between items-center">
-    <span className="font-semibold text-gray-700">{label}:</span>
-    <span className="text-gray-600">{value}</span>
-  </div>
-);
+const DetailRow = ({ label, value, isTable }) => {
+  return (
+    <div
+      className={`flex justify-between items-center ${
+        isTable
+          ? "mb-2 flex-row text-gray-700"
+          : "p-4 border-b border-gray-300 text-gray-600"
+      }`}
+    >
+      <span className={`font-semibold ${isTable ? "" : "text-black"}`}>
+        {label}:
+      </span>
+      <span>{value}</span>
+    </div>
+  );
+};
 
 DetailRow.propTypes = {
   label: PropTypes.string.isRequired,
-  value: PropTypes.any.isRequired,
+  value: PropTypes.any,
+  isTable: PropTypes.bool.isRequired,
 };
 
 export default DetailRow;

@@ -51,9 +51,11 @@ const ShipmentsTable = ({
                 {!areShipments ? (
                   <>
                     <td className="p-4 text-gray-600">{index}</td>
-                    <td className="p-4 text-gray-600">{item.status}</td>
                     <td className="p-4 text-gray-600">
-                      <StarRating rating={item.reviews} />
+                      {helperFunctions.convertRequestStatus(item.status)}
+                    </td>
+                    <td className="p-4 text-gray-600">
+                      <StarRating rating={item.ratings} />
                     </td>
                     <td className="p-4 text-gray-600">{item.firstname}</td>
                     <td className="p-4 text-gray-600">{item.lastname}</td>
@@ -123,33 +125,54 @@ const ShipmentsTable = ({
               {areShipments ? (
                 <>
                   <DetailRow
+                    isTable={true}
                     label="Type"
                     value={helperFunctions.convertType(item.shipmentType)}
                   />
                   <DetailRow
+                    isTable={true}
                     label="Status"
                     value={helperFunctions.convertStatus(item.shipmentStatus)}
                   />
                   <DetailRow
+                    isTable={true}
                     label="Date"
                     value={helperFunctions.formatDate(item.shipmentDate)}
                   />
-                  <DetailRow label="Price" value={item.price} />
+                  <DetailRow isTable={true} label="Price" value={item.price} />
                   <DetailRow
+                    isTable={true}
                     label="Distance"
                     value={`${item.distanceBetweenAddresses} km`}
                   />
                 </>
               ) : (
                 <>
-                  <DetailRow label="Status" value={item.status} />
                   <DetailRow
-                    label="Reviews"
-                    value={<StarRating rating={item.reviews} />}
+                    isTable={true}
+                    label="Status"
+                    value={helperFunctions.convertRequestStatus(item.status)}
                   />
-                  <DetailRow label="Firstname" value={item.firstname} />
-                  <DetailRow label="Lastname" value={item.lastname} />
-                  <DetailRow label="Vehicle" value={item.vehicle} />
+                  <DetailRow
+                    isTable={true}
+                    label="Reviews"
+                    value={<StarRating rating={item.ratings} />}
+                  />
+                  <DetailRow
+                    isTable={true}
+                    label="Firstname"
+                    value={item.firstname}
+                  />
+                  <DetailRow
+                    isTable={true}
+                    label="Lastname"
+                    value={item.lastname}
+                  />
+                  <DetailRow
+                    isTable={true}
+                    label="Vehicle"
+                    value={item.vehicle}
+                  />
                 </>
               )}
             </div>

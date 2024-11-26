@@ -39,11 +39,23 @@ function formatAddress(addressObject) {
   return `${street}, ${city}, ${state}, ${postalCode}, ${country}`;
 }
 
+function convertRequestStatus(number) {
+  switch (number) {
+    case 1:
+      return "Accepted";
+    case 2:
+      return "Refused";
+    default:
+      return "Pending";
+  }
+}
+
 const helperFunctions = {
   formatDate,
   convertType,
   convertStatus,
   formatAddress,
+  convertRequestStatus,
 };
 
 export default helperFunctions;
