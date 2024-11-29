@@ -1,6 +1,7 @@
 import RequestService from "../../Services/Requests/RequestService";
 import ReviewService from "../../Services/Reviews/ReviewService";
 import VehicleService from "../../Services/Vehicles/VehicleService";
+import helperFunctions from "../helperFunctions";
 
 export const getCompleteRequestsCall = async (shipmentId) => {
   try {
@@ -15,6 +16,7 @@ export const getCompleteRequestsCall = async (shipmentId) => {
           // Default values for the enriched data
           let rating = 0; // Default to 0 instead of N/A
           let vehicleInfo = "No vehicle data available";
+          let vehicleTypeInit = -1;
 
           try {
             // Fetch reviews for transporter
@@ -42,10 +44,11 @@ export const getCompleteRequestsCall = async (shipmentId) => {
               transporterId
             );
             if (vehicle.success && vehicle.message) {
-              const { manufacture, model, year } = vehicle.message;
+              const { manufacture, model, year, vehicleType } = vehicle.message;
               vehicleInfo = `${manufacture || "Unknown"} ${model || "Model"} ${
                 year || "Year"
               }`;
+              vehicleTypeInit = vehicleType;
             }
           } catch (vehicleError) {
             console.warn(
@@ -61,6 +64,7 @@ export const getCompleteRequestsCall = async (shipmentId) => {
             lastname: lastName,
             ratings: rating, // Numeric value for ratings
             vehicle: vehicleInfo,
+            vehicleType: helperFunctions.convertVehicleType(vehicleTypeInit),
           };
         })
       );

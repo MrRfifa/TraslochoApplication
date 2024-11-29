@@ -3,12 +3,14 @@ import { useParams } from "react-router-dom";
 import ShipmentsTable from "../../Components/Tables/ShipmentsTable";
 import ShipmentService from "../../Services/Shipments/ShipmentService";
 import helperFunctions from "../../Helpers/helperFunctions";
-import MapModal from "../../Components/MapModal";
+import MapModal from "../../Components/Modals/MapModal";
 import Empty from "../../Components/Empty";
 import ImageGallery from "../../Components/ImageGallery";
 import DetailRow from "../../Components/DetailRow";
 import { getCompleteRequestsCall } from "../../Helpers/Services/GettingRequestsCall";
-
+import UpdateDateModal from "../../Components/Modals/UpdateDateModal";
+import CancelShipmentModal from "../../Components/Modals/CancelShipmentModal";
+//TODO: Add the update shipment details service call.
 const ShipmentDetails = () => {
   const { shipmentId } = useParams();
   const [currentShipment, setCurrentShipment] = useState();
@@ -17,6 +19,8 @@ const ShipmentDetails = () => {
   const [currentShipmentRequests, setCurrentShipmentRequests] = useState([]);
   const [loading, setLoading] = useState(true); // New loading state
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [originCord, setOriginCord] = useState(null);
   const [destinationCord, setDestinationCord] = useState(null);
 
@@ -97,7 +101,10 @@ const ShipmentDetails = () => {
       </div>
     );
   }
-  console.log(currentShipmentRequests);
+
+  const canBeCanceled = helperFunctions.isShipmentPendingOrAccepted(
+    shipmentData.status
+  );
 
   return (
     <div className="p-5 md:ml-64 ml-0 grid grid-rows-2 gap-2">
@@ -142,13 +149,23 @@ const ShipmentDetails = () => {
               <span className="text-gray-700">{shipmentData.destination}</span>
             </div>
           </div>
-          <div className="flex flex-row mt-0 space-x-5">
-            <button className="bg-[#FCA311] hover:bg-[#ff6700] text-white py-2 px-4 rounded transition duration-200">
-              Update Shipment Date
+          <div className="flex flex-col md:flex-row mt-0 justify-evenly">
+            <button
+              onClick={() => setIsUpdateOpen(true)}
+              className="bg-[#FCA311] hover:bg-[#ff6700] text-white mb-5 py-2 px-4 rounded transition duration-200"
+            >
+              Update Date
             </button>
+            {isUpdateOpen && (
+              <UpdateDateModal
+                isOpen={isUpdateOpen}
+                shipmentId={parseInt(shipmentId)}
+                onClose={() => setIsUpdateOpen(false)}
+              />
+            )}
             <button
               onClick={() => setIsMapOpen(true)}
-              className="bg-[#FCA311] hover:bg-[#ff6700] text-white py-2 px-4 rounded transition duration-200"
+              className="bg-[#14213D] hover:bg-[#3c6e71] text-white py-2 px-4 mb-5 rounded transition duration-200"
             >
               View on Map
             </button>
@@ -161,6 +178,23 @@ const ShipmentDetails = () => {
               />
             )}
           </div>
+          {canBeCanceled && (
+            <div className="flex flex-row justify-evenly">
+              <button
+                onClick={() => setIsCancelOpen(true)}
+                className="bg-red-600 hover:bg-red-800 text-white py-2 px-4 rounded transition duration-200"
+              >
+                Cancel shipment
+              </button>
+              {isCancelOpen && (
+                <CancelShipmentModal
+                  isOpen={isCancelOpen}
+                  onClose={() => setIsCancelOpen(false)}
+                  shipmentId={parseInt(shipmentId)}
+                />
+              )}
+            </div>
+          )}
         </div>
       </div>
       {/* Second Row */}

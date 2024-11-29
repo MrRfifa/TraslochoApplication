@@ -20,6 +20,7 @@ const ShipmentsTable = ({
         "Firstname",
         "Lastname",
         "Vehicle",
+        "Type",
         "actions",
       ];
 
@@ -60,6 +61,7 @@ const ShipmentsTable = ({
                     <td className="p-4 text-gray-600">{item.firstname}</td>
                     <td className="p-4 text-gray-600">{item.lastname}</td>
                     <td className="p-4 text-gray-600">{item.vehicle}</td>
+                    <td className="p-4 text-gray-600">{item.vehicleType}</td>
                     <td className="p-4">
                       <button
                         //   onClick={() => handleViewDetails(index)}
@@ -172,6 +174,11 @@ const ShipmentsTable = ({
                     isTable={true}
                     label="Vehicle"
                     value={item.vehicle}
+                  />
+                  <DetailRow
+                    isTable={true}
+                    label="Type"
+                    value={item.vehicleType}
                   />
                 </>
               )}

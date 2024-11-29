@@ -104,8 +104,6 @@ const Shipments = () => {
     fetchCanceledShipments();
   }, []);
 
-  console.log(newShipments);
-
   // Define the tabs dynamically with real data
   const tabsData = [
     {
@@ -152,8 +150,9 @@ const Shipments = () => {
         />
       ),
     },
+
     {
-      label: "Completed",
+      label: "Canceled",
       content: loading ? (
         <div>Loading...</div>
       ) : error ? (
@@ -163,7 +162,7 @@ const Shipments = () => {
       ) : (
         <ShipmentsTable
           areShipments={true}
-          data={completedShipments}
+          data={canceledShipments}
           labelActionButton="View details"
           missingData={false}
         />
@@ -187,7 +186,7 @@ const Shipments = () => {
       ),
     },
     {
-      label: "Canceled",
+      label: "Completed",
       content: loading ? (
         <div>Loading...</div>
       ) : error ? (
@@ -197,7 +196,7 @@ const Shipments = () => {
       ) : (
         <ShipmentsTable
           areShipments={true}
-          data={canceledShipments}
+          data={completedShipments}
           labelActionButton="View details"
           missingData={false}
         />

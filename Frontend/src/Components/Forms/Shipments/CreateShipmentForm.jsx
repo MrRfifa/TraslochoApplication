@@ -9,8 +9,6 @@ const CreateShipmentForm = () => {
   const [shipmentImages, setImages] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  //   const [submissionResult, setSubmissionResult] = useState(null);
-  //TODO fix styling and colors, everything goes fine
   // Disable dates before today
   const today = new Date().toISOString().split("T")[0];
 

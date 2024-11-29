@@ -7,13 +7,9 @@ import ImageGallery from "../../Components/ImageGallery";
 
 const CompleteShipmentDetails = () => {
   const { shipmentId } = useParams();
-  // const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentShipment, setCurrentShipment] = useState();
   const [currentShipmentImages, setCurrentShipmentImages] = useState([]);
   const [loading, setLoading] = useState(true); // New loading state
-
-  // const thumbnailContainerRef = useRef(null);
-  // const thumbnailRefs = useRef([]);
 
   useEffect(() => {
     const fetchShipmentDetails = async () => {
@@ -48,28 +44,6 @@ const CompleteShipmentDetails = () => {
       }
     : {};
 
-  // const nextImage = () => {
-  //   setCurrentImageIndex((prevIndex) =>
-  //     prevIndex === currentShipmentImages.length - 1 ? 0 : prevIndex + 1
-  //   );
-  // };
-
-  // const prevImage = () => {
-  //   setCurrentImageIndex((prevIndex) =>
-  //     prevIndex === 0 ? currentShipmentImages.length - 1 : prevIndex - 1
-  //   );
-  // };
-
-  // const scrollToThumbnail = (index) => {
-  //   if (thumbnailContainerRef.current && thumbnailRefs.current[index]) {
-  //     thumbnailContainerRef.current.scrollTo({
-  //       left:
-  //         thumbnailRefs.current[index].offsetLeft -
-  //         thumbnailContainerRef.current.offsetLeft,
-  //       behavior: "smooth",
-  //     });
-  //   }
-  // };
 
   if (loading) {
     // Render loading spinner while data is being fetched

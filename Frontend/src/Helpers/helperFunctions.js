@@ -50,12 +50,30 @@ function convertRequestStatus(number) {
   }
 }
 
+function convertVehicleType(number) {
+  switch (number) {
+    case 1:
+      return "Truck";
+    default:
+      return "Van";
+  }
+}
+
+function isShipmentPendingOrAccepted(shipmentStatus) {
+  if (shipmentStatus === "Pending" || shipmentStatus === "Accepted") {
+    return true;
+  }
+  return false;
+}
+
 const helperFunctions = {
   formatDate,
   convertType,
   convertStatus,
   formatAddress,
   convertRequestStatus,
+  convertVehicleType,
+  isShipmentPendingOrAccepted,
 };
 
 export default helperFunctions;

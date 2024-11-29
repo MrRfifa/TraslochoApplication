@@ -256,6 +256,54 @@ const fetchCoordinates = async (address) => {
   }
 };
 
+const cancelShipment = async (shipmentId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.put(
+      `${API_URL}shipment/cancel/${shipmentId}`,
+      {}, // Empty body
+      { headers } // Pass headers here
+    );
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || "An error occurred",
+    };
+  }
+};
+
+const updateShipmentDate = async (shipmentId, newDate) => {
+  const headers = {
+    Authorization: localStorage.getItem("token"), // Authorization header
+  };
+
+  const formData = new FormData();
+  formData.append("newDate", newDate); // Attach the date as form-data
+
+  try {
+    const response = await axios.put(
+      `${API_URL}shipment/update-date/${shipmentId}`,
+      formData, // Pass the formData as the body
+      { headers } // Pass headers
+    );
+
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || "An error occurred",
+    };
+  }
+};
+
 const ShipmentService = {
   getPendingShipments,
   getPendingUncompletedShipments,
@@ -268,6 +316,8 @@ const ShipmentService = {
   createShipment,
   addAddresses,
   fetchCoordinates,
+  cancelShipment,
+  updateShipmentDate,
 };
 
 export default ShipmentService;
