@@ -83,7 +83,7 @@ namespace Backend.Cached
                     var canceledShipments = await _decorated.GetCanceledShipmentsByOwnerId(canceledShipment.OwnerId);
                     if (canceledShipments != null && canceledShipments.Any())
                     {
-                        await _distributedCache.SetStringAsync(pendingShipmentsKey, JsonConvert.SerializeObject(canceledShipments), new DistributedCacheEntryOptions
+                        await _distributedCache.SetStringAsync(canceledShipmentsKey, JsonConvert.SerializeObject(canceledShipments), new DistributedCacheEntryOptions
                         {
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
                         });

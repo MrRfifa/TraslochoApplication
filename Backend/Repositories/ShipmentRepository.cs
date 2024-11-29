@@ -120,29 +120,37 @@ namespace Backend.Repositories
         public async Task<int> CancelShipment(int shipmentId)
         {
             // Get the shipment
-            Shipment? shipment = await GetShipmentById(shipmentId);
+            Shipment? shipment = await _context.Shipments.FirstOrDefaultAsync(s => s.Id == shipmentId);
+
             if (shipment == null)
             {
-                return -1; // Or throw an exception if needed for missing shipment
+                return -1; // Shipment not found
             }
+            // Calculate the days difference
             int daysDifference = (shipment.ShipmentDate - DateTime.Now).Days;
-            if (daysDifference <= 3)
+
+            // Check if the shipment is pending and the date has passed OR if it is more than 3 days away
+            if (shipment.ShipmentStatus == ShipmentStatus.Pending && shipment.ShipmentDate < DateTime.Now || daysDifference > 3)
             {
-                return 0; // Return false for invalid cancellation attempt
+                // Update the shipment status
+                shipment.ShipmentStatus = ShipmentStatus.Canceled;
+
+                // Notify the transporter if TransporterId is not null
+                if (shipment.TransporterId.HasValue)
+                {
+                    var transporterConnectionId = await _distributedCache.GetStringAsync($"{shipment.TransporterId.Value}-connection");
+                    await NotifyUser(shipment.TransporterId.Value, transporterConnectionId, "A shipment has been canceled.");
+                }
+                _context.Shipments.Update(shipment);
+                // Save changes to the database
+                await Save(); // Ensure changes are saved to the database
+                return 1; // Cancellation successful
             }
 
-            // Update the shipment status
-            shipment.ShipmentStatus = ShipmentStatus.Canceled;
-            // Notify the transporter if TransporterId is not null
-            var transporterConnectionId = await _distributedCache.GetStringAsync($"{shipment.TransporterId}-connection");
-            if (shipment.TransporterId.HasValue)
-            {
-                await NotifyUser(shipment.TransporterId.Value, transporterConnectionId, "A shipment has been canceled.");
-            }
-            // Save changes to the database
-            await Save();
-            return 1;
+            // If the cancellation is not allowed
+            return 0; // Invalid cancellation
         }
+
 
         public async Task<bool> CreateShipment(CreateShipmentDto shipmentToCreate, int ownerId)
         {
@@ -222,6 +230,7 @@ namespace Backend.Repositories
         {
             var shipments = await _context.Shipments
                 .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Accepted)
+                .OrderByDescending(s => s.ShipmentDate)
                 .ToListAsync();
 
             // Return the result
@@ -232,6 +241,7 @@ namespace Backend.Repositories
         {
             var shipments = await _context.Shipments
                 .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Canceled)
+                .OrderByDescending(s => s.ShipmentDate)
                 .ToListAsync();
 
             // Return the result
@@ -241,8 +251,9 @@ namespace Backend.Repositories
         public async Task<ICollection<Shipment>?> GetCompletedShipmentsByOwnerId(int ownerId)
         {
             var shipments = await _context.Shipments
-    .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Completed)
-    .ToListAsync();
+                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Completed)
+                .OrderByDescending(s => s.ShipmentDate)
+                .ToListAsync();
 
             // Return the result
             return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
@@ -304,7 +315,8 @@ namespace Backend.Repositories
                     && s.DistanceBetweenAddresses > 0 // Ensure Distance is greater than 0
                     && s.OriginAddressId > 0 // Check for non-nullable OriginAddressId
                     && s.DestinationAddressId > 0 // Check for non-nullable DestinationAddressId
-         )
+            )
+                .OrderByDescending(s => s.ShipmentDate)
                 .ToListAsync();
 
             // Return the result
@@ -391,6 +403,7 @@ namespace Backend.Repositories
                                     && s.Price == 0 && s.DistanceBetweenAddresses == 0
                                     && s.OriginAddressId == null && s.DestinationAddressId == null
                             )
+                            .OrderByDescending(s => s.ShipmentDate)
                             .ToListAsync();
 
             // Return the result
@@ -450,7 +463,7 @@ namespace Backend.Repositories
             {
                 shipment.ShipmentDate = newDate;
                 shipment.ShipmentStatus = ShipmentStatus.Pending;
-
+                _context.Shipments.Update(shipment);
                 await Save(); // Assuming Save returns a boolean
                 // Notify the transporter if TransporterId is not null
                 if (shipment.TransporterId.HasValue)
