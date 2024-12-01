@@ -1,26 +1,32 @@
 import { useState } from "react";
-import ShipmentService from "../../../Services/Shipments/ShipmentService";
 import { errorToast, successToast } from "../../Toasts";
+import VehicleService from "../../../Services/Vehicles/VehicleService";
 
-const CreateShipmentForm = () => {
-  const [shipmentType, setShipmentType] = useState("Throwing");
-  const [shipmentDate, setShipmentDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [shipmentImages, setImages] = useState([]);
+const CreateCarForm = () => {
+  const [manufacture, setManufacture] = useState("");
+  const [model, setModel] = useState("");
+  const [year, setYear] = useState("");
+  const [color, setColor] = useState("");
+  const [vehicleType, setVehicleType] = useState("Van");
+  const [lengthCar, setLengthCar] = useState("");
+  const [heightCar, setHeightCar] = useState("");
+  const [vehicleImages, setImages] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Disable dates before today
-  const today = new Date().toISOString().split("T")[0];
 
   const handleImageUpload = (event) => {
-    const uploadedFiles = Array.from(event.target.files);
+    const uploadedFiles = Array.from(event.target.files); // Convert FileList to Array
     const newImages = uploadedFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file), // Create a preview URL for the image
+      file, // Store file object
+      preview: URL.createObjectURL(file), // Create preview URL for the image
     }));
+
+    // Log the new images to verify
+    console.log(newImages);
+
     setImages((prevImages) => [...prevImages, ...newImages]);
 
-    // Simulate progress for file upload
+    // Simulate progress for file upload (optional)
     let progress = 0;
     const interval = setInterval(() => {
       progress += 10;
@@ -37,29 +43,43 @@ const CreateShipmentForm = () => {
     event.preventDefault();
     // Prepare FormData
     const fd = new FormData();
-    fd.append("ShipmentType", shipmentType);
-    fd.append("ShipmentDate", shipmentDate);
-    fd.append("Description", description);
-    shipmentImages.forEach(({ file }) => {
-      fd.append("ShipmentImages", file);
+    fd.append("Model", model);
+    fd.append("Manufacture", manufacture);
+    fd.append("Year", year);
+    fd.append("Color", color);
+    fd.append("VehicleType", vehicleType);
+    fd.append("Length", lengthCar);
+    fd.append("Height", heightCar);
+    vehicleImages.forEach(({ file }) => {
+      fd.append("VehicleImages", file);
     });
     setIsSubmitting(true);
-    const result = await ShipmentService.createShipment(fd);
+
+    const result = await VehicleService.createCar(fd);
 
     if (result.success) {
       successToast(result.message);
-      setDescription("");
-      setShipmentDate("");
-      setShipmentType("Throwing");
+      setColor("");
+      setManufacture("");
+      setModel("");
+      setYear("");
+      setHeightCar("");
+      setLengthCar("");
+      setVehicleType("Van");
       setImages([]);
+      window.location.reload();
     } else {
       errorToast(result.error);
     }
     setIsSubmitting(false);
   };
 
+  // console.log(vehicleImages);
+  // vehicleImages.forEach((image) => {
+  //   console.log(image);
+  // });
   return (
-    <div className="max-w-2xl mx-auto p-2 bg-white rounded-lg shadow-sm">
+    <div className="mt-10 max-w-2xl mx-auto p-2 bg-white rounded-lg shadow-sm">
       <div
         className="p-4 mb-4 text-sm text-white rounded-lg bg-[#FCA311] dark:bg-gray-800 dark:text-yellow-300"
         role="alert"
@@ -68,49 +88,99 @@ const CreateShipmentForm = () => {
         u have to complete its data in the next section.
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Shipment Type Selector */}
+        {/* Vehicle Type Selector */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Shipment Type
+            Vehicle Type
           </label>
           <select
-            value={shipmentType}
-            onChange={(e) => setShipmentType(e.target.value)}
+            value={vehicleType}
+            onChange={(e) => setVehicleType(e.target.value)}
             className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="Throwing">Throwing</option>
-            <option value="Transporting">Transporting</option>
+            <option value="Van">Van</option>
+            <option value="Truck">Truck</option>
           </select>
         </div>
 
-        {/* Date and Time Picker */}
+        {/* Manufacture */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Date and Time
+            Manufacture
           </label>
           <input
-            type="datetime-local"
-            value={shipmentDate}
-            onChange={(e) => setShipmentDate(e.target.value)}
+            type="text"
+            value={manufacture}
+            placeholder="Tesla, Ford, Mercedes..."
+            onChange={(e) => setManufacture(e.target.value)}
             className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min={`${today}T00:00`}
             required
           />
         </div>
 
-        {/* Description Text Area */}
+        {/* Model */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Description
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows="4"
-            placeholder="Enter shipment description here..."
+          <label className="block text-gray-700 font-medium mb-2">Model</label>
+          <input
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder="Transit, Boxer, Daily..."
             className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
-          ></textarea>
+          />
+        </div>
+        {/* Year */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Year</label>
+          <input
+            type="number"
+            min={"1995"}
+            max={new Date().getFullYear()}
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            placeholder="2020"
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        {/* Color */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Color</label>
+          <input
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            placeholder="White, black, red..."
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        {/* Length */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">
+            Length (m)
+          </label>
+          <input
+            type="number"
+            value={lengthCar}
+            onChange={(e) => setLengthCar(e.target.value)}
+            placeholder="4.5"
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        {/* Height */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">
+            Height (m)
+          </label>
+          <input
+            type="number"
+            value={heightCar}
+            onChange={(e) => setHeightCar(e.target.value)}
+            placeholder="2.5"
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
         </div>
 
         {/* Images Uploader */}
@@ -145,7 +215,7 @@ const CreateShipmentForm = () => {
 
           {/* Preview of Uploaded Images */}
           <div className="mt-4 grid grid-cols-3 gap-4">
-            {shipmentImages.map((image, index) => (
+            {vehicleImages.map((image, index) => (
               <div
                 key={index}
                 className="relative border rounded-lg overflow-hidden"
@@ -183,4 +253,4 @@ const CreateShipmentForm = () => {
   );
 };
 
-export default CreateShipmentForm;
+export default CreateCarForm;

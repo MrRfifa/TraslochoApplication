@@ -1,7 +1,4 @@
-import { useTranslation } from "react-i18next";
-
-export const ValidateRegisterUsersForm = (formData, setErrors) => {
-  const { t } = useTranslation("register");
+export const ValidateRegisterUsersForm = (formData, setErrors, t) => {
   let isValid = true;
   const newErrors = {
     firstName: "",

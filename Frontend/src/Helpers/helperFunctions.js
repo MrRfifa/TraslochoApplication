@@ -66,6 +66,13 @@ function isShipmentPendingOrAccepted(shipmentStatus) {
   return false;
 }
 
+function isShipmentAccepted(shipmentStatus) {
+  if (shipmentStatus === "Accepted") {
+    return true;
+  }
+  return false;
+}
+
 const helperFunctions = {
   formatDate,
   convertType,
@@ -74,6 +81,7 @@ const helperFunctions = {
   convertRequestStatus,
   convertVehicleType,
   isShipmentPendingOrAccepted,
+  isShipmentAccepted,
 };
 
 export default helperFunctions;

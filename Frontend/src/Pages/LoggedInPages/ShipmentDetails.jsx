@@ -10,7 +10,7 @@ import DetailRow from "../../Components/DetailRow";
 import { getCompleteRequestsCall } from "../../Helpers/Services/GettingRequestsCall";
 import UpdateDateModal from "../../Components/Modals/UpdateDateModal";
 import CancelShipmentModal from "../../Components/Modals/CancelShipmentModal";
-//TODO: Add the update shipment details service call.
+//TODO Add view transporter profile
 const ShipmentDetails = () => {
   const { shipmentId } = useParams();
   const [currentShipment, setCurrentShipment] = useState();
@@ -105,6 +105,10 @@ const ShipmentDetails = () => {
   const canBeCanceled = helperFunctions.isShipmentPendingOrAccepted(
     shipmentData.status
   );
+  //TODO: See if necessary a cron job for marking the shipemnts as completed
+  // const canBeCompleted = helperFunctions.isShipmentAccepted(
+  //   shipmentData.status
+  // );
 
   return (
     <div className="p-5 md:ml-64 ml-0 grid grid-rows-2 gap-2">
@@ -207,6 +211,7 @@ const ShipmentDetails = () => {
               data={currentShipmentRequests}
               labelActionButton=""
               missingData={false}
+              arePending={false}
             />
           </>
         ) : (

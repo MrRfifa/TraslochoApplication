@@ -11,8 +11,8 @@ const Shipments = () => {
   const [completedShipments, setCompletedShipments] = useState([]);
   const [acceptedShipments, setAcceptedShipments] = useState([]);
   const [canceledShipments, setCanceledShipments] = useState([]);
-  const [loading, setLoading] = useState(true); // Optional: to handle loading state
-  const [error, setError] = useState(null); // Optional: to handle errors
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPendingShipments = async () => {
@@ -130,6 +130,7 @@ const Shipments = () => {
           data={newShipments}
           labelActionButton="Complete details"
           missingData={true}
+          arePending={false}
         />
       ),
     },
@@ -147,10 +148,10 @@ const Shipments = () => {
           data={pendingShipments}
           labelActionButton="View details"
           missingData={false}
+          arePending={true}
         />
       ),
     },
-
     {
       label: "Canceled",
       content: loading ? (
@@ -165,6 +166,7 @@ const Shipments = () => {
           data={canceledShipments}
           labelActionButton="View details"
           missingData={false}
+          arePending={false}
         />
       ),
     },
@@ -182,6 +184,7 @@ const Shipments = () => {
           data={acceptedShipments}
           labelActionButton="View details"
           missingData={false}
+          arePending={false}
         />
       ),
     },
@@ -199,6 +202,7 @@ const Shipments = () => {
           data={completedShipments}
           labelActionButton="View details"
           missingData={false}
+          arePending={false}
         />
       ),
     },

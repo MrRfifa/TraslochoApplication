@@ -70,8 +70,7 @@ const RegisterUsersForm = ({ transporter }) => {
 
     try {
       setLoading(true);
-
-      const isValid = ValidateRegisterUsersForm(formData, setErrors);
+      const isValid = ValidateRegisterUsersForm(formData, setErrors, t);
 
       if (isValid) {
         successToast("Form validation successful!");
@@ -80,7 +79,7 @@ const RegisterUsersForm = ({ transporter }) => {
         errorToast("Form validation failed");
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       dangerToast("Error during form submission");
     } finally {
       setLoading(false);

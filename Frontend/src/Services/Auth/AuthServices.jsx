@@ -57,26 +57,24 @@ const logout = (userId) => {
     });
 };
 
-const register = (fd, transporter) => {
+const register = async (fd, transporter) => {
   const endpoint = transporter ? "register-transporter" : "register-owner";
 
-  return axios
-    .post(`${API_URL}Auth/${endpoint}`, fd, {
+  try {
+    await axios.post(`${API_URL}Auth/${endpoint}`, fd, {
       headers: { "Content-Type": "multipart/form-data" },
-    })
-    .then((response) => {
-      if (response.status === 200) {
-        return { success: true, message: "Signed up successfully!" };
-      } else {
-        return { success: false, error: "Registration failed" };
-      }
-    })
-    .catch((error) => {
-      return {
-        success: false,
-        error: error.response.data.error.errors[0].errorMessage,
-      };
     });
+
+    // Axios automatically handles non-2xx statuses as errors
+    return { success: true, message: "Signed up successfully!" };
+  } catch (error) {
+    // Handle potential structure issues in the error response
+    const errorMessage =
+      error.response?.data?.error?.errors?.[0]?.errorMessage ||
+      "An unknown error occurred during registration.";
+
+    return { success: false, error: errorMessage };
+  }
 };
 
 const forgetPassword = (email) =>

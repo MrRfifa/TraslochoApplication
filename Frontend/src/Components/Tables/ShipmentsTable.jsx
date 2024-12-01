@@ -2,12 +2,15 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import StarRating from "../StarRating";
 import { FaCheck } from "react-icons/fa6";
+import { IoPersonCircle } from "react-icons/io5";
 import helperFunctions from "../../Helpers/helperFunctions";
 import DetailRow from "../DetailRow";
+import TooltipButton from "../Buttons/TooltipButton";
 
 const ShipmentsTable = ({
   data,
   areShipments,
+  arePending,
   labelActionButton,
   missingData,
 }) => {
@@ -23,7 +26,7 @@ const ShipmentsTable = ({
         "Type",
         "actions",
       ];
-
+  //TODO: Add badges for all status (better ui) https://flowbite.com/docs/components/badge/
   return (
     <div className="container mx-auto p-4">
       {/* Table for large screens */}
@@ -51,7 +54,7 @@ const ShipmentsTable = ({
               >
                 {!areShipments ? (
                   <>
-                    <td className="p-4 text-gray-600">{index}</td>
+                    <td className="p-4 text-gray-600">{index + 1}</td>
                     <td className="p-4 text-gray-600">
                       {helperFunctions.convertRequestStatus(item.status)}
                     </td>
@@ -62,13 +65,17 @@ const ShipmentsTable = ({
                     <td className="p-4 text-gray-600">{item.lastname}</td>
                     <td className="p-4 text-gray-600">{item.vehicle}</td>
                     <td className="p-4 text-gray-600">{item.vehicleType}</td>
-                    <td className="p-4">
-                      <button
-                        //   onClick={() => handleViewDetails(index)}
-                        className="text-white bg-green-400 hover:scale-105 hover:bg-green-600 px-4 py-2 rounded-full transition duration-200"
-                      >
-                        <FaCheck />
-                      </button>
+                    <td className="p-4 flex flex-row space-x-2">
+                      {arePending && (
+                        <TooltipButton
+                          text="Accept request"
+                          icon={<FaCheck />}
+                        />
+                      )}
+                      <TooltipButton
+                        text="View Profile"
+                        icon={<IoPersonCircle />}
+                      />
                     </td>
                   </>
                 ) : (
@@ -200,9 +207,15 @@ const ShipmentsTable = ({
                   </Link>
                 )
               ) : (
-                <button className="text-white bg-green-400 hover:scale-105 hover:bg-green-600 px-4 py-2 rounded-full transition duration-200">
-                  <FaCheck />
-                </button>
+                <>
+                  {arePending && (
+                    <TooltipButton text="Accept request" icon={<FaCheck />} />
+                  )}
+                  <TooltipButton
+                    text="View Profile"
+                    icon={<IoPersonCircle />}
+                  />
+                </>
               )}
             </div>
           </div>
@@ -215,6 +228,7 @@ const ShipmentsTable = ({
 ShipmentsTable.propTypes = {
   data: PropTypes.array.isRequired,
   areShipments: PropTypes.bool.isRequired,
+  arePending: PropTypes.bool.isRequired,
   labelActionButton: PropTypes.string.isRequired,
   missingData: PropTypes.bool.isRequired,
 };
