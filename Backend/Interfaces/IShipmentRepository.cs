@@ -24,5 +24,10 @@ namespace Backend.Interfaces
         Task<int> MarkShipmentAsCompleted(int shipmentId);
         Task<float> GetDistanceBetweenCities(string originCountry, string originCity, string destinationCountry, string destinationCity);
         Task<bool> Save();
+
+        //Cron services
+        Task<int> UpdateShipmentStatus(int shipmentId, int newStatus);
+        Task<ICollection<Shipment>?> GetPendingPassedShipments();
+        Task<ICollection<Shipment>?> GetAcceptedPassedShipments();
     }
 }

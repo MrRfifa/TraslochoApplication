@@ -357,5 +357,72 @@ namespace Backend.Cached
             return shipmentExists;
         }
 
+        public async Task<int> UpdateShipmentStatus(int shipmentId, int newStatus)
+        {
+            var result = await _decorated.UpdateShipmentStatus(shipmentId, newStatus);
+            if (result == 1)
+            {
+                var updatedShipment = await _decorated.GetShipmentById(shipmentId);
+                if (updatedShipment != null)
+                {
+                    var shipmentKey = $"shipment-{shipmentId}";
+                    var shipmentExistenceKey = $"shipment-exists-{shipmentId}";
+                    var pendingShipmentsKey = $"owner-pending-shipments-{updatedShipment.OwnerId}";
+                    var canceledShipmentsKey = $"owner-canceled-shipments-{updatedShipment.OwnerId}";
+                    var completedShipmentsKey = $"owner-completed-shipments-{updatedShipment.OwnerId}";
+                    var acceptedShipmentsKey = $"owner-accepted-shipments-{updatedShipment.OwnerId}";
+                    // Remove the shipment from the cache since it's canceled
+                    await _distributedCache.RemoveAsync(shipmentKey);
+                    await _distributedCache.RemoveAsync(shipmentExistenceKey);
+                    await _distributedCache.RemoveAsync(pendingShipmentsKey);
+                    await _distributedCache.RemoveAsync(canceledShipmentsKey);
+                    await _distributedCache.RemoveAsync(completedShipmentsKey);
+                    await _distributedCache.RemoveAsync(acceptedShipmentsKey);
+                    var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(updatedShipment.OwnerId);
+                    if (pendingShipments != null && pendingShipments.Any())
+                    {
+                        await _distributedCache.SetStringAsync(pendingShipmentsKey, JsonConvert.SerializeObject(pendingShipments), new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                        });
+                    }
+                    var canceledShipments = await _decorated.GetCanceledShipmentsByOwnerId(updatedShipment.OwnerId);
+                    if (canceledShipments != null && canceledShipments.Any())
+                    {
+                        await _distributedCache.SetStringAsync(canceledShipmentsKey, JsonConvert.SerializeObject(canceledShipments), new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                        });
+                    }
+                    var acceptedShipments = await _decorated.GetAcceptedShipmentsByOwnerId(updatedShipment.OwnerId);
+                    if (acceptedShipments != null && acceptedShipments.Any())
+                    {
+                        await _distributedCache.SetStringAsync(acceptedShipmentsKey, JsonConvert.SerializeObject(acceptedShipments), new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                        });
+                    }
+                    var completedShipments = await _decorated.GetCompletedShipmentsByOwnerId(updatedShipment.OwnerId);
+                    if (completedShipments != null && completedShipments.Any())
+                    {
+                        await _distributedCache.SetStringAsync(completedShipmentsKey, JsonConvert.SerializeObject(completedShipments), new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                        });
+                    }
+                }
+            }
+            return result;
+        }
+
+        public async Task<ICollection<Shipment>?> GetPendingPassedShipments()
+        {
+            return await _decorated.GetPendingPassedShipments();
+        }
+
+        public async Task<ICollection<Shipment>?> GetAcceptedPassedShipments()
+        {
+            return await _decorated.GetAcceptedPassedShipments();
+        }
     }
 }

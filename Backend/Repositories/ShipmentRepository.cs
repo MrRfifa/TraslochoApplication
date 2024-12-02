@@ -515,5 +515,37 @@ namespace Backend.Repositories
             }
         }
 
+        public async Task<int> UpdateShipmentStatus(int shipmentId, int newStatus)
+        {
+            var shipment = await _context.Shipments.SingleOrDefaultAsync(s => s.Id == shipmentId);
+            if (shipment == null)
+            {
+                return -1;
+            }
+            shipment.ShipmentStatus = newStatus == 0 ? ShipmentStatus.Completed : ShipmentStatus.Canceled;
+            var isSaved = await Save();
+            return isSaved ? 1 : 0;
+        }
+
+        public async Task<ICollection<Shipment>?> GetPendingPassedShipments()
+        {
+            var shipments = await _context.Shipments
+                .Where(s => s.ShipmentStatus == ShipmentStatus.Pending
+                            && s.ShipmentDate <= DateTime.Now) // Add date condition
+                .ToListAsync();
+
+            return shipments; // Return the result directly, no need to check count
+        }
+
+        public async Task<ICollection<Shipment>?> GetAcceptedPassedShipments()
+        {
+            var shipments = await _context.Shipments
+                .Where(s => s.ShipmentStatus == ShipmentStatus.Accepted
+                            && s.ShipmentDate <= DateTime.Now) // Add date condition
+                .ToListAsync();
+
+            return shipments; // Return the result directly
+        }
+
     }
 }

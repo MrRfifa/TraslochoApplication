@@ -1,4 +1,5 @@
 using System.Text;
+using Backend.BackgroundServices;
 using Backend.Cached;
 using Backend.Data;
 using Backend.Interfaces;
@@ -69,6 +70,9 @@ builder.Services.AddScoped<IDatabase>(provider =>
     var multiplexer = provider.GetRequiredService<IConnectionMultiplexer>();
     return multiplexer.GetDatabase();
 });
+//Background service : Cron job for updating shipment status
+builder.Services.AddHostedService<ShipmentStatusUpdateService>();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
