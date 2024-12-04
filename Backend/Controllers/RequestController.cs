@@ -194,5 +194,52 @@ namespace Backend.Controllers
             }
         }
 
+        [HttpGet("transporter/{transporterId:int}/shipment/{shipmentId:int}/exists")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(400)]
+        [Authorize]
+        public async Task<IActionResult> TransporterHasRequestForShipment(int transporterId, int shipmentId)
+        {
+            try
+            {
+                var hasRequest = await _requestRepository.TransporterHasRequestForShipment(transporterId, shipmentId);
+                return Ok(new { status = "success", message = hasRequest });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { status = "fail", message = "An error occurred while fetching requests." });
+            }
+        }
+
+
+        [HttpGet("transporter/{transporterId:int}/shipment/{shipmentId:int}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(400)]
+        [Authorize]
+        public async Task<IActionResult> GetRequestByTransporterAndShipment(int transporterId, int shipmentId)
+        {
+            try
+            {
+                var request = await _requestRepository.GetRequestByTransporterAndShipment(transporterId, shipmentId);
+                if (request == null)
+                {
+                    return NotFound(new
+                    {
+                        status = "fail",
+                        message = "No request found for the given transporter and shipment."
+                    });
+                }
+                return Ok(new { status = "success", message = request });
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { status = "fail", message = "An error occurred while fetching requests." });
+            }
+        }
+
+
+
     }
 }

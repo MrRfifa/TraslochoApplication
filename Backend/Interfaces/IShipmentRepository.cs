@@ -11,11 +11,12 @@ namespace Backend.Interfaces
         Task<GetShipmentDto?> GetShipmentDtoById(int shipmentId);
         Task<ICollection<byte[]>?> GetShipmentAndImages(int shipmentId);
         Task<ICollection<GetAddressDto>?> GetShipmentAddresses(int shipmentId);
-        Task<ICollection<Shipment>?> GetCompletedShipmentsByOwnerId(int ownerId);
-        Task<ICollection<Shipment>?> GetCanceledShipmentsByOwnerId(int ownerId);
-        Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByOwnerId(int ownerId);
+        Task<ICollection<Shipment>?> GetCompletedShipmentsByUserId(int UserId);
+        Task<ICollection<Shipment>?> GetCanceledShipmentsByUserId(int UserId);
+        Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByUserId(int UserId);
+        Task<ICollection<Shipment>?> GetPendingCompletedDataShipments();
+        Task<ICollection<Shipment>?> GetAcceptedShipmentsByUserId(int userId);
         Task<ICollection<Shipment>?> GetUncompletedDataShipmentsByOwnerId(int ownerId);
-        Task<ICollection<Shipment>?> GetAcceptedShipmentsByOwnerId(int ownerId);
         Task<bool> ShipmentExists(int shipmentId);
         Task<bool> CreateShipment(CreateShipmentDto shipment, int ownerId);
         Task<int> AddShipmentAddresses(int shipmentId, CreateAddressDto originAddress, CreateAddressDto destinationAddress);

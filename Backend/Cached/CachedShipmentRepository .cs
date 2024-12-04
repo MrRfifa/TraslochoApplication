@@ -42,7 +42,7 @@ namespace Backend.Cached
                 });
                 // Remove the existing cached owner's shipments
                 await _distributedCache.RemoveAsync(pendingShipmentsKey);
-                var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(updatedShipment.OwnerId);
+                var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByUserId(updatedShipment.OwnerId);
                 if (pendingShipments != null && pendingShipments.Any())
                 {
                     await _distributedCache.SetStringAsync(pendingShipmentsKey, JsonConvert.SerializeObject(pendingShipments), new DistributedCacheEntryOptions
@@ -72,7 +72,7 @@ namespace Backend.Cached
                     await _distributedCache.RemoveAsync(shipmentExistenceKey);
                     await _distributedCache.RemoveAsync(pendingShipmentsKey);
                     await _distributedCache.RemoveAsync(canceledShipmentsKey);
-                    var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(canceledShipment.OwnerId);
+                    var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByUserId(canceledShipment.OwnerId);
                     if (pendingShipments != null && pendingShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(pendingShipmentsKey, JsonConvert.SerializeObject(pendingShipments), new DistributedCacheEntryOptions
@@ -80,7 +80,7 @@ namespace Backend.Cached
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
                         });
                     }
-                    var canceledShipments = await _decorated.GetCanceledShipmentsByOwnerId(canceledShipment.OwnerId);
+                    var canceledShipments = await _decorated.GetCanceledShipmentsByUserId(canceledShipment.OwnerId);
                     if (canceledShipments != null && canceledShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(canceledShipmentsKey, JsonConvert.SerializeObject(canceledShipments), new DistributedCacheEntryOptions
@@ -98,9 +98,9 @@ namespace Backend.Cached
             return await _decorated.CreateShipment(shipment, ownerId);
         }
 
-        public async Task<ICollection<Shipment>?> GetAcceptedShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetAcceptedShipmentsByUserId(int userId)
         {
-            string key = $"owner-accepted-shipments-{ownerId}";
+            string key = $"owner-accepted-shipments-{userId}";
             string? cachedAcceptedShipments = await _distributedCache.GetStringAsync(key);
             // If shipments are found in cache, deserialize and return them
             if (!string.IsNullOrEmpty(cachedAcceptedShipments))
@@ -108,7 +108,7 @@ namespace Backend.Cached
                 return JsonConvert.DeserializeObject<List<Shipment>>(cachedAcceptedShipments) ?? new List<Shipment>();
             }
             // Otherwise, fetch from the database
-            var shipments = await _decorated.GetAcceptedShipmentsByOwnerId(ownerId);
+            var shipments = await _decorated.GetAcceptedShipmentsByUserId(userId);
 
             // Return the shipments or an empty list if none found
             if (shipments != null && shipments.Any())
@@ -125,9 +125,9 @@ namespace Backend.Cached
             return Enumerable.Empty<Shipment>().ToList();
         }
 
-        public async Task<ICollection<Shipment>?> GetCanceledShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetCanceledShipmentsByUserId(int userId)
         {
-            string key = $"owner-canceled-shipments-{ownerId}";
+            string key = $"owner-canceled-shipments-{userId}";
             string? cachedCanceledShipments = await _distributedCache.GetStringAsync(key);
             // If shipments are found in cache, deserialize and return them
             if (!string.IsNullOrEmpty(cachedCanceledShipments))
@@ -135,7 +135,7 @@ namespace Backend.Cached
                 return JsonConvert.DeserializeObject<List<Shipment>>(cachedCanceledShipments) ?? new List<Shipment>();
             }
             // Otherwise, fetch from the database
-            var shipments = await _decorated.GetCanceledShipmentsByOwnerId(ownerId);
+            var shipments = await _decorated.GetCanceledShipmentsByUserId(userId);
             // Return the shipments or an empty list if none found
             if (shipments != null && shipments.Any())
             {
@@ -151,9 +151,9 @@ namespace Backend.Cached
             return Enumerable.Empty<Shipment>().ToList();
         }
 
-        public async Task<ICollection<Shipment>?> GetCompletedShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetCompletedShipmentsByUserId(int userId)
         {
-            string key = $"owner-completed-shipments-{ownerId}";
+            string key = $"owner-completed-shipments-{userId}";
             string? cachedCompletedShipments = await _distributedCache.GetStringAsync(key);
             // If shipments are found in cache, deserialize and return them
             if (!string.IsNullOrEmpty(cachedCompletedShipments))
@@ -161,7 +161,7 @@ namespace Backend.Cached
                 return JsonConvert.DeserializeObject<List<Shipment>>(cachedCompletedShipments) ?? new List<Shipment>();
             }
             // Otherwise, fetch from the database
-            var shipments = await _decorated.GetCompletedShipmentsByOwnerId(ownerId);
+            var shipments = await _decorated.GetCompletedShipmentsByUserId(userId);
             // Return the shipments or an empty list if none found
             if (shipments != null && shipments.Any())
             {
@@ -182,9 +182,9 @@ namespace Backend.Cached
             return await _decorated.GetDistanceBetweenCities(originCountry, originCity, destinationCountry, destinationCity);
         }
 
-        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByUserId(int userId)
         {
-            string key = $"owner-pending-shipments-{ownerId}";
+            string key = $"owner-pending-shipments-{userId}";
             string? cachedPendingShipments = await _distributedCache.GetStringAsync(key);
             // If shipments are found in cache, deserialize and return them
             if (!string.IsNullOrEmpty(cachedPendingShipments))
@@ -192,7 +192,7 @@ namespace Backend.Cached
                 return JsonConvert.DeserializeObject<List<Shipment>>(cachedPendingShipments) ?? new List<Shipment>();
             }
             // Otherwise, fetch from the database
-            var shipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(ownerId);
+            var shipments = await _decorated.GetPendingCompletedDataShipmentsByUserId(userId);
             // Return the shipments or an empty list if none found
             if (shipments != null && shipments.Any())
             {
@@ -273,7 +273,7 @@ namespace Backend.Cached
                     await _distributedCache.RemoveAsync(shipmentExistenceKey);
                     await _distributedCache.RemoveAsync(acceptedShipmentsKey);
                     await _distributedCache.RemoveAsync(completedShipmentsKey);
-                    var acceptedShipments = await _decorated.GetAcceptedShipmentsByOwnerId(completedShipment.OwnerId);
+                    var acceptedShipments = await _decorated.GetAcceptedShipmentsByUserId(completedShipment.OwnerId);
                     if (acceptedShipments != null && acceptedShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(acceptedShipmentsKey, JsonConvert.SerializeObject(acceptedShipments), new DistributedCacheEntryOptions
@@ -281,7 +281,7 @@ namespace Backend.Cached
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
                         });
                     }
-                    var completedShipments = await _decorated.GetCompletedShipmentsByOwnerId(completedShipment.OwnerId);
+                    var completedShipments = await _decorated.GetCompletedShipmentsByUserId(completedShipment.OwnerId);
                     if (completedShipments != null && completedShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(completedShipmentsKey, JsonConvert.SerializeObject(completedShipments), new DistributedCacheEntryOptions
@@ -317,7 +317,7 @@ namespace Backend.Cached
                         {
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
                         });
-                    var ownerShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(updatedShipment.OwnerId);
+                    var ownerShipments = await _decorated.GetPendingCompletedDataShipmentsByUserId(updatedShipment.OwnerId);
                     if (ownerShipments != null && ownerShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(
@@ -378,7 +378,7 @@ namespace Backend.Cached
                     await _distributedCache.RemoveAsync(canceledShipmentsKey);
                     await _distributedCache.RemoveAsync(completedShipmentsKey);
                     await _distributedCache.RemoveAsync(acceptedShipmentsKey);
-                    var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByOwnerId(updatedShipment.OwnerId);
+                    var pendingShipments = await _decorated.GetPendingCompletedDataShipmentsByUserId(updatedShipment.OwnerId);
                     if (pendingShipments != null && pendingShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(pendingShipmentsKey, JsonConvert.SerializeObject(pendingShipments), new DistributedCacheEntryOptions
@@ -386,7 +386,7 @@ namespace Backend.Cached
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
                         });
                     }
-                    var canceledShipments = await _decorated.GetCanceledShipmentsByOwnerId(updatedShipment.OwnerId);
+                    var canceledShipments = await _decorated.GetCanceledShipmentsByUserId(updatedShipment.OwnerId);
                     if (canceledShipments != null && canceledShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(canceledShipmentsKey, JsonConvert.SerializeObject(canceledShipments), new DistributedCacheEntryOptions
@@ -394,7 +394,7 @@ namespace Backend.Cached
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
                         });
                     }
-                    var acceptedShipments = await _decorated.GetAcceptedShipmentsByOwnerId(updatedShipment.OwnerId);
+                    var acceptedShipments = await _decorated.GetAcceptedShipmentsByUserId(updatedShipment.OwnerId);
                     if (acceptedShipments != null && acceptedShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(acceptedShipmentsKey, JsonConvert.SerializeObject(acceptedShipments), new DistributedCacheEntryOptions
@@ -402,7 +402,7 @@ namespace Backend.Cached
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
                         });
                     }
-                    var completedShipments = await _decorated.GetCompletedShipmentsByOwnerId(updatedShipment.OwnerId);
+                    var completedShipments = await _decorated.GetCompletedShipmentsByUserId(updatedShipment.OwnerId);
                     if (completedShipments != null && completedShipments.Any())
                     {
                         await _distributedCache.SetStringAsync(completedShipmentsKey, JsonConvert.SerializeObject(completedShipments), new DistributedCacheEntryOptions
@@ -423,6 +423,11 @@ namespace Backend.Cached
         public async Task<ICollection<Shipment>?> GetAcceptedPassedShipments()
         {
             return await _decorated.GetAcceptedPassedShipments();
+        }
+
+        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipments()
+        {
+            return await _decorated.GetPendingCompletedDataShipments();
         }
     }
 }

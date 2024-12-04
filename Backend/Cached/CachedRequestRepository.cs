@@ -38,8 +38,8 @@ namespace Backend.Cached
                     await _distributedCache.RemoveAsync(acceptedShipmentsKey);
 
                     // Fetch the updated pending and accepted shipments from the decorated repository
-                    var pendingShipments = await _shipmentRepository.GetPendingCompletedDataShipmentsByOwnerId(acceptedShipment.OwnerId);
-                    var acceptedShipments = await _shipmentRepository.GetAcceptedShipmentsByOwnerId(acceptedShipment.OwnerId);
+                    var pendingShipments = await _shipmentRepository.GetPendingCompletedDataShipmentsByUserId(acceptedShipment.OwnerId);
+                    var acceptedShipments = await _shipmentRepository.GetAcceptedShipmentsByUserId(acceptedShipment.OwnerId);
 
                     // Re-cache the updated pending shipments if there are any
                     if (pendingShipments != null && pendingShipments.Any())
@@ -79,6 +79,12 @@ namespace Backend.Cached
         {
             return await _decorated.GetRequestById(requestId);
         }
+
+        public async Task<GetRequestDto?> GetRequestByTransporterAndShipment(int transporterId, int shipmentId)
+        {
+            return await _decorated.GetRequestByTransporterAndShipment(transporterId, shipmentId);
+        }
+
         public async Task<ICollection<GetRequestDto>?> GetRequestsByShipmentId(int shipmentId)
         {
             return await _decorated.GetRequestsByShipmentId(shipmentId);
@@ -102,6 +108,11 @@ namespace Backend.Cached
         public async Task<bool> Save()
         {
             return await _decorated.Save();
+        }
+
+        public async Task<bool> TransporterHasRequestForShipment(int transporterId, int shipmentId)
+        {
+            return await _decorated.TransporterHasRequestForShipment(transporterId, shipmentId);
         }
     }
 }

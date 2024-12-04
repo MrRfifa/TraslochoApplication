@@ -201,6 +201,21 @@ namespace Backend.Repositories
 
             return _mapper.Map<GetRequestDto>(request);
         }
+
+        public async Task<GetRequestDto?> GetRequestByTransporterAndShipment(int transporterId, int shipmentId)
+        {
+            bool transporterHasRequest = await TransporterHasRequestForShipment(transporterId, shipmentId);
+            if (transporterHasRequest)
+            {
+                var transporterRequest = await _context.Requests
+                .Include(r => r.Transporter)
+                .SingleOrDefaultAsync(r => r.TransporterId == transporterId
+                                        && r.ShipmentId == shipmentId);
+                return _mapper.Map<GetRequestDto>(transporterRequest);
+            }
+            return null;
+        }
+
         public async Task<ICollection<GetRequestDto>?> GetRequestsByShipmentId(int shipmentId)
         {
             var shipmentExists = await _context.Shipments.AnyAsync(s => s.Id == shipmentId);
@@ -260,6 +275,13 @@ namespace Backend.Repositories
         {
             var saved = await _context.SaveChangesAsync();
             return saved > 0;
+        }
+
+        public async Task<bool> TransporterHasRequestForShipment(int transporterId, int shipmentId)
+        {
+            var transporterHasRequest = await _context.Requests
+                .AnyAsync(r => r.TransporterId == transporterId && r.ShipmentId == shipmentId);
+            return transporterHasRequest;
         }
 
         // Helper method for notification

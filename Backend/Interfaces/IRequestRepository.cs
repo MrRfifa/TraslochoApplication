@@ -8,10 +8,12 @@ namespace Backend.Interfaces
         Task<ICollection<GetRequestDto>?> GetAllRequests();
         Task<GetRequestDto?> GetRequestById(int requestId);
         Task<ICollection<GetRequestDto>?> GetRequestsByShipmentId(int shipmentId);
+        Task<GetRequestDto?> GetRequestByTransporterAndShipment(int transporterId, int shipmentId);
         Task<ICollection<GetRequestDto>?> GetRequestsByTransporterId(int transporterId);
         Task<Shipment?> GetShipmentByRequestId(int requestId);
         Task<int> GetTransporterIdByRequest(int requestId);
         Task<bool> RequestExists(int requestId);
+        Task<bool> TransporterHasRequestForShipment(int transporterId, int shipmentId);
         Task<bool> AcceptRequest(int requestId);
         Task<bool> CreateRequest(int transporterId, int shipmentId);
         Task<bool> DeleteRequest(int requestId);

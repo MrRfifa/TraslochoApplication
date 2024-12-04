@@ -226,10 +226,10 @@ namespace Backend.Repositories
             return shipmentCreated;
         }
 
-        public async Task<ICollection<Shipment>?> GetAcceptedShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetAcceptedShipmentsByUserId(int userId)
         {
             var shipments = await _context.Shipments
-                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Accepted)
+                .Where(s => (s.OwnerId == userId || s.TransporterId == userId) && s.ShipmentStatus == ShipmentStatus.Accepted)
                 .OrderByDescending(s => s.ShipmentDate)
                 .ToListAsync();
 
@@ -237,10 +237,10 @@ namespace Backend.Repositories
             return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
         }
 
-        public async Task<ICollection<Shipment>?> GetCanceledShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetCanceledShipmentsByUserId(int userId)
         {
             var shipments = await _context.Shipments
-                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Canceled)
+                .Where(s => (s.OwnerId == userId || s.TransporterId == userId) && s.ShipmentStatus == ShipmentStatus.Canceled)
                 .OrderByDescending(s => s.ShipmentDate)
                 .ToListAsync();
 
@@ -248,10 +248,10 @@ namespace Backend.Repositories
             return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
         }
 
-        public async Task<ICollection<Shipment>?> GetCompletedShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetCompletedShipmentsByUserId(int userId)
         {
             var shipments = await _context.Shipments
-                .Where(s => s.OwnerId == ownerId && s.ShipmentStatus == ShipmentStatus.Completed)
+                .Where(s => (s.OwnerId == userId || s.TransporterId == userId) && s.ShipmentStatus == ShipmentStatus.Completed)
                 .OrderByDescending(s => s.ShipmentDate)
                 .ToListAsync();
 
@@ -306,10 +306,10 @@ namespace Backend.Repositories
             }
         }
 
-        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByOwnerId(int ownerId)
+        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipmentsByUserId(int userId)
         {
             var shipments = await _context.Shipments
-                .Where(s => s.OwnerId == ownerId
+                .Where(s => (s.OwnerId == userId || s.TransporterId == userId)
                     && s.ShipmentStatus == ShipmentStatus.Pending
                     && s.Price > 0 // Ensure Price is greater than 0
                     && s.DistanceBetweenAddresses > 0 // Ensure Distance is greater than 0
@@ -547,5 +547,20 @@ namespace Backend.Repositories
             return shipments; // Return the result directly
         }
 
+        public async Task<ICollection<Shipment>?> GetPendingCompletedDataShipments()
+        {
+            var shipments = await _context.Shipments
+                .Where(s => s.ShipmentStatus == ShipmentStatus.Pending
+                    && s.Price > 0 // Ensure Price is greater than 0
+                    && s.DistanceBetweenAddresses > 0 // Ensure Distance is greater than 0
+                    && s.OriginAddressId > 0 // Check for non-nullable OriginAddressId
+                    && s.DestinationAddressId > 0 // Check for non-nullable DestinationAddressId
+            )
+                .OrderByDescending(s => s.ShipmentDate)
+                .ToListAsync();
+
+            // Return the result
+            return shipments.Count > 0 ? shipments : Enumerable.Empty<Shipment>().ToList();
+        }
     }
 }
