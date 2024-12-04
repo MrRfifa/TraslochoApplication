@@ -66,8 +66,22 @@ function isShipmentPendingOrAccepted(shipmentStatus) {
   return false;
 }
 
+function isShipmentCanceledOrCompleted(shipmentStatus) {
+  if (shipmentStatus === "Completed" || shipmentStatus === "Canceled") {
+    return true;
+  }
+  return false;
+}
+
 function isShipmentAccepted(shipmentStatus) {
   if (shipmentStatus === "Accepted") {
+    return true;
+  }
+  return false;
+}
+
+function isShipmentPending(shipmentStatus) {
+  if (shipmentStatus === "Pending") {
     return true;
   }
   return false;
@@ -81,7 +95,9 @@ const helperFunctions = {
   convertRequestStatus,
   convertVehicleType,
   isShipmentPendingOrAccepted,
+  isShipmentCanceledOrCompleted,
   isShipmentAccepted,
+  isShipmentPending,
 };
 
 export default helperFunctions;

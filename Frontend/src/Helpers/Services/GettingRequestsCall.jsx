@@ -40,9 +40,10 @@ export const getCompleteRequestsCall = async (shipmentId) => {
 
           try {
             // Fetch vehicle info for transporter
-            const vehicle = await VehicleService.getVehicleByTransporterId(
+            const vehicle = await VehicleService.getVehicleDataByTransporterId(
               transporterId
             );
+
             if (vehicle.success && vehicle.message) {
               const { manufacture, model, year, vehicleType } = vehicle.message;
               vehicleInfo = `${manufacture || "Unknown"} ${model || "Model"} ${

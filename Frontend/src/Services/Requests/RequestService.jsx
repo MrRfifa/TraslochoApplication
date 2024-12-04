@@ -25,8 +25,128 @@ const getShipmentRequests = async (shipmentId) => {
   }
 };
 
+const createRequest = async (transporterId, shipmentId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.post(
+      `${API_URL}request`,
+      {
+        transporterId,
+        shipmentId,
+      },
+      {
+        headers,
+      }
+    );
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    } else {
+      return { success: false, error: "Shipment request's not available" };
+    }
+  } catch (error) {
+    console.error("Error getting pending shipments:", error);
+    return { success: false, error: "Error getting pending shipments" };
+  }
+};
+
+const getRequest = async (requestId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.get(`${API_URL}request/${requestId}`, {
+      headers,
+    });
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    } else {
+      return { success: false, error: "Shipment request's not available" };
+    }
+  } catch (error) {
+    console.error("Error getting pending shipments:", error);
+    return { success: false, error: "Error getting pending shipments" };
+  }
+};
+
+const transporterHasRequestForShipment = async (transporterId, shipmentId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.get(
+      `${API_URL}request/transporter/${transporterId}/shipment/${shipmentId}/exists`,
+      {
+        headers,
+      }
+    );
+
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    }
+  } catch (error) {
+    console.error("Error getting request:", error);
+    return { success: false, error: "Error getting request" };
+  }
+};
+
+const deleteRequest = async (requestId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.delete(`${API_URL}request/${requestId}`, {
+      headers,
+    });
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    } else {
+      return { success: false, error: response.data.message };
+    }
+  } catch (error) {
+    console.error("Error getting pending shipments:", error);
+    return { success: false, error: "Error getting pending shipments" };
+  }
+};
+
+const getRequestByTransporterAndShipment = async (
+  transporterId,
+  shipmentId
+) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.get(
+      `${API_URL}request/transporter/${transporterId}/shipment/${shipmentId}`,
+      {
+        headers,
+      }
+    );
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    } else {
+      return { success: false, error: response.data.message };
+    }
+  } catch (error) {
+    console.error("Error getting pending shipments:", error);
+    return { success: false, error: "Error getting pending shipments" };
+  }
+};
+
 const ShipmentService = {
   getShipmentRequests,
+  getRequest,
+  createRequest,
+  transporterHasRequestForShipment,
+  deleteRequest,
+  getRequestByTransporterAndShipment,
 };
 
 export default ShipmentService;

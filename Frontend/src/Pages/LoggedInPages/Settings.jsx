@@ -1,7 +1,7 @@
 import Account from "../../Components/Settings/Account";
 import AccountSettings from "../../Components/Settings/AccountSettings";
 import SecuritySettings from "../../Components/Settings/SecuritySettings";
-import Tabs from "../../Components/Tabs";
+import Tabs from "../../Components/Tabs/Tabs";
 
 const tabsData = [
   {

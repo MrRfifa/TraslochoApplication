@@ -304,6 +304,26 @@ const updateShipmentDate = async (shipmentId, newDate) => {
   }
 };
 
+const getPendingAvailableShipments = async () => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.get(`${API_URL}shipment/pending`, {
+      headers,
+    });
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    } else {
+      return { success: false, error: "Shipments not available" };
+    }
+  } catch (error) {
+    console.error("Error getting pending shipments:", error);
+    return { success: false, error: "Error getting pending shipments" };
+  }
+};
+
 const ShipmentService = {
   getPendingShipments,
   getPendingUncompletedShipments,
@@ -318,6 +338,7 @@ const ShipmentService = {
   fetchCoordinates,
   cancelShipment,
   updateShipmentDate,
+  getPendingAvailableShipments
 };
 
 export default ShipmentService;

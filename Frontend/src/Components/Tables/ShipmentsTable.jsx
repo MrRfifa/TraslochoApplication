@@ -10,7 +10,7 @@ import TooltipButton from "../Buttons/TooltipButton";
 const ShipmentsTable = ({
   data,
   areShipments,
-  arePending,
+  arePendingStatus,
   labelActionButton,
   missingData,
 }) => {
@@ -66,7 +66,7 @@ const ShipmentsTable = ({
                     <td className="p-4 text-gray-600">{item.vehicle}</td>
                     <td className="p-4 text-gray-600">{item.vehicleType}</td>
                     <td className="p-4 flex flex-row space-x-2">
-                      {arePending && (
+                      {arePendingStatus && (
                         <TooltipButton
                           text="Accept request"
                           icon={<FaCheck />}
@@ -208,7 +208,7 @@ const ShipmentsTable = ({
                 )
               ) : (
                 <>
-                  {arePending && (
+                  {arePendingStatus && (
                     <TooltipButton text="Accept request" icon={<FaCheck />} />
                   )}
                   <TooltipButton
@@ -228,7 +228,7 @@ const ShipmentsTable = ({
 ShipmentsTable.propTypes = {
   data: PropTypes.array.isRequired,
   areShipments: PropTypes.bool.isRequired,
-  arePending: PropTypes.bool.isRequired,
+  arePendingStatus: PropTypes.bool.isRequired,
   labelActionButton: PropTypes.string.isRequired,
   missingData: PropTypes.bool.isRequired,
 };

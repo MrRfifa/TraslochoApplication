@@ -21,9 +21,6 @@ const CreateCarForm = () => {
       preview: URL.createObjectURL(file), // Create preview URL for the image
     }));
 
-    // Log the new images to verify
-    console.log(newImages);
-
     setImages((prevImages) => [...prevImages, ...newImages]);
 
     // Simulate progress for file upload (optional)
@@ -74,18 +71,14 @@ const CreateCarForm = () => {
     setIsSubmitting(false);
   };
 
-  // console.log(vehicleImages);
-  // vehicleImages.forEach((image) => {
-  //   console.log(image);
-  // });
   return (
     <div className="mt-10 max-w-2xl mx-auto p-2 bg-white rounded-lg shadow-sm">
       <div
         className="p-4 mb-4 text-sm text-white rounded-lg bg-[#FCA311] dark:bg-gray-800 dark:text-yellow-300"
         role="alert"
       >
-        <span className="font-medium">Warning!</span> After creating a shipment
-        u have to complete its data in the next section.
+        <span className="font-medium">Warning!</span> After adding a car, the
+        page will reload!
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Vehicle Type Selector */}

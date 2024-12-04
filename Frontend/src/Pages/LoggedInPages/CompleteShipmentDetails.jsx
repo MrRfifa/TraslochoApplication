@@ -4,6 +4,7 @@ import ShipmentService from "../../Services/Shipments/ShipmentService";
 import helperFunctions from "../../Helpers/helperFunctions";
 import AddAddressesForm from "../../Components/Forms/Shipments/AddAddressesForm";
 import ImageGallery from "../../Components/ImageGallery";
+import LoadingSpin from "../../Components/LoadingSpin";
 
 const CompleteShipmentDetails = () => {
   const { shipmentId } = useParams();
@@ -44,14 +45,9 @@ const CompleteShipmentDetails = () => {
       }
     : {};
 
-
   if (loading) {
     // Render loading spinner while data is being fetched
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
-      </div>
-    );
+    return <LoadingSpin />;
   }
 
   return (
