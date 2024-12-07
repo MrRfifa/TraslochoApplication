@@ -140,6 +140,30 @@ const getRequestByTransporterAndShipment = async (
   }
 };
 
+const acceptRequest = async (requestId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+  try {
+    const response = await axios.post(
+      `${API_URL}request/accept/${requestId}`,
+      {},
+      {
+        headers,
+      }
+    );
+    if (response.data && response.status === 200) {
+      return { success: true, message: response.data.message };
+    } else {
+      return { success: false, error: response.data.message };
+    }
+  } catch (error) {
+    console.error("Error accepting request:", error);
+    return { success: false, error: "Error accepting request" };
+  }
+};
+
 const ShipmentService = {
   getShipmentRequests,
   getRequest,
@@ -147,6 +171,7 @@ const ShipmentService = {
   transporterHasRequestForShipment,
   deleteRequest,
   getRequestByTransporterAndShipment,
+  acceptRequest
 };
 
 export default ShipmentService;

@@ -1,11 +1,15 @@
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import StarRating from "../StarRating";
 import { FaCheck } from "react-icons/fa6";
 import { IoPersonCircle } from "react-icons/io5";
 import helperFunctions from "../../Helpers/helperFunctions";
 import DetailRow from "../DetailRow";
 import TooltipButton from "../Buttons/TooltipButton";
+import { useState } from "react";
+import RequestService from "../../Services/Requests/RequestService";
+import { errorToast, successToast } from "../Toasts";
+import LoadingSpin from "../LoadingSpin";
 
 const ShipmentsTable = ({
   data,
@@ -14,6 +18,34 @@ const ShipmentsTable = ({
   labelActionButton,
   missingData,
 }) => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const statusColors = {
+    0: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    1: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    2: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  };
+
+  const acceptRequest = async (requestId) => {
+    setLoading(true); // Start loading immediately
+    try {
+      const result = await RequestService.acceptRequest(requestId);
+
+      if (result.success) {
+        successToast(result.message); // Show success message
+        window.location.reload();
+      } else {
+        errorToast(
+          result.error || "An error occurred while processing your request."
+        ); // Handle generic fallback
+      }
+    } catch (error) {
+      errorToast("Failed to create request. Please try again."); // Show a generic error toast
+    } finally {
+      setLoading(false); // Always stop loading
+    }
+  };
+
   const tableAttributes = areShipments
     ? ["Index", "type", "status", "date", "price", "distance", "actions"]
     : [
@@ -26,7 +58,9 @@ const ShipmentsTable = ({
         "Type",
         "actions",
       ];
-  //TODO: Add badges for all status (better ui) https://flowbite.com/docs/components/badge/
+  if (loading) {
+    return <LoadingSpin />;
+  }
   return (
     <div className="container mx-auto p-4">
       {/* Table for large screens */}
@@ -56,8 +90,16 @@ const ShipmentsTable = ({
                   <>
                     <td className="p-4 text-gray-600">{index + 1}</td>
                     <td className="p-4 text-gray-600">
-                      {helperFunctions.convertRequestStatus(item.status)}
+                      <span
+                        className={`text-sm font-medium me-2 px-2.5 py-0.5 rounded ${
+                          statusColors[item.status] ||
+                          "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {helperFunctions.convertRequestStatus(item.status)}
+                      </span>
                     </td>
+
                     <td className="p-4 text-gray-600">
                       <StarRating rating={item.ratings} />
                     </td>
@@ -70,11 +112,17 @@ const ShipmentsTable = ({
                         <TooltipButton
                           text="Accept request"
                           icon={<FaCheck />}
+                          color="green"
+                          onClickFunc={() => acceptRequest(item.requestId)}
                         />
                       )}
                       <TooltipButton
                         text="View Profile"
                         icon={<IoPersonCircle />}
+                        color="yellow"
+                        onClickFunc={() =>
+                          navigate(`/transporter-profile/${item.transporterId}`)
+                        }
                       />
                     </td>
                   </>
@@ -122,7 +170,6 @@ const ShipmentsTable = ({
           </tbody>
         </table>
       </div>
-
       {/* Cards for small screens */}
       <div className="md:hidden grid gap-4">
         {data.map((item, index) => (
@@ -157,11 +204,21 @@ const ShipmentsTable = ({
                 </>
               ) : (
                 <>
-                  <DetailRow
-                    isTable={true}
-                    label="Status"
-                    value={helperFunctions.convertRequestStatus(item.status)}
-                  />
+                  <div
+                    className={
+                      "flex justify-between items-center mb-2 flex-row text-gray-700"
+                    }
+                  >
+                    <span className="font-semibold">Status:</span>
+                    <span
+                      className={`text-sm font-medium me-2 px-2.5 py-0.5 rounded ${
+                        statusColors[item.status] ||
+                        "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      {helperFunctions.convertRequestStatus(item.status)}
+                    </span>
+                  </div>
                   <DetailRow
                     isTable={true}
                     label="Reviews"
@@ -209,11 +266,20 @@ const ShipmentsTable = ({
               ) : (
                 <>
                   {arePendingStatus && (
-                    <TooltipButton text="Accept request" icon={<FaCheck />} />
+                    <TooltipButton
+                      text="Accept request"
+                      icon={<FaCheck />}
+                      color="green"
+                      onClickFunc={() => acceptRequest(item.requestId)}
+                    />
                   )}
                   <TooltipButton
                     text="View Profile"
                     icon={<IoPersonCircle />}
+                    color="yellow"
+                    onClickFunc={() =>
+                      navigate(`/transporter-profile/${item.transporterId}`)
+                    }
                   />
                 </>
               )}

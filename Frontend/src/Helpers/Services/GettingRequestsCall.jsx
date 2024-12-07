@@ -11,7 +11,8 @@ export const getCompleteRequestsCall = async (shipmentId) => {
     if (requestsObject.success && !requestsObject.error) {
       const enrichedRequests = await Promise.all(
         requestsObject.message.map(async (request) => {
-          const { transporterId, status, firstName, lastName } = request;
+          const { requestId, transporterId, status, firstName, lastName } =
+            request;
 
           // Default values for the enriched data
           let rating = 0; // Default to 0 instead of N/A
@@ -60,6 +61,8 @@ export const getCompleteRequestsCall = async (shipmentId) => {
 
           // Return the enriched request object
           return {
+            requestId: requestId,
+            transporterId: transporterId,
             status: status,
             firstname: firstName,
             lastname: lastName,

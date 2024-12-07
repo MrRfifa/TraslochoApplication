@@ -361,6 +361,29 @@ const getAllUsers = async () => {
   }
 };
 
+const GetTransporterInfoById = (transporterId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: localStorage.getItem("token"),
+  };
+
+  return axios
+    .get(`${API_URL}User/transporter-${transporterId}/`, {
+      headers,
+    })
+    .then((response) => {
+      if (response.data && response.status === 200) {
+        return { success: true, message: response.data.message };
+      } else {
+        return { success: false, error: response.data.message };
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching user:", error);
+      return { success: false, error: error.response.data };
+    });
+};
+
 const UserServices = {
   getUserById,
   changeEmailAddress,
@@ -374,6 +397,7 @@ const UserServices = {
   fetchOwners,
   fetchTransporters,
   getAllUsers,
+  GetTransporterInfoById,
 };
 
 export default UserServices;

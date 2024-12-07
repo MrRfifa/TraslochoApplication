@@ -23,6 +23,16 @@ const OwnerShipmentDetails = () => {
   const [originCord, setOriginCord] = useState(null);
   const [destinationCord, setDestinationCord] = useState(null);
 
+  const statusColors = {
+    Pending:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    Accepted:
+      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    Completed:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
+    Canceled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  };
+
   useEffect(() => {
     const fetchShipmentDetails = async () => {
       setLoading(true); // Start loading
@@ -92,11 +102,6 @@ const OwnerShipmentDetails = () => {
     setLoading(true);
   }, [shipmentData.destination, shipmentData.origin, shipmentId]);
 
-  if (loading) {
-    // Render loading spinner while data is being fetched
-    return <LoadingSpin />;
-  }
-
   const canBeCanceled = helperFunctions.isShipmentPendingOrAccepted(
     shipmentData.status
   );
@@ -117,6 +122,10 @@ const OwnerShipmentDetails = () => {
     shipmentData.status
   );
 
+  if (loading) {
+    // Render loading spinner while data is being fetched
+    return <LoadingSpin />;
+  }
   return (
     <div className={"p-5 md:ml-64 ml-0 grid grid-rows-2 gap-2 "}>
       {/* First Row */}
@@ -134,11 +143,21 @@ const OwnerShipmentDetails = () => {
           <h1 className="text-3xl font-bold mb-4">Shipment Details</h1>
           <div className="grid grid-cols-1 gap-0 mb-6">
             <DetailRow isTable={false} label="Type" value={shipmentData.type} />
-            <DetailRow
-              isTable={false}
-              label="Status"
-              value={shipmentData.status}
-            />
+            <div
+              className={
+                "flex justify-between items-center p-4 border-b border-gray-300 text-gray-600"
+              }
+            >
+              <span className="font-semibold  text-black">Status:</span>
+              <span
+                className={`text-sm font-medium me-2 px-2.5 py-0.5 rounded ${
+                  statusColors[shipmentData.status] ||
+                  "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                }`}
+              >
+                {shipmentData.status}
+              </span>
+            </div>
             <DetailRow isTable={false} label="Date" value={shipmentData.date} />
             <DetailRow
               isTable={false}
@@ -150,7 +169,6 @@ const OwnerShipmentDetails = () => {
               label="Distance"
               value={shipmentData.distance}
             />
-            <DetailRow isTable={false} label="Type" value={shipmentData.type} />
             <div className="flex flex-col justify-start p-4 border-b border-gray-300">
               <span className="font-semibold">From:</span>
               <span className="text-gray-700">{shipmentData.origin}</span>
@@ -173,7 +191,7 @@ const OwnerShipmentDetails = () => {
           </div>
           {/* Updates buttons */}
           <div className="flex flex-col md:flex-row mt-0 justify-evenly">
-            {isCanceledOrCompleted && (
+            {!isCanceledOrCompleted && (
               <ModalButton
                 buttonText="Update Date"
                 buttonStyle="bg-[#FCA311] hover:bg-[#ff6700] text-white"
