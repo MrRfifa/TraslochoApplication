@@ -11,7 +11,6 @@ using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 using Swashbuckle.AspNetCore.Filters;
 // using Scrutor;
-//TODO if there is necessity add pagination to the targets
 var builder = WebApplication.CreateBuilder(args);
 
 // Load environment variables from .env file

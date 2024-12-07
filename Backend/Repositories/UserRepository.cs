@@ -149,6 +149,28 @@ namespace Backend.Repositories
             return await _context.Owners.OrderBy(u => u.Id).ToListAsync();
         }
 
+        public async Task<Transporter> GetTransporterInfoById(int transporterId)
+        {
+            var transporterExists = await UserExistsById(transporterId);
+
+            if (!transporterExists)
+            {
+                throw new Exception($"Transporter with ID {transporterId} not found");
+            }
+
+            var transporter = await _context.Transporters
+                .Include(t => t.Vehicle)
+                .Include(t => t.UserAddress)
+                .FirstOrDefaultAsync(t => t.Id == transporterId);
+
+            if (transporter is null)
+            {
+                throw new Exception($"User with ID {transporterId} not found");
+            }
+
+            return transporter;
+        }
+
         public async Task<ICollection<Transporter>> GetTransporters()
         {
             return await _context.Transporters.OrderBy(u => u.Id).ToListAsync();

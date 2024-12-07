@@ -15,7 +15,8 @@ namespace Backend.Interfaces
         Task<User> GetUserByEmailChangeToken(string token);
         Task<User> GetUserByVerificationToken(string token);
         Task<User> GetUserByResetToken(string token);
-
+        Task<Transporter> GetTransporterInfoById(int transporterId);
+        
         //User Existence
         Task<bool> UserExistsById(int userId);
         Task<bool> UserExistsByEmail(string email);

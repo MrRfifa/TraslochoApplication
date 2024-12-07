@@ -396,6 +396,30 @@ namespace Backend.Controllers
             return Ok(transporters); // Return 200 OK with the transporters data
         }
 
+        [HttpGet("transporter-{transporterId:int}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetTransporterInfoById(int transporterId)
+        {
+            try
+            {
+                var transporter = await _userRepository.GetTransporterInfoById(transporterId);
+
+                if (transporter is null)
+                {
+                    return NotFound(new { status = "success", message = "User not found" });
+                }
+
+                return Ok(new { status = "success", message = transporter });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = "success", message = ex.Message });
+            }
+        }
+
 
     }
 }
