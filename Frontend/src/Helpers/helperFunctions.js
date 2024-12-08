@@ -59,6 +59,15 @@ function convertVehicleType(number) {
   }
 }
 
+function convertTransporterType(number) {
+  switch (number) {
+    case 1:
+      return "Company";
+    default:
+      return "Private";
+  }
+}
+
 function isShipmentPendingOrAccepted(shipmentStatus) {
   if (shipmentStatus === "Pending" || shipmentStatus === "Accepted") {
     return true;
@@ -98,6 +107,7 @@ const helperFunctions = {
   isShipmentCanceledOrCompleted,
   isShipmentAccepted,
   isShipmentPending,
+  convertTransporterType,
 };
 
 export default helperFunctions;

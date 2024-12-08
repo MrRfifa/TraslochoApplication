@@ -32,7 +32,9 @@ const ImageGallery = ({ images }) => {
   return (
     <div className="relative mb-4">
       <img
+        //TODO: Refix images src
         src={`data:image/png;base64,${images[currentImageIndex]}`}
+        // src={`${images[currentImageIndex]}`}
         alt="Primary Shipment Image"
         className="rounded-lg shadow-lg w-full h-auto"
       />
@@ -56,6 +58,8 @@ const ImageGallery = ({ images }) => {
           <img
             key={index}
             ref={(el) => (thumbnailRefs.current[index] = el)}
+            //TODO: also here fix images
+            // src={`${img}`}
             src={`data:image/png;base64,${img}`}
             alt={`Shipment thumbnail ${index + 1}`}
             className={`rounded-lg shadow-md cursor-pointer h-16 w-24 object-cover ${

@@ -8,7 +8,7 @@ import Messages from "../Pages/LoggedInPages/Messages.jsx";
 import ShipmentDetails from "../Pages/LoggedInPages/ShipmentDetails.jsx";
 import Notifications from "../Pages/LoggedInPages/Notifications.jsx";
 import CompleteShipmentDetails from "../Pages/LoggedInPages/CompleteShipmentDetails.jsx";
-import TransporterProfilePage from "../Pages/LoggedInPages/TransporterProfilePAge.jsx";
+import TransporterProfilePage from "../Pages/LoggedInPages/TransporterProfilePage.jsx";
 
 const UsersRoute = () => {
   return (
