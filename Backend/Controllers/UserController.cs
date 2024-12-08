@@ -409,14 +409,14 @@ namespace Backend.Controllers
 
                 if (transporter is null)
                 {
-                    return NotFound(new { status = "success", message = "User not found" });
+                    return NotFound(new { status = "fail", message = "User not found" });
                 }
 
                 return Ok(new { status = "success", message = transporter });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { status = "success", message = ex.Message });
+                return BadRequest(new { status = "fail", message = ex.Message });
             }
         }
 

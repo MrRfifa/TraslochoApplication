@@ -1,3 +1,4 @@
+using Backend.DTOs.User;
 using Backend.Models.Classes.AddressesEntities;
 using Backend.Models.Classes.UsersEntities;
 
@@ -15,7 +16,7 @@ namespace Backend.Interfaces
         Task<User> GetUserByEmailChangeToken(string token);
         Task<User> GetUserByVerificationToken(string token);
         Task<User> GetUserByResetToken(string token);
-        Task<Transporter> GetTransporterInfoById(int transporterId);
+        Task<GetTransporterInfoDto?> GetTransporterInfoById(int transporterId);
         
         //User Existence
         Task<bool> UserExistsById(int userId);

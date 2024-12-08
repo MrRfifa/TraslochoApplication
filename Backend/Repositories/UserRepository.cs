@@ -1,4 +1,6 @@
+using AutoMapper;
 using Backend.Data;
+using Backend.DTOs.User;
 using Backend.Interfaces;
 using Backend.Models.Classes.AddressesEntities;
 using Backend.Models.Classes.UsersEntities;
@@ -11,11 +13,13 @@ namespace Backend.Repositories
     {
         private readonly ITokenRepository _tokenRepository;
         private readonly ApplicationDBContext _context;
+        private readonly IMapper _mapper;
 
-        public UserRepository(ITokenRepository tokenRepository, ApplicationDBContext context)
+        public UserRepository(ITokenRepository tokenRepository, ApplicationDBContext context, IMapper mapper)
         {
             _context = context;
             _tokenRepository = tokenRepository;
+            _mapper = mapper;
         }
         public async Task<bool> ChangeAddress(int userId, string newStreet, string newCity, string newState, string newPostalCode, string newCountry, string password)
         {
@@ -149,7 +153,7 @@ namespace Backend.Repositories
             return await _context.Owners.OrderBy(u => u.Id).ToListAsync();
         }
 
-        public async Task<Transporter> GetTransporterInfoById(int transporterId)
+        public async Task<GetTransporterInfoDto?> GetTransporterInfoById(int transporterId)
         {
             var transporterExists = await UserExistsById(transporterId);
 
@@ -160,7 +164,9 @@ namespace Backend.Repositories
 
             var transporter = await _context.Transporters
                 .Include(t => t.Vehicle)
+                .ThenInclude(v => v!.VehicleImages)
                 .Include(t => t.UserAddress)
+                .Include(t => t.TransporterReviews)
                 .FirstOrDefaultAsync(t => t.Id == transporterId);
 
             if (transporter is null)
@@ -168,7 +174,9 @@ namespace Backend.Repositories
                 throw new Exception($"User with ID {transporterId} not found");
             }
 
-            return transporter;
+            var transporterDto = _mapper.Map<GetTransporterInfoDto>(transporter);
+
+            return transporterDto;
         }
 
         public async Task<ICollection<Transporter>> GetTransporters()
