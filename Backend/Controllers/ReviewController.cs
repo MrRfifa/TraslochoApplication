@@ -7,7 +7,7 @@ namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Owner")]
+    [Authorize]
     public class ReviewController : ControllerBase
     {
         private readonly IReviewRepository _reviewRepository;

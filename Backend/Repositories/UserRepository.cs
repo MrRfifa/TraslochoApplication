@@ -1,6 +1,9 @@
 using AutoMapper;
 using Backend.Data;
+using Backend.DTOs.Address;
+using Backend.DTOs.Review;
 using Backend.DTOs.User;
+using Backend.DTOs.Vehicle;
 using Backend.Interfaces;
 using Backend.Models.Classes.AddressesEntities;
 using Backend.Models.Classes.UsersEntities;
@@ -166,8 +169,33 @@ namespace Backend.Repositories
                 .Include(t => t.Vehicle)
                 .ThenInclude(v => v!.VehicleImages)
                 .Include(t => t.UserAddress)
-                .Include(t => t.TransporterReviews)
+                .Include(t => t.TransporterReviews!)
+                .ThenInclude(r => r.Owner) // Include Owner to map specific fields
+                .Select(t => new GetTransporterInfoDto
+                {
+                    Id = t.Id,
+                    FirstName = t.FirstName,
+                    LastName = t.LastName,
+                    FileContentBase64 = t.FileContentBase64,
+                    DateOfBirth = t.DateOfBirth,
+                    UserAddress = _mapper.Map<GetAddressDto>(t.UserAddress),
+                    TransporterType = t.TransporterType,
+                    Vehicle = _mapper.Map<GetVehicleDto>(t.Vehicle),
+                    TransporterReviews = t.TransporterReviews!.Select(r => new GetReviewDto
+                    {
+                        Id = r.Id,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        Sentiment = r.Sentiment,
+                        ReviewTime = r.ReviewTime,
+                        OwnerId = r.OwnerId,
+                        FirstName = r.Owner != null ? r.Owner.FirstName : string.Empty,
+                        LastName = r.Owner != null ? r.Owner.LastName : string.Empty,
+                        FileContentBase64 = r.Owner != null ? r.Owner.FileContentBase64 : Array.Empty<byte>()
+                    }).ToList()
+                })
                 .FirstOrDefaultAsync(t => t.Id == transporterId);
+
 
             if (transporter is null)
             {

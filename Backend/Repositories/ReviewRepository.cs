@@ -131,6 +131,7 @@ namespace Backend.Repositories
         public async Task<ICollection<GetReviewDto>?> GetReviewsByOwnerId(int ownerId)
         {
             var transporterReviews = await _context.Reviews
+                .Include(r => r.Owner)
                 .Where(r => r.OwnerId == ownerId)
                 .ToListAsync();
 
@@ -140,6 +141,7 @@ namespace Backend.Repositories
         public async Task<ICollection<GetReviewDto>?> GetReviewsByTransporterId(int transporterId)
         {
             var transporterReviews = await _context.Reviews
+                .Include(r => r.Owner)
                 .Where(r => r.TransporterId == transporterId)
                 .ToListAsync();
             return _mapper.Map<ICollection<GetReviewDto>>(transporterReviews);

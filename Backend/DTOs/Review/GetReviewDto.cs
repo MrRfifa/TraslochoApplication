@@ -8,5 +8,11 @@ namespace Backend.DTOs.Review
         public string Comment { get; set; } = string.Empty;
         public string Sentiment { get; set; } = string.Empty;
         public DateTime ReviewTime { get; set; }
+
+        //Owner details
+        public int OwnerId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public byte[] FileContentBase64 { get; set; } = Array.Empty<byte>();
     }
 }

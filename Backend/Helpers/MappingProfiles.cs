@@ -30,7 +30,11 @@ namespace Backend.Helpers
             CreateMap<CreateAddressDto, UserAddress>();
             CreateMap<UserAddress, GetAddressDto>();
 
-            CreateMap<Review, GetReviewDto>();
+            CreateMap<Review, GetReviewDto>()
+                .ForMember(dest => dest.OwnerId, opt => opt.MapFrom(src => src.Owner!.Id))
+                .ForMember(dest => dest.FileContentBase64, opt => opt.MapFrom(src => src.Owner!.FileContentBase64))
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.Owner!.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.Owner!.LastName));
             CreateMap<CreateReviewDto, Review>();
 
             CreateMap<Request, GetRequestDto>()
