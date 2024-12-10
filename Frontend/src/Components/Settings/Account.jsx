@@ -1,3 +1,4 @@
+import { useSelector } from "react-redux";
 import ProfileImageForm from "../Forms/SettingProfileForms/ProfileImageForm";
 import {
   FaCheckCircle,
@@ -6,9 +7,13 @@ import {
   FaUserShield,
   FaShieldAlt,
 } from "react-icons/fa"; // Icons for tips
+import UserInfo from "../../Redux/SlicesCalls/UserInfo";
 
 const Account = () => {
-  var isOwner = true;
+  const state = useSelector((state) => state.userInfo.value);
+  UserInfo();
+
+  var isOwner = state.role === "Owner";
 
   // Arrays for tips
   const usefulTipsForOwners = [

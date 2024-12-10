@@ -65,7 +65,6 @@ const ChatBox = ({ selectedUser, messages, userId }) => {
         content: currentMessage,
         time: new Date().toISOString(), // Ensure ISO format for consistency
       };
-      console.log("Sending message with timestamp:", messageData.time); // Debugging log
 
       // Attempt to send the message and clear the input
       await sendMessage(

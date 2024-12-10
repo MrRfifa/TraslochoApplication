@@ -1,20 +1,25 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ImageGallery from "../../Components/ImageGallery";
 import DetailRow from "../../Components/DetailRow";
 import ProfileDetails from "../../Components/ProfileDetails";
-import ReviewsTable from "../../Components/Tables/ReviewsTable";
 import UserService from "../../Services/Users/UserServices";
 import { useEffect, useState } from "react";
-import { errorToast } from "../../Components/Toasts";
+import { errorToast, warningToast } from "../../Components/Toasts";
 import LoadingSpin from "../../Components/LoadingSpin";
 import Empty from "../../Components/Empty";
 import helperFunctions from "../../Helpers/helperFunctions";
+import ReviewCard from "../../Components/Cards/ReviewCard";
+import ModalButton from "../../Components/Buttons/ModalButton";
+import CreateReviewModal from "../../Components/Modals/CreateReviewModal";
+import AuthVerifyService from "../../Services/Auth/AuthVerifyService";
+import ContactService from "../../Services/Messages/Conversations";
+import { addContactCall } from "../../Helpers/Services/ContactServicesCall";
 
 const TransporterProfilePage = () => {
   const { transporterId } = useParams();
   const [transporterData, setTransporterData] = useState({});
   const [loading, setLoading] = useState({});
-
+  const navigate = useNavigate();
   useEffect(() => {
     const loadTransporterData = async () => {
       setLoading(true); // Start loading immediately
@@ -43,27 +48,93 @@ const TransporterProfilePage = () => {
       (image) => image.fileContentBase64
     ) || [];
 
-  // console.log(transporterData.transporterReviews[0]);
+  const handleReviewCreated = () => {
+    // Fetch updated transporter data after a review is created
+    const loadUpdatedData = async () => {
+      const result = await UserService.GetTransporterInfoById(transporterId);
+      if (result.success) {
+        setTransporterData(result.message); // Update the transporter data, including reviews
+      }
+    };
+    loadUpdatedData();
+  };
+
+  const handleReviewDeleted = (reviewId) => {
+    setTransporterData((prevData) => ({
+      ...prevData,
+      transporterReviews: prevData.transporterReviews.filter(
+        (review) => review.id !== reviewId
+      ),
+    }));
+  };
+
+  const handleCreateContact = async () => {
+    try {
+      const existsContact = await ContactService.checkContactExists(
+        AuthVerifyService.getUserId(),
+        transporterId
+      );
+
+      if (existsContact.message) {
+        // Assuming `exists` is returned as a boolean
+        // If contact exists, navigate to the messaging page
+        navigate(`/messages/${transporterId}`);
+      } else {
+        // If contact does not exist, create it and then navigate
+        const addResponse = await addContactCall(
+          AuthVerifyService.getUserId(),
+          transporterId
+        );
+        if (addResponse.success) {
+          navigate(`/messages/${transporterId}`);
+        }
+      }
+    } catch (error) {
+      warningToast("An error occurred while handling contact creation.");
+      console.error("Error in handleCreateContact:", error);
+    }
+  };
 
   if (loading) {
     return <LoadingSpin />;
   }
-  //TODO add add review
-  //TODO add add as friend and start chatting
+
   return (
-    <div className="ml-0 md:ml-96 grid grid-rows-2 gap-4 p-5 h-full">
+    <div className="ml-0 md:ml-64 grid grid-rows-2 gap-4 p-5 h-full">
       {/* First Row: Transporter Profile and Vehicle Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
         {/* Left Column: Transporter Profile */}
-        <div>
+        <div className="flex flex-col space-y-5">
           <ProfileDetails
             activityType={transporterData.transporterType}
             imageProfile={transporterData.fileContentBase64}
-            dateOfBirth={transporterData.dateOfBirth}
+            dateOfBirth={helperFunctions.formatDateToHumanDate(
+              transporterData.dateOfBirth
+            )}
             firstName={transporterData.firstName}
             lastName={transporterData.lastName}
             address={transporterData.userAddress}
           />
+          <div className="flex flex-row justify-center space-x-5">
+            <ModalButton
+              buttonText="Create review"
+              ModalComponent={CreateReviewModal}
+              modalProps={{
+                transporterId: parseInt(transporterId),
+                ownerId: parseInt(AuthVerifyService.getUserId()),
+                onReviewCreated: handleReviewCreated,
+              }}
+              buttonStyle={"bg-yellow-500 hover:bg-yellow-700 text-white"}
+            />
+            <button
+              onClick={handleCreateContact}
+              className={
+                "bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 mb-5 rounded transition duration-200"
+              }
+            >
+              Chat
+            </button>
+          </div>
         </div>
 
         {/* Right Column: Vehicle Details */}
@@ -128,7 +199,13 @@ const TransporterProfilePage = () => {
       {/* Second Row: Reviews Section */}
       <div>
         {transporterData.transporterReviews.length > 0 ? (
-          <ReviewsTable reviews={transporterData.transporterReviews} />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <ReviewCard
+              onReviewDeleted={handleReviewDeleted}
+              reviews={transporterData.transporterReviews}
+              isPreview={true}
+            />
+          </div>
         ) : (
           <Empty
             description={"It looks like there are no reviews at the moment!"}

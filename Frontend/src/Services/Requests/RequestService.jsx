@@ -109,8 +109,8 @@ const deleteRequest = async (requestId) => {
       return { success: false, error: response.data.message };
     }
   } catch (error) {
-    console.error("Error getting pending shipments:", error);
-    return { success: false, error: "Error getting pending shipments" };
+    console.error("Error deleting request:", error);
+    return { success: false, error: "Error deleting request" };
   }
 };
 

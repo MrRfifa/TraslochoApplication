@@ -43,7 +43,7 @@ ProfileDetails.propTypes = {
   firstName: PropTypes.string.isRequired,
   lastName: PropTypes.string.isRequired,
   dateOfBirth: PropTypes.string.isRequired,
-  activityType: PropTypes.string.isRequired,
+  activityType: PropTypes.number.isRequired,
   address: PropTypes.object.isRequired,
   imageProfile: PropTypes.any.isRequired,
 };

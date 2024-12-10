@@ -59,20 +59,25 @@ export const getContactsCall = async (userId) => {
 // export const addContactCall = async (part1, part2, navigate) => {
 export const addContactCall = async (part1, part2) => {
   try {
-    const participant1 = parseInt(part1);
-    const response = await ContactService.addContact(participant1, part2);
+    const participant1 = parseInt(part1, 10);
+    const participant2 = parseInt(part2, 10);
 
-    // Call toast here after receiving the response
+    const response = await ContactService.addContact(
+      participant1,
+      participant2
+    );
+
+    // Show a success or warning toast based on the API response
     if (response.success) {
       successToast(response.message);
     } else {
       warningToast(response.error);
     }
 
-    return response;
+    return response; // Return the API response for further use
   } catch (error) {
-    warningToast("Failed to add contact.");
-    console.error("Failed to add contact:", error);
+    warningToast("Failed to add contact. Please try again.");
+    console.error("Error in addContactCall:", error);
     return { success: false };
   }
 };

@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 
 const UserAvatar = ({
   profileImage,
@@ -11,12 +12,17 @@ const UserAvatar = ({
   hasUnreadMessages, // New prop to indicate unread messages
   lastMessagePreview, // New prop to show the last message preview
 }) => {
+  const navigate = useNavigate();
   return (
     <div
       className={`flex flex-row justify-between items-center hover:cursor-pointer p-2 rounded-lg ${
         isPreview ? "hover:bg-gray-200" : ""
       } `}
-      onClick={() => (!isPreview ? null : onUserClick(user))}
+      onClick={() =>
+        !isPreview
+          ? navigate(`/transporter-profile/${user.participant}`)
+          : onUserClick(user)
+      }
     >
       <div className="flex flex-row items-center space-x-5">
         <div className="relative">
@@ -70,6 +76,7 @@ UserAvatar.propTypes = {
     firstName: PropTypes.string,
     lastName: PropTypes.string,
     fileContentBase64: PropTypes.string,
+    participant: PropTypes.number,
   }).isRequired,
   hasUnreadMessages: PropTypes.bool, // Add new prop type for unread messages
   lastMessagePreview: PropTypes.string, // Add new prop type for last message preview

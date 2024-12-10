@@ -9,6 +9,14 @@ function formatDate(dateString) {
 
   return `${year}/${month}/${day} ${hours}:${minutes}`;
 }
+function formatDateToHumanDate(dateString) {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date);
+}
 
 function convertType(number) {
   switch (number) {
@@ -98,6 +106,7 @@ function isShipmentPending(shipmentStatus) {
 
 const helperFunctions = {
   formatDate,
+  formatDateToHumanDate,
   convertType,
   convertStatus,
   formatAddress,

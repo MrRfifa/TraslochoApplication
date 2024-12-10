@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import {
   bigSuccessToast,
   dangerToast,
@@ -6,9 +5,12 @@ import {
 } from "../Components/Toasts";
 import AuthService from "../Services/Auth/AuthServices";
 
-export const OnFinishRegisterUsersForm = async (formData, transporter) => {
+export const OnFinishRegisterUsersForm = async (
+  formData,
+  transporter,
+  navigate
+) => {
   const realFormData = new FormData();
-  const navigate= useNavigate()
 
   realFormData.append("FirstName", formData.firstName);
   realFormData.append("LastName", formData.lastName);
@@ -29,7 +31,7 @@ export const OnFinishRegisterUsersForm = async (formData, transporter) => {
 
   if (response.success === true) {
     bigSuccessToast(response.message);
-    navigate("/login")
+    navigate("/login");
   } else {
     warningToast(response.error);
   }

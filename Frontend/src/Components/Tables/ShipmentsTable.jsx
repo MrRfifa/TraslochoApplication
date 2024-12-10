@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
-import StarRating from "../StarRating";
 import { FaCheck } from "react-icons/fa6";
 import { IoPersonCircle } from "react-icons/io5";
 import helperFunctions from "../../Helpers/helperFunctions";
@@ -10,6 +9,7 @@ import { useState } from "react";
 import RequestService from "../../Services/Requests/RequestService";
 import { errorToast, successToast } from "../Toasts";
 import LoadingSpin from "../LoadingSpin";
+import StarRating from "../StarRating/StarRating";
 
 const ShipmentsTable = ({
   data,

@@ -1,27 +1,28 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaArrowCircleLeft } from "react-icons/fa";
 import { states } from "country-cities";
 import { Toaster } from "react-hot-toast";
 import PropTypes from "prop-types";
-
+import { useRegisterUserFormStates } from "../../Helpers/FormsStates";
 import { countryData, findCountry } from "../../Helpers/europian_countries";
 import { ValidateRegisterUsersForm } from "../../Helpers/FormsValidations";
 import { OnFinishRegisterUsersForm } from "../../Helpers/FormsSubmits";
-import { RegisterUserFormStates } from "../../Helpers/FormsStates";
 import { dangerToast, errorToast, successToast } from "../Toasts";
 import { useTranslation } from "react-i18next";
 import { ImSpinner9 } from "react-icons/im";
 
 const RegisterUsersForm = ({ transporter }) => {
   const { t } = useTranslation("register");
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fieldValue, setFieldValue] = useState(8);
   const [countryStates, setCountryStates] = useState([]);
   const [country, setCountry] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const { formData, setFormData, errors, setErrors } = RegisterUserFormStates();
+  const { formData, setFormData, errors, setErrors } =
+    useRegisterUserFormStates();
 
   const handleCountryChange = (event) => {
     const selectedCountryCode = parseInt(event.target.value);
@@ -70,11 +71,12 @@ const RegisterUsersForm = ({ transporter }) => {
 
     try {
       setLoading(true);
+
       const isValid = ValidateRegisterUsersForm(formData, setErrors, t);
 
       if (isValid) {
         successToast("Form validation successful!");
-        await OnFinishRegisterUsersForm(formData, transporter);
+        await OnFinishRegisterUsersForm(formData, transporter, navigate);
       } else {
         errorToast("Form validation failed");
       }

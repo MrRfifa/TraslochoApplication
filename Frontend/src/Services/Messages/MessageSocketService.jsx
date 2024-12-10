@@ -19,7 +19,7 @@ export const startSocketConnection = (userId) => {
     // socket = io(SOCKET_URL, { query: { userId } });
 
     socket.on("receive_message", (message) => {
-      console.log("Received message:", message);
+      // console.log("Received message:", message);
       store.dispatch(addMessage(message)); // Dispatch to Redux store
     });
 

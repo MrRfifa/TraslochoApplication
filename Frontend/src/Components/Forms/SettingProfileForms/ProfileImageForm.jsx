@@ -9,6 +9,7 @@ import AuthService from "../../../Services/Auth/AuthServices";
 import UserSpecInfo from "../../../Redux/SlicesCalls/UserSpecInfo";
 import UserAddress from "../../../Redux/SlicesCalls/UserAddress";
 import { findCountryByIndex } from "../../../Helpers/europian_countries";
+import helperFunctions from "../../../Helpers/helperFunctions";
 
 const ProfileImageForm = () => {
   const dispatch = useDispatch();
@@ -186,7 +187,11 @@ const ProfileImageForm = () => {
               <span className="font-semibold text-gray-700">
                 Date of Birth:
               </span>
-              <span className="text-gray-600">{userSpecInfo.dateOfBirth}</span>
+              <span className="text-gray-600">
+                {helperFunctions.formatDateToHumanDate(
+                  userSpecInfo.dateOfBirth
+                )}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-700">Address:</span>
