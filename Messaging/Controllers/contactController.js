@@ -42,5 +42,27 @@ const retrieveContactsByUserId = async (req, res) => {
   }
 };
 
+// Check if contact exists between two participants
+const checkContactExists = async (req, res) => {
+  try {
+    const { participant1, participant2 } = req.params;
+
+    // Check if both participants exist in the 'participants' field
+    const contact = await Contact.findOne({
+      participants: { $all: [participant1, participant2] },
+    });
+
+    if (contact) {
+      return res.json({ exists: true }); // Return true if contact exists
+    } else {
+      return res.json({ exists: false }); // Return false if contact doesn't exist
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "failed", error: "Internal Server Error" });
+  }
+};
+
 exports.createContact = createContact;
 exports.retrieveContactsByUserId = retrieveContactsByUserId;
+exports.checkContactExists = checkContactExists;
