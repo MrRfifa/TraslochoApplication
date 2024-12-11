@@ -11,6 +11,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Brush,
 } from "recharts";
 import PropTypes from "prop-types";
 
@@ -36,7 +37,8 @@ const BarChartComponent = ({ data, title }) => {
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="shipments" fill="#82ca9d" />
+            <Brush dataKey="name" height={30} stroke="#FCA311" />
+            <Bar dataKey="shipments" fill="#FCA311" />
           </BarChart>
         </ResponsiveContainer>
       ) : (
@@ -47,8 +49,8 @@ const BarChartComponent = ({ data, title }) => {
 };
 
 BarChartComponent.propTypes = {
-  title: PropTypes.string.isRequired,
-  data: PropTypes.array.isRequired,
+  title: PropTypes.string,
+  data: PropTypes.array,
 };
 
 // Line Chart Component
@@ -63,7 +65,8 @@ const LineChartComponent = ({ data, title }) => {
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey="sales" stroke="#8884d8" />
+            <Brush dataKey="name" height={30} stroke="#FCA311" />
+            <Line type="monotone" dataKey="shipments" stroke="#FCA311" />
           </LineChart>
         </ResponsiveContainer>
       ) : (
@@ -74,12 +77,22 @@ const LineChartComponent = ({ data, title }) => {
 };
 
 LineChartComponent.propTypes = {
-  title: PropTypes.string.isRequired,
-  data: PropTypes.array.isRequired,
+  title: PropTypes.string,
+  data: PropTypes.array,
+};
+
+// Define a color palette mapping for different charts
+const CHART_COLORS = {
+  "shipment status": ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF"],
+  Sentiments: ["#FF9F40", "#042a78", "#0fa6a1", "#4CAF50", "#9c0b9e"],
+  // Add more titles and palettes as needed
 };
 
 // Pie Chart Component
 const PieChartComponent = ({ data, title }) => {
+  // Get the colors for the specific chart based on the title
+  const colors = CHART_COLORS[title] || ["#CCCCCC"]; // Default to gray if no palette is found
+
   return (
     <div className={CardStyle}>
       <h2 className="text-lg font-semibold mb-2">{title}</h2>
@@ -88,7 +101,7 @@ const PieChartComponent = ({ data, title }) => {
           <PieChart>
             <Pie
               data={data}
-              dataKey="value" // replace `valueKey` with `dataKey`
+              dataKey="value"
               cx="50%"
               cy="50%"
               outerRadius={80}
@@ -97,7 +110,7 @@ const PieChartComponent = ({ data, title }) => {
               {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={`#${Math.floor(Math.random() * 16777215).toString(16)}`}
+                  fill={colors[index % colors.length]} // Cycle through the chart-specific palette
                 />
               ))}
             </Pie>
